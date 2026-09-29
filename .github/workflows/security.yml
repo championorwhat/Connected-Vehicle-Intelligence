@@ -1,0 +1,48 @@
+name: security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"   # weekly re-scan for new CVEs
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (semgrep)
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v5
+      - run: semgrep scan --config p/python --config p/dockerfile --config p/secrets --error
+
+  iac-and-deps:
+    name: IaC + dependency scan (trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Pinned Trivy image rather than the wrapper action: one less third-party action
+      # in the supply chain, and the same command runs locally (scripts/security-scan.sh).
+      - name: trivy fs scan
+        run: |
+          docker run --rm -v "$PWD":/src aquasec/trivy:0.67.2 fs \
+            --scanners vuln,misconfig,secret --severity CRITICAL,HIGH \
+            --exit-code 0 --format table /src | tee trivy-fs.txt
+          # report-only until M12 sets the baseline; then --exit-code 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-report
+          path: trivy-fs.txt

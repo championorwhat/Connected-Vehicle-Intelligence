@@ -1,0 +1,4 @@
+# Reviewed false positives only. One fingerprint per line; never ignore a whole rule.
+# generic-api-key matched the phrase "lz4-compressed batches" in the M0 design doc (no credential).
+73482c05e4d057cdb1cc76fcfac542b346f32d31:docs/product/m0-problem-selection.md:generic-api-key:242
+docs/product/m0-problem-selection.md:generic-api-key:242

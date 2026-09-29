@@ -1,0 +1,93 @@
+# Root project: shared dev tooling and lint/type/test configuration for the monorepo.
+# Each Python app (apps/*, ml, packages/*) gets its own pyproject.toml as it is built
+# and is added to [tool.uv.workspace] members.
+
+[project]
+name = "prognos"
+version = "0.1.0"
+description = "Prognos: predictive maintenance for connected vehicle fleets"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "Pratibimb Gupta" }]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12",
+    "mypy>=1.17",
+    "pytest>=8.4",
+    "pytest-cov>=6.2",
+    "pytest-asyncio>=1.1",
+    "pre-commit>=4.2",
+    "pyyaml>=6.0",
+    "psycopg[binary]>=3.2",
+    "clickhouse-connect>=0.8",
+    "testcontainers>=4.10",
+    "prognos-common",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+prognos-common = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/common"]
+
+# --- Ruff (lint + format) ----------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["apps/web", "**/node_modules", "**/*_pb2.py", "**/*_pb2.pyi"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "S",        # bandit (security)
+    "SIM",      # simplify
+    "C4",       # comprehensions
+    "PT",       # pytest style
+    "RUF",
+]
+ignore = ["S101"]  # assert is fine; tests rely on it
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "PT011"]
+# Reference-data tables are kept one row per line for reviewability.
+"packages/common/src/prognos_common/catalog.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["prognos_common", "tests"]
+
+# --- mypy --------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+ignore_missing_imports = true
+exclude = ["apps/web/", "node_modules/"]
+
+# --- pytest ------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
+testpaths = ["tests", "packages"]
+markers = [
+    "integration: needs Docker (Testcontainers)",
+    "slow: long-running (benchmarks, soak)",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+source = ["prognos_common"]
+omit = ["**/tests/**"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

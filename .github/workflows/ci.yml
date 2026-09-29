@@ -1,0 +1,86 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-quality:
+    name: lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy tests packages/common/src database/postgres/seeds
+      - run: uv run pytest tests/unit packages --cov --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage.xml
+
+  integration:
+    name: integration (Testcontainers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --group dev
+      - run: uv run pytest tests/integration --junitxml=integration.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: integration.xml
+
+  compose:
+    name: compose validate + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: cp .env.example .env
+      - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f infra/docker/compose.kafka-ha.yml config --quiet
+      - name: start core stack (topics + migrations)
+        run: ./scripts/up.sh
+      - name: topics created
+        run: |
+          docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh \
+            --bootstrap-server kafka:19092 --list | tee topics.txt
+          grep -q '^telemetry.raw$' topics.txt
+          grep -q '^telemetry.dlq$' topics.txt
+      - name: migrations applied
+        run: |
+          docker compose logs migrate-postgres migrate-clickhouse --no-color
+          docker compose exec -T postgres psql -U prognos -d prognos -tAc \
+            "SELECT count(*) FROM schema_migrations" | grep -qx 2
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: seed 100K vehicles
+        run: |
+          uv sync --group dev
+          ./scripts/seed.sh --vehicles 100000 --evidence seed-100k.json
+          docker compose exec -T postgres psql -U prognos -d prognos -tAc \
+            "SELECT count(*) FROM vehicles" | grep -qx 100000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seed-100k-ci
+          path: seed-100k.json
+      - name: logs on failure
+        if: failure()
+        run: docker compose logs --no-color | tail -300
+      - run: docker compose down -v
