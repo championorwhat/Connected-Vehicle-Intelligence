@@ -1,0 +1,23 @@
+{
+  "measured_at": "2026-09-29T05:35:47+00:00",
+  "vehicles": 100000,
+  "tenants": 20,
+  "seed": 42,
+  "environment": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "cpu_count": 4
+  },
+  "roster_generation_s": 1.617,
+  "database_load_s": 18.536,
+  "rows": {
+    "tenants": 20,
+    "subscriptions": 20,
+    "fleets": 56,
+    "workshops": 82,
+    "vehicles": 100000,
+    "drivers": 89998,
+    "driver_assignments": 89998,
+    "cost_parameters": 100
+  }
+}

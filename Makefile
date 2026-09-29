@@ -23,16 +23,16 @@ bootstrap: env ## Install Python dev tooling (uv) and git hooks
 	uv run pre-commit install
 
 # --- Stack -------------------------------------------------------------------
-.PHONY: config up up-obs up-ha down clean ps logs topics
+.PHONY: config up up-obs up-ha down clean ps logs topics migrate seed seed-100k schema-dump psql chsql
 config: env ## Validate docker-compose files
 	$(COMPOSE) config --quiet && echo "docker-compose.yml: OK"
 	$(COMPOSE_HA) config --quiet && echo "kafka HA overlay: OK"
 
-up: env ## Start the core data plane (Kafka, Postgres, ClickHouse, Redis)
-	$(COMPOSE) up -d --wait
+up: env ## Start Kafka, Postgres, ClickHouse, Redis; create topics; run migrations
+	./scripts/up.sh
 
-up-obs: env ## Start core + Prometheus/Grafana
-	$(COMPOSE) --profile observability up -d --wait
+up-obs: env ## Same as `up` plus Prometheus/Grafana
+	./scripts/up.sh --profile observability
 
 up-ha: env ## Start core with a 3-broker Kafka cluster (needs more memory)
 	$(COMPOSE_HA) up -d --wait
@@ -52,8 +52,27 @@ logs: ## Follow logs (make logs s=kafka)
 topics: ## List Kafka topics with partition details
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --describe
 
+migrate: ## Apply PostgreSQL + ClickHouse migrations (also run by `make up`)
+	./scripts/migrate.sh
+
+seed: ## Seed PostgreSQL with VEHICLE_COUNT synthetic vehicles (from .env)
+	./scripts/seed.sh
+
+seed-100k: ## Reset and seed 100,000 vehicles; saves timing evidence
+	./scripts/seed.sh --vehicles 100000 --reset --evidence evidence/benchmarks/m2-seed-100k.json
+
+schema-dump: ## Regenerate database/postgres/schema.sql from the running database
+	$(COMPOSE) exec -T postgres sh -c 'pg_dump -s --no-owner --no-privileges -U $$POSTGRES_USER $$POSTGRES_DB' \
+	  | grep -v '^\\\(un\)\?restrict ' > database/postgres/schema.sql
+
+psql: ## Open a psql shell
+	$(COMPOSE) exec postgres sh -c 'psql -U $$POSTGRES_USER $$POSTGRES_DB'
+
+chsql: ## Open a clickhouse-client shell
+	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
+
 # --- Quality -----------------------------------------------------------------
-.PHONY: lint fmt typecheck test check
+.PHONY: lint fmt typecheck test test-integration check
 lint: ## Lint Python code
 	uv run ruff check .
 	uv run ruff format --check .
@@ -63,9 +82,12 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests
+	uv run mypy tests packages/common/src database/postgres/seeds
 
-test: ## Run unit tests
-	uv run pytest tests/unit
+test: ## Unit tests (fast, no Docker)
+	uv run pytest tests/unit packages --cov --cov-report=term
 
-check: lint typecheck test config ## Everything CI runs locally
+test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
+	uv run pytest tests/integration
+
+check: lint typecheck test config ## Everything CI runs locally (except integration)

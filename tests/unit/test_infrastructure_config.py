@@ -17,7 +17,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 COMPOSE = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
 SERVICES: dict[str, dict[str, Any]] = COMPOSE["services"]
-ONE_SHOT = {"kafka-init"}
+ONE_SHOT = {"kafka-init", "migrate-postgres", "migrate-clickhouse"}
 STATEFUL = {"kafka", "postgres", "clickhouse", "redis"}
 LAPTOP_BUDGET_MB = 5 * 1024  # Docker VM memory on an 8 GB MacBook Air
 
