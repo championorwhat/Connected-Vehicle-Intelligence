@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M1 (repository bootstrap) complete. See [milestones](#milestones).
+**Status:** M2 (data model) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -58,7 +58,8 @@ make down       # stop (keeps data); `make clean` also deletes data
 Run the same checks CI runs:
 
 ```zsh
-make check
+make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
+make test-integration  # 26 tests against real PostgreSQL 17 + ClickHouse 25.8 (Testcontainers)
 ```
 
 ## 4. Environment variables
@@ -85,7 +86,19 @@ Values tagged `[scale]` are raised for the 100K-vehicle runs.
 
 Idle figures were measured in a Linux container, not yet on the target Mac.
 
-## 6. Repository structure
+## 6. Data model (M2)
+
+- **PostgreSQL (3NF)**: 20 tables for tenants, fleets, vehicles, pseudonymous drivers, RBAC,
+  alerts, work orders, cost inputs, erasure requests and an append-only partitioned audit log.
+  Business rules live in the schema (composite tenant FKs, exclusion constraints, partial
+  unique indexes) and are proven by tests. See [data-model.md](docs/database/data-model.md).
+- **ClickHouse**: raw `events` (30-day hot tier, replay-collapsing), a duplicate-safe
+  per-minute rollup (400 days), `risk_scores` and `dlq_events`.
+- **Seed**: a deterministic roster shared with the simulator (`packages/common`). 100,000
+  vehicles load in ~18 s ([evidence](evidence/benchmarks/m2-seed-100k.json), measured on a
+  4-vCPU Linux container, not yet on the Mac).
+
+## 7. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -105,8 +118,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 |---|---|---|
 | M0 | Problem selection, MVP, architecture | ✅ Done |
 | M1 | Repo bootstrap, Docker Compose, CI, lint/format | ✅ Done |
-| M2 | PostgreSQL 3NF + ClickHouse schema, migrations, 100K-vehicle seed | ⏭ Next |
-| M3 | Vehicle simulator + standalone benchmark | Planned |
+| M2 | PostgreSQL 3NF + ClickHouse schema, migrations, 100K-vehicle seed | ✅ Done ([data model](docs/database/data-model.md), [ER diagram](docs/database/er-diagram.md)) |
+| M3 | Vehicle simulator + standalone benchmark | ⏭ Next |
 | M4–M19 | See the M0 document | Planned |
 
 ## Declarations
