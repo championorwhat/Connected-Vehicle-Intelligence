@@ -1,0 +1,3 @@
+Feature ID,Feature,User Story,Priority,Status,Code Path,Test,Evidence,Demo Timestamp
+F-00,One-command local stack,"As a developer I want one command to start the data plane so that anyone can run Prognos locally",Must,Done,docker-compose.yml; Makefile,tests/unit/test_infrastructure_config.py; .github/workflows/ci.yml (compose job),evidence/benchmarks/m1-idle-memory.txt,
+F-00b,Replicated durable messaging,"As a platform engineer I want telemetry to survive a broker failure so that no events are lost",Must,Partial,infra/docker/compose.kafka-ha.yml; kafka/topics/,manual smoke (M13 automates),evidence/chaos/m1-kafka-ha-smoke.md,

@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: prognos
+    folder: Prognos
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
