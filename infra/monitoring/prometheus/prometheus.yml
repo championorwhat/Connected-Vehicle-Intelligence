@@ -1,0 +1,9 @@
+# Scrape targets are added as services gain /metrics endpoints (M4+).
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
