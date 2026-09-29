@@ -1,0 +1,68 @@
+# 3-broker Kafka overlay for replication and broker-failure (chaos) tests.
+#   docker compose -f docker-compose.yml -f infra/docker/compose.kafka-ha.yml up -d
+# Needs ~2 GB more memory than the default stack; on an 8 GB laptop stop
+# ClickHouse/observability while running it, or run it in CI.
+
+x-kafka-common: &kafka-common
+  image: apache/kafka:4.1.0
+  restart: unless-stopped
+  deploy:
+    resources:
+      limits:
+        memory: 768m
+
+x-kafka-env: &kafka-env
+  KAFKA_PROCESS_ROLES: broker,controller
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093,2@kafka-2:9093,3@kafka-3:9093
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+  KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+  KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+  KAFKA_MIN_INSYNC_REPLICAS: 2
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  KAFKA_HEAP_OPTS: -Xms384m -Xmx384m
+
+services:
+  kafka:
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 1
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+
+  kafka-2:
+    <<: *kafka-common
+    hostname: kafka-2
+    ports: ["9094:9094"]
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENERS: INTERNAL://:19092,EXTERNAL://:9094,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:19092,EXTERNAL://localhost:9094
+    volumes: [kafka-2-data:/var/lib/kafka/data]
+
+  kafka-3:
+    <<: *kafka-common
+    hostname: kafka-3
+    ports: ["9095:9095"]
+    environment:
+      <<: *kafka-env
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENERS: INTERNAL://:19092,EXTERNAL://:9095,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:19092,EXTERNAL://localhost:9095
+    volumes: [kafka-3-data:/var/lib/kafka/data]
+
+  kafka-init:
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092,kafka-2:19092,kafka-3:19092
+      KAFKA_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+
+volumes:
+  kafka-2-data:
+  kafka-3-data:

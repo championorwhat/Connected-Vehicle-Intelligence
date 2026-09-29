@@ -407,3 +407,28 @@ connected-vehicle-intelligence/
 - Submission date: provided as **20/09/2026**; kept exactly as given.
 - Mac hardware (CPU cores / RAM), which decides the local vs cloud load-test plan.
 - Confirm product name (Prognos) and the telemetry store (ClickHouse over TimescaleDB).
+
+---
+
+## 15. Amendment (after author feedback): 8 GB MacBook Air M2, solo team
+
+**Decisions confirmed:** Predictive maintenance · product name Prognos · ClickHouse. Team: solo
+(Pratibimb Gupta). Submission date: kept as given, to be revisited.
+
+**Hardware reality.** An 8 GB M2 Air gives Docker about 5 GB. That is enough for the whole pipeline
+at reduced scale, but not for 100K ev/s end to end with Kafka, ClickHouse, the processors and
+the API all on one machine. Claiming otherwise would be fabrication. The scale strategy is:
+
+| Tier | Where | What we prove |
+|---|---|---|
+| Laptop (daily dev + demo) | Mac, Docker 5 GB, `VEHICLE_COUNT=10000` | Full functionality, the live demo, alert latency at 10K ev/s (target, NOT YET MEASURED) |
+| Stage benchmarks | Mac and CI | Simulator alone at 100K vehicles; the normaliser alone; ClickHouse inserts alone. Each stage's own ceiling |
+| Scale runs (100K sustained, 300K burst, soak, chaos) | CI runner (`ubuntu-latest`, 4 vCPU / 16 GB) and/or a free-tier cloud VM/K8s (M16) | The brief's NFRs, measured where the hardware allows, with the hardware stated next to every number |
+
+**Changes caused by the 8 GB limit:**
+- MinIO dropped from the default stack. MinIO stopped publishing community images in 2025, and
+  it would cost RAM. Parquet goes to `OBJECT_STORE_URL` (`file://` locally, `s3://`/`gs://` in
+  cloud), which keeps it cloud-agnostic through config alone.
+- Observability is an opt-in compose profile.
+- 3-broker Kafka is an overlay used for chaos tests, not the default.
+- Every container has a memory limit, and a unit test enforces the ≤ 5 GB default budget.
