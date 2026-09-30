@@ -182,8 +182,10 @@ jobs:
         run: |
           docker compose --profile pipeline run --rm -e SCORER_LAG_SECONDS=0 scorer --once \
             --output /dev/stdout | tee score.json
-          # 20 s of traffic is far below the 45-minute coverage gate: nothing may be scored.
-          jq -e '.vehicles_scored == 0 and .vehicles_insufficient_data > 90000' score.json
+          # 20 s of traffic is far below the 45-minute coverage gate: nothing may be scored, and
+          # the gate must have seen (and held back) vehicles. How many reported before the
+          # snapshot's minute boundary depends on the clock, so no fixed share is asserted.
+          jq -e '.vehicles_scored == 0 and .vehicles_insufficient_data > 0' score.json
       - name: API end to end (login, RBAC, tenant data, at-risk, OpenAPI)
         run: |
           set -a; . ./.env; set +a
