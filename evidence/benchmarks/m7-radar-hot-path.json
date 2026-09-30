@@ -1,0 +1,10 @@
+{
+  "measured_at": "2026-09-30T05:28:14Z",
+  "what": "radar hot path per canonical event (byte check; parse + add only when a DTC is present), excluding Kafka I/O",
+  "hardware": "x86_64 Linux container, 4 vCPU (not the target Mac)",
+  "events": 1069321,
+  "events_with_dtc": 2368,
+  "best_of_3_seconds": 0.743,
+  "events_per_second": 1439030,
+  "ns_per_event": 695
+}

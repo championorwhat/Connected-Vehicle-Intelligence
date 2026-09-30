@@ -1,0 +1,466 @@
+{
+  "calibration": {
+    "horizon_hours": 168.0,
+    "rules": {
+      "COOLANT_DRIFT": {
+        "eligible_alerts": 14,
+        "followed_by_failure": 14,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.785,
+          1.0
+        ],
+        "median_hours_to_failure": 30.0,
+        "hours_to_failure_p10": 10.3
+      },
+      "COOLANT_OVERHEAT": {
+        "eligible_alerts": 12,
+        "followed_by_failure": 12,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.757,
+          1.0
+        ],
+        "median_hours_to_failure": 16.4,
+        "hours_to_failure_p10": 3.6
+      },
+      "DTC_C1A10": {
+        "eligible_alerts": 9,
+        "followed_by_failure": 9,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.701,
+          1.0
+        ],
+        "median_hours_to_failure": 8.0,
+        "hours_to_failure_p10": 3.5
+      },
+      "DTC_C1A11": {
+        "eligible_alerts": 12,
+        "followed_by_failure": 12,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.757,
+          1.0
+        ],
+        "median_hours_to_failure": 14.7,
+        "hours_to_failure_p10": 10.9
+      },
+      "DTC_C1A12": {
+        "eligible_alerts": 5,
+        "followed_by_failure": 5,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.566,
+          1.0
+        ],
+        "median_hours_to_failure": 13.7,
+        "hours_to_failure_p10": 8.5
+      },
+      "DTC_C1A13": {
+        "eligible_alerts": 8,
+        "followed_by_failure": 8,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.676,
+          1.0
+        ],
+        "median_hours_to_failure": 23.8,
+        "hours_to_failure_p10": 14.4
+      },
+      "DTC_P0118": {
+        "eligible_alerts": 18,
+        "followed_by_failure": 18,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.824,
+          1.0
+        ],
+        "median_hours_to_failure": 40.3,
+        "hours_to_failure_p10": 21.8
+      },
+      "DTC_P0217": {
+        "eligible_alerts": 12,
+        "followed_by_failure": 12,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.757,
+          1.0
+        ],
+        "median_hours_to_failure": 16.8,
+        "hours_to_failure_p10": 3.6
+      },
+      "DTC_P0300": {
+        "eligible_alerts": 13,
+        "followed_by_failure": 13,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.772,
+          1.0
+        ],
+        "median_hours_to_failure": 22.9,
+        "hours_to_failure_p10": 17.5
+      },
+      "DTC_P0301": {
+        "eligible_alerts": 5,
+        "followed_by_failure": 4,
+        "p_failure": 0.8,
+        "p_failure_ci95": [
+          0.376,
+          0.964
+        ],
+        "median_hours_to_failure": 115.6,
+        "hours_to_failure_p10": 112.9
+      },
+      "DTC_P0302": {
+        "eligible_alerts": 3,
+        "followed_by_failure": 3,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.438,
+          1.0
+        ],
+        "median_hours_to_failure": 99.9,
+        "hours_to_failure_p10": 41.9
+      },
+      "DTC_P0303": {
+        "eligible_alerts": 5,
+        "followed_by_failure": 5,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.566,
+          1.0
+        ],
+        "median_hours_to_failure": 59.8,
+        "hours_to_failure_p10": 57.3
+      },
+      "DTC_P0304": {
+        "eligible_alerts": 2,
+        "followed_by_failure": 2,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.342,
+          1.0
+        ],
+        "median_hours_to_failure": 84.7,
+        "hours_to_failure_p10": 70.9
+      },
+      "DTC_P0562": {
+        "eligible_alerts": 47,
+        "followed_by_failure": 43,
+        "p_failure": 0.915,
+        "p_failure_ci95": [
+          0.801,
+          0.966
+        ],
+        "median_hours_to_failure": 66.0,
+        "hours_to_failure_p10": 9.3
+      },
+      "DTC_P0A7F": {
+        "eligible_alerts": 5,
+        "followed_by_failure": 5,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.566,
+          1.0
+        ],
+        "median_hours_to_failure": 72.5,
+        "hours_to_failure_p10": 18.2
+      },
+      "DTC_P0A80": {
+        "eligible_alerts": 3,
+        "followed_by_failure": 3,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.438,
+          1.0
+        ],
+        "median_hours_to_failure": 38.5,
+        "hours_to_failure_p10": 18.0
+      },
+      "DTC_P0AFA": {
+        "eligible_alerts": 3,
+        "followed_by_failure": 3,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.438,
+          1.0
+        ],
+        "median_hours_to_failure": 64.2,
+        "hours_to_failure_p10": 17.8
+      },
+      "HV_CELL_CRITICAL": {
+        "eligible_alerts": 3,
+        "followed_by_failure": 3,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.438,
+          1.0
+        ],
+        "median_hours_to_failure": 64.1,
+        "hours_to_failure_p10": 17.8
+      },
+      "HV_CELL_IMBALANCE": {
+        "eligible_alerts": 6,
+        "followed_by_failure": 6,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.61,
+          1.0
+        ],
+        "median_hours_to_failure": 109.6,
+        "hours_to_failure_p10": 17.8
+      },
+      "LV_BATTERY_CRITICAL": {
+        "eligible_alerts": 21,
+        "followed_by_failure": 20,
+        "p_failure": 0.952,
+        "p_failure_ci95": [
+          0.773,
+          0.992
+        ],
+        "median_hours_to_failure": 65.0,
+        "hours_to_failure_p10": 10.1
+      },
+      "LV_BATTERY_WEAK": {
+        "eligible_alerts": 27,
+        "followed_by_failure": 27,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.875,
+          1.0
+        ],
+        "median_hours_to_failure": 110.4,
+        "hours_to_failure_p10": 21.9
+      },
+      "MISFIRE_ROUGHNESS": {
+        "eligible_alerts": 13,
+        "followed_by_failure": 13,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.772,
+          1.0
+        ],
+        "median_hours_to_failure": 66.8,
+        "hours_to_failure_p10": 55.5
+      },
+      "TYRE_PRESSURE_CRITICAL": {
+        "eligible_alerts": 34,
+        "followed_by_failure": 34,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.898,
+          1.0
+        ],
+        "median_hours_to_failure": 10.7,
+        "hours_to_failure_p10": 4.9
+      },
+      "TYRE_SLOW_LEAK": {
+        "eligible_alerts": 35,
+        "followed_by_failure": 35,
+        "p_failure": 1.0,
+        "p_failure_ci95": [
+          0.901,
+          1.0
+        ],
+        "median_hours_to_failure": 21.8,
+        "hours_to_failure_p10": 7.6
+      }
+    }
+  },
+  "failures": 120,
+  "failures_warned_before_breakdown": 120,
+  "recall": 1.0,
+  "lead_time": {
+    "median_hours_real_time": 49.7,
+    "min_hours_real_time": 3.5
+  },
+  "alerts_opened_with_failure_mode": 470,
+  "precision": 1.0,
+  "per_failure_mode": {
+    "COOLING_FAILURE": {
+      "failures": 23,
+      "warned": 23,
+      "recall": 1.0,
+      "lead_time": {
+        "median_hours_real_time": 40.3,
+        "min_hours_real_time": 19.2
+      }
+    },
+    "IGNITION_MISFIRE": {
+      "failures": 21,
+      "warned": 21,
+      "recall": 1.0,
+      "lead_time": {
+        "median_hours_real_time": 99.9,
+        "min_hours_real_time": 41.9
+      }
+    },
+    "LV_BATTERY_FAILURE": {
+      "failures": 26,
+      "warned": 26,
+      "recall": 1.0,
+      "lead_time": {
+        "median_hours_real_time": 109.8,
+        "min_hours_real_time": 10.0
+      }
+    },
+    "TYRE_SLOW_LEAK": {
+      "failures": 43,
+      "warned": 43,
+      "recall": 1.0,
+      "lead_time": {
+        "median_hours_real_time": 21.9,
+        "min_hours_real_time": 3.5
+      }
+    },
+    "HV_BATTERY_THERMAL": {
+      "failures": 7,
+      "warned": 7,
+      "recall": 1.0,
+      "lead_time": {
+        "median_hours_real_time": 120.2,
+        "min_hours_real_time": 18.2
+      }
+    }
+  },
+  "per_rule": {
+    "COOLANT_DRIFT": {
+      "opened": 21,
+      "true": 21,
+      "precision": 1.0
+    },
+    "COOLANT_OVERHEAT": {
+      "opened": 16,
+      "true": 16,
+      "precision": 1.0
+    },
+    "DTC_C1A10": {
+      "opened": 12,
+      "true": 12,
+      "precision": 1.0
+    },
+    "DTC_C1A11": {
+      "opened": 16,
+      "true": 16,
+      "precision": 1.0
+    },
+    "DTC_C1A12": {
+      "opened": 5,
+      "true": 5,
+      "precision": 1.0
+    },
+    "DTC_C1A13": {
+      "opened": 11,
+      "true": 11,
+      "precision": 1.0
+    },
+    "DTC_P0118": {
+      "opened": 28,
+      "true": 28,
+      "precision": 1.0
+    },
+    "DTC_P0217": {
+      "opened": 16,
+      "true": 16,
+      "precision": 1.0
+    },
+    "DTC_P0300": {
+      "opened": 22,
+      "true": 22,
+      "precision": 1.0
+    },
+    "DTC_P0301": {
+      "opened": 8,
+      "true": 8,
+      "precision": 1.0
+    },
+    "DTC_P0302": {
+      "opened": 4,
+      "true": 4,
+      "precision": 1.0
+    },
+    "DTC_P0303": {
+      "opened": 9,
+      "true": 9,
+      "precision": 1.0
+    },
+    "DTC_P0304": {
+      "opened": 7,
+      "true": 7,
+      "precision": 1.0
+    },
+    "DTC_P0562": {
+      "opened": 73,
+      "true": 73,
+      "precision": 1.0
+    },
+    "DTC_P0A7F": {
+      "opened": 7,
+      "true": 7,
+      "precision": 1.0
+    },
+    "DTC_P0A80": {
+      "opened": 7,
+      "true": 7,
+      "precision": 1.0
+    },
+    "DTC_P0AFA": {
+      "opened": 7,
+      "true": 7,
+      "precision": 1.0
+    },
+    "HV_CELL_CRITICAL": {
+      "opened": 7,
+      "true": 7,
+      "precision": 1.0
+    },
+    "HV_CELL_IMBALANCE": {
+      "opened": 9,
+      "true": 9,
+      "precision": 1.0
+    },
+    "LV_BATTERY_CRITICAL": {
+      "opened": 32,
+      "true": 32,
+      "precision": 1.0
+    },
+    "LV_BATTERY_WEAK": {
+      "opened": 41,
+      "true": 41,
+      "precision": 1.0
+    },
+    "MISFIRE_ROUGHNESS": {
+      "opened": 23,
+      "true": 23,
+      "precision": 1.0
+    },
+    "TYRE_PRESSURE_CRITICAL": {
+      "opened": 44,
+      "true": 44,
+      "precision": 1.0
+    },
+    "TYRE_SLOW_LEAK": {
+      "opened": 45,
+      "true": 45,
+      "precision": 1.0
+    }
+  },
+  "run": {
+    "vehicles": 300,
+    "simulated_hours": 8.0,
+    "fault_rate": 0.2,
+    "fault_time_scale": 48.0,
+    "seed": 7,
+    "raw_messages": 8726401,
+    "wall_seconds": 512.8,
+    "pipeline_us_per_message": 58.8,
+    "alerts_opened": 597,
+    "alerts_cleared": 499
+  },
+  "environment": {
+    "machine": "x86_64",
+    "cpu_count": 4
+  },
+  "measured_at": "2026-09-30T05:20:51Z"
+}

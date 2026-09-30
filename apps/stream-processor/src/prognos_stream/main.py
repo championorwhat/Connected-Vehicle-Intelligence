@@ -18,7 +18,7 @@ import os
 import platform
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sized
 from pathlib import Path
 
 from prometheus_client import start_http_server
@@ -49,9 +49,9 @@ def build_registry() -> VehicleRegistry:
     return VehicleRegistry.from_postgres(dsn)
 
 
-def wait_for_registry(
-    build: Callable[[], VehicleRegistry], *, timeout_s: float, poll_s: float = 5.0
-) -> VehicleRegistry:
+def wait_for_registry[R: Sized](
+    build: Callable[[], R], *, timeout_s: float, poll_s: float = 5.0
+) -> R:
     """Do not start consuming with an empty registry.
 
     Consuming before the database is seeded would quarantine every event as

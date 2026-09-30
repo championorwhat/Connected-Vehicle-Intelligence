@@ -29,3 +29,18 @@ make dlq-peek                                     # inspect rejects with reasons
 - 100K ev/s end to end through the normalizer. This needs about 5 dedicated cores (M14).
 - 3× burst end to end.
 - Any measurement on the target MacBook Air.
+
+## M7: planner and radar (4 vCPU Linux container, not the target Mac)
+
+| What | Result | Evidence |
+|---|---|---|
+| Planner cycle, 100K vehicles, 5,000 open alerts (synthetic backlog) | 0.90 s: 4,204 proposed, 796 unscheduled (no capacity in 7 days), 2,792 booked after the predicted failure | [m7-planner-100k.json](../../evidence/benchmarks/m7-planner-100k.json) |
+| Planner re-run on the same state | 28 ms, 0 new proposals (idempotent) | same |
+| Batched inserts vs a round trip per row | 3.5 s → 0.9 s (same cycle, measured before and after) | same |
+| Radar hot path | 695 ns/event (about 1.4 M events/s), Kafka excluded | [m7-radar-hot-path.json](../../evidence/benchmarks/m7-radar-hot-path.json) |
+| Radar live, 100K vehicles at 10K ev/s | Defect cohort flagged; 0 other signals | [m7-radar-live.json](../../evidence/benchmarks/m7-radar-live.json) |
+
+The backlog of 5,000 alerts at once (5% of the fleet) is a stress case: it exceeds what
+the seeded workshops can absorb before the short cooling deadlines, so many proposals are
+flagged late. The planner reports this rather than hiding it.
+

@@ -296,6 +296,65 @@ services:
         limits:
           memory: 256m
 
+  # Maintenance planner: open alerts -> calibrated risk -> proposed work orders.
+  planner:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/stream:local
+    build:
+      context: .
+      dockerfile: apps/stream-processor/Dockerfile
+      secrets: [extra_ca]
+    entrypoint: ["prognos-planner"]
+    depends_on:
+      migrate-postgres:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PLANNER_INTERVAL_SECONDS: ${PLANNER_INTERVAL_SECONDS:-60}
+      PLANNER_HORIZON_DAYS: ${PLANNER_HORIZON_DAYS:-7}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # Emerging-fault radar: telemetry.canonical -> fleet.signals (single consumer: whole fleet).
+  radar:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/stream:local
+    build:
+      context: .
+      dockerfile: apps/stream-processor/Dockerfile
+      secrets: [extra_ca]
+    entrypoint: ["prognos-radar"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      migrate-postgres:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:19092}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      RADAR_WINDOW_SECONDS: ${RADAR_WINDOW_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
   # ---------------------------------------------------------------------------
   # Schema migrations (one-shot, idempotent). dbmate applies plain SQL files and
   # records them in schema_migrations; re-running is a no-op.
