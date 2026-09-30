@@ -71,6 +71,20 @@ psql: ## Open a psql shell
 chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
+# --- Simulator ---------------------------------------------------------------
+.PHONY: sim sim-demo sim-stop sim-bench
+sim: env ## Stream simulated telemetry into Kafka (VEHICLE_COUNT / EVENTS_PER_SECOND from .env)
+	$(COMPOSE) --profile sim up -d --build simulator
+
+sim-demo: env ## As `sim`, plus 5 scripted failures 10-18 minutes after start
+	SIM_SCENARIO=demo $(COMPOSE) --profile sim up -d --build simulator
+
+sim-stop: ## Stop the simulator gracefully (releases held-back events, flushes Kafka)
+	$(COMPOSE) --profile sim stop simulator
+
+sim-bench: ## Standalone generation benchmark at 100K vehicles (no Kafka)
+	uv run python -m prognos_sim.bench --vehicles 100000 --seconds 20 --workers 1,2,4
+
 # --- Quality -----------------------------------------------------------------
 .PHONY: lint fmt typecheck test test-integration check
 lint: ## Lint Python code
@@ -82,10 +96,10 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src
 
 test: ## Unit tests (fast, no Docker)
-	uv run pytest tests/unit packages --cov --cov-report=term
+	uv run pytest tests/unit packages apps/simulator/tests --cov --cov-report=term
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration
