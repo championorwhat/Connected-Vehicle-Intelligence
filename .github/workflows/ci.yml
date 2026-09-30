@@ -24,11 +24,14 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
-      - run: uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=xml
+      - run: uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=
+        env:
+          COVERAGE_FILE: .coverage.unit
       - uses: actions/upload-artifact@v4
         with:
-          name: coverage-unit
-          path: coverage.xml
+          name: coverage-data-unit
+          path: .coverage.unit
+          include-hidden-files: true
 
   web:
     name: web (typecheck, unit tests, build)
@@ -57,12 +60,47 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --group dev
-      - run: uv run pytest tests/integration --junitxml=integration.xml
+      - run: uv run pytest tests/integration --junitxml=integration.xml --cov --cov-report=
+        env:
+          COVERAGE_FILE: .coverage.integration
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: integration-results
           path: integration.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-integration
+          path: .coverage.integration
+          include-hidden-files: true
+
+  coverage:
+    name: coverage (unit + integration, gate 80 %)
+    needs: [python-quality, integration]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --group dev
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-data-*
+          merge-multiple: true
+      - name: combine and gate
+        run: |
+          uv run coverage combine .coverage.unit .coverage.integration
+          uv run coverage report --skip-covered | tee coverage.txt
+          uv run coverage xml
+          uv run coverage report --fail-under=80 > /dev/null
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            coverage.txt
+            coverage.xml
 
   compose:
     name: compose validate + smoke
@@ -206,6 +244,22 @@ jobs:
         with:
           name: seed-100k-ci
           path: seed-100k.json
+      - name: container image scan (Trivy; fails on fixable CRITICAL, reports HIGH)
+        run: |
+          set -o pipefail
+          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                      -v trivy-cache:/root/.cache aquasec/trivy:0.67.2 image --quiet --scanners vuln "$@"; }
+          for img in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep '^prognos/' | sort -u); do
+            echo "== $img" | tee -a trivy-images.txt
+            trivy --severity CRITICAL,HIGH --ignore-unfixed --format table "$img" | tee -a trivy-images.txt
+            trivy --severity CRITICAL --ignore-unfixed --exit-code 1 --format table "$img" > /dev/null
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-image-report
+          path: trivy-images.txt
+          if-no-files-found: ignore
       - name: logs on failure
         if: failure()
         run: docker compose logs --no-color | tail -300

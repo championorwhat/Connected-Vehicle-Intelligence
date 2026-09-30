@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import orjson
+import psycopg
 import redis
 from prometheus_client import Counter, Histogram, start_http_server
 
@@ -119,6 +120,12 @@ def main(argv: list[str] | None = None) -> int:
     service.install_signal_handlers()
     try:
         stats = service.run()
+    except (psycopg.OperationalError, redis.ConnectionError, redis.TimeoutError) as exc:
+        # Retry budget spent: exit without committing, so the batch is re-read after the
+        # restart (docker restart policy / Kubernetes). Nothing is lost; M13 chaos drill.
+        log.error("store unavailable for %.0fs, exiting for a restart (offsets not committed):"
+                  " %s", cfg.retry_budget_s, exc)  # fmt: skip
+        return 1
     finally:
         alerts.close()
     summary = {"consumed": int(stats["consumed"]), "postgres": alerts.stats, "redis": live.stats}

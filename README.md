@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M15 (SQL optimisation) complete; M13, M14 and M16 are next. See [milestones](#milestones).
+**Status:** M13 (testing) and M15 (SQL optimisation) complete; M14 and M16 are next. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -401,7 +401,37 @@ The slowest queries were **measured**, not guessed.
   query returns.
 - Measured on a 4-vCPU Linux container, not the target Mac.
 
-## 18. Repository structure
+## 18. Testing (M13)
+
+[Testing strategy](docs/testing/strategy.md): every layer runs in CI on every push.
+
+- **Test counts:**
+  - 231 unit, contract and security tests.
+  - 78 integration tests against real PostgreSQL, ClickHouse, Kafka and Redis.
+  - 5 **BDD** scenarios in Gherkin
+    ([feature](tests/integration/features/fleet_manager.feature)): a critical alert
+    becomes a scheduled repair, planning twice books once, tenant isolation, role limits
+    and location masking.
+  - 7 + 4 web tests.
+- **Coverage:**
+  - Unit and integration combined: **84 %** (branch coverage, all five Python packages).
+  - CI fails below 80 % ([report](evidence/coverage/m13-coverage.txt)).
+  - Before M13, the coverage configuration silently skipped the API and ML packages.
+- **Chaos drill:**
+  - PostgreSQL was stopped for 90 s during live ingestion. The sink retried for its 60 s
+    budget, then exited without committing. It restarted and Kafka redelivered the batch.
+  - Reconciliation: Kafka, ClickHouse and PostgreSQL agree exactly over 3.77M events, and
+    all 4 alerts raised during the outage arrived
+    ([write-up](docs/observability/drills.md#drill-2-postgresql-goes-away-mid-ingestion-m13-2026-09-30)).
+  - The sink now exits with a clear reason instead of a traceback.
+- **Image scan:**
+  - CI scans every built image and fails on fixable CRITICAL vulnerabilities (0 today).
+  - Fixable HIGH findings in base-image OS packages are reported
+    ([report](evidence/security/m13-image-scan.txt)).
+- **Dependabot** now groups minor and patch updates and ignores majors. A major bump
+  needs a deliberate migration.
+
+## 19. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -432,8 +462,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ✅ Done ([screens](#14-dashboard-m10)) |
 | M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ✅ Done ([SLOs](docs/observability/slo.md), [drill](docs/observability/drills.md), [ADR-009](docs/architecture/adr/ADR-009.md)) |
 | M12 | Security and privacy: STRIDE, row-level security, erasure workflow, headers, scan gate | ✅ Done ([threat model](docs/security/threat-model.md), [privacy](docs/security/privacy.md), [ADR-010](docs/architecture/adr/ADR-010.md)) |
-| M13 | Testing: coverage, contract, BDD, chaos | ⏭ Next |
-| M14 | Performance: 10K / 50K / 100K / burst / soak | Planned |
+| M13 | Testing: coverage, contract, BDD, chaos | ✅ Done ([strategy](docs/testing/strategy.md), [drills](docs/observability/drills.md)) |
+| M14 | Performance: 10K / 50K / 100K / burst / soak | ⏭ Next |
 | M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
 | M16–M19 | See the M0 document | Planned |
 
