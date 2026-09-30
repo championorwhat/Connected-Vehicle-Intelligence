@@ -445,6 +445,8 @@ ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured 
 | 100K at 1.5× rate (15K events/s) | 0.70 / 1.79 / 2.57 s | 3.5 | at the limit of this machine |
 | 100K at 2× rate (20K events/s) | 18 / 29 / 30 s | 3.8 | not sustained (CPU saturated) |
 
+- **Soak:** 30 minutes at 100K vehicles with every stage current, flat detector memory
+  (295–305 MB) and bounded disk use.
 - **API under load:** 40 users during the 100K run; p95 of 63–82 ms on every route;
   0 errors.
 - **Burst:** the backlog peaked at 587K messages (43 s behind, inside the 60 s SLO) and

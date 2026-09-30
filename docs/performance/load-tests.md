@@ -29,7 +29,7 @@ backlog that is not growing.
 | 100K at 15K events/s | 15,320 | 14,877 | 0.2 s | 0.70 / 1.79 / 2.57 s | 3.5 | 2.6 GiB | at the limit: kept up for 4 min, detector at 97 % of input |
 | 100K at 20K events/s | 20,322 | 17,558 | 35.6 s and growing | 18 / 29 / 30 s | 3.8 | 3.5 GiB | **not sustained**: the machine is saturated |
 | 3× burst on 100K | ~22K peak | ~16K during, ~23K after | 0.1 s (43 s max) | during the burst window: p95 56 s | 3.3 | 3.0 GiB | recovers: see chart |
-| 30-minute soak, 100K | NOT YET MEASURED (run in progress) | | | | | | |
+| **30-minute soak, 100K** | 10,106 | 9,898 | 0.1 s (0.7 s max) | 0.59 / 1.83 / 5.04 s | 2.9 | 3.0 GiB | **sustained; memory flat** |
 
 - **Target met on this machine.** The brief's 100K vehicles, each reporting every 10 s,
   runs with every stage current. 95 % of critical alerts are raised within 1.8 s, against
@@ -54,6 +54,25 @@ backlog that is not growing.
 - It drained at about 23K/s, **50 s after input returned to normal**.
 - Alerts raised from delayed events were late (p95 56 s across the window), which is
   exactly what the alert-latency SLO is meant to catch.
+
+### Soak
+
+![30-minute soak: memory flat, pipeline current](../images/m14-soak.svg)
+
+- For 30 minutes at 100K vehicles and 10K events/s, every stage stayed current. The
+  detector was never more than 0.7 s behind.
+- **No leak:**
+  - The detector stayed at 295–305 MB. Kafka (730–940 MB) and ClickHouse (490–780 MB)
+    move up and down with their flushes and merges, but do not trend upward.
+  - The normalizers step up once, when their vehicle registry is refreshed at 5
+    minutes, then hold at 138–151 MB.
+  - Redis grows while all 100K vehicles' live state fills in, then flattens at about
+    120 MB.
+- **Disk:** with 128 MB segments and (for the test) 10-minute retention, disk use
+  levelled off. It grew by about 1 GB over the last 25 minutes.
+- **p99 alert latency of 5.04 s** sits just above 5 s. The SLO is 95 % within 5 s
+  (measured 1.83 s at p95), so it is met, but the tail is close to the target when the
+  machine runs at 73 % CPU.
 
 ### API under load
 
