@@ -24,3 +24,8 @@ scrape_configs:
       - names: ["detector"]
         type: A
         port: 9103
+  - job_name: sink
+    dns_sd_configs:
+      - names: ["sink"]
+        type: A
+        port: 9104

@@ -28,8 +28,11 @@ for file in $(ls "$DIR"/*.sql | sort); do
   fi
   [[ "${1:-up}" == "status" ]] && { echo "[pending] $(basename "$file")"; continue; }
   echo "Applying: $(basename "$file")"
-  # Keep only the '-- migrate:up' section.
-  awk '/^-- migrate:up/{f=1;next} /^-- migrate:down/{f=0} f' "$file" | "${CH[@]}" --multiquery
+  # Keep only the '-- migrate:up' section; substitute deployment-specific placeholders
+  # (the Kafka broker list differs between compose, CI and cloud).
+  awk '/^-- migrate:up/{f=1;next} /^-- migrate:down/{f=0} f' "$file" \
+    | sed "s|{{KAFKA_BROKERS}}|${KAFKA_BROKERS:-kafka:19092}|g" \
+    | "${CH[@]}" --multiquery
   "${CH[@]}" -q "INSERT INTO schema_migrations (version) VALUES ('$version')"
   echo "Applied: $(basename "$file")"
 done
