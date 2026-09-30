@@ -23,8 +23,8 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds
-      - run: uv run pytest tests/unit packages --cov --cov-report=xml
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src
+      - run: uv run pytest tests/unit packages apps/simulator/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-unit
@@ -76,6 +76,14 @@ jobs:
           ./scripts/seed.sh --vehicles 100000 --evidence seed-100k.json
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
             "SELECT count(*) FROM vehicles" | grep -qx 100000
+      - name: simulator image builds and streams into Kafka
+        run: |
+          docker compose --profile sim build simulator
+          docker compose --profile sim run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
+            simulator --summary /tmp/sim.json
+          docker compose exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
+            --bootstrap-server kafka:19092 --topic telemetry.raw \
+            | awk -F: '{s+=$3} END {print "telemetry.raw messages:", s; exit !(s > 150000)}'
       - uses: actions/upload-artifact@v4
         with:
           name: seed-100k-ci

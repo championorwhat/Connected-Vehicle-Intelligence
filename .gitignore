@@ -42,3 +42,6 @@ ml/models/*.bin
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# Simulator file-publisher output
+data/sim-output/

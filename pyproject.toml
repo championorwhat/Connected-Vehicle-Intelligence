@@ -24,6 +24,7 @@ dev = [
     "clickhouse-connect>=0.8",
     "testcontainers>=4.10",
     "prognos-common",
+    "prognos-simulator",
 ]
 
 [tool.uv]
@@ -31,9 +32,10 @@ package = false
 
 [tool.uv.sources]
 prognos-common = { workspace = true }
+prognos-simulator = { workspace = true }
 
 [tool.uv.workspace]
-members = ["packages/common"]
+members = ["packages/common", "apps/simulator"]
 
 # --- Ruff (lint + format) ----------------------------------------------------
 [tool.ruff]
@@ -62,7 +64,7 @@ ignore = ["S101"]  # assert is fine; tests rely on it
 "packages/common/src/prognos_common/catalog.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["prognos_common", "tests"]
+known-first-party = ["prognos_common", "prognos_sim", "tests"]
 
 # --- mypy --------------------------------------------------------------------
 [tool.mypy]
@@ -76,7 +78,7 @@ exclude = ["apps/web/", "node_modules/"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
-testpaths = ["tests", "packages"]
+testpaths = ["tests", "packages", "apps/simulator/tests"]
 markers = [
     "integration: needs Docker (Testcontainers)",
     "slow: long-running (benchmarks, soak)",
@@ -85,7 +87,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["prognos_common"]
+source = ["prognos_common", "prognos_sim"]
 omit = ["**/tests/**"]
 
 [tool.coverage.report]
