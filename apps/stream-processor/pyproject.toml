@@ -5,6 +5,7 @@ description = "Prognos stream processing: OEM normalisation, validation, dedupli
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "prognos-common",
+    "prognos-simulator",  # evaluate.py back-test harness only
     "orjson>=3.10",
     "confluent-kafka>=2.6",
     "prometheus-client>=0.21",
@@ -13,9 +14,11 @@ dependencies = [
 
 [project.scripts]
 prognos-normalizer = "prognos_stream.main:main"
+prognos-detector = "prognos_stream.detector_main:main"
 
 [tool.uv.sources]
 prognos-common = { workspace = true }
+prognos-simulator = { workspace = true }
 
 [build-system]
 requires = ["hatchling>=1.25"]

@@ -62,7 +62,7 @@ def test_normalizer_end_to_end(kafka_bootstrap: str, fresh_topics) -> None:  # t
 
     service_cfg = ServiceConfig(
         bootstrap_servers=kafka_bootstrap, group_id="normalizer-it", batch_size=500,
-        exit_when_idle_s=5, lag_interval_s=1, raw_topic=topics["telemetry.raw"],
+        exit_when_idle_s=5, lag_interval_s=1, input_topic=topics["telemetry.raw"],
         canonical_topic=topics["telemetry.canonical"], dlq_topic=topics["telemetry.dlq"],
     )  # fmt: skip
     normalizer = Normalizer(VehicleRegistry.from_roster(roster))
