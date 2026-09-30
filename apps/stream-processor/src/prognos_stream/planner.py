@@ -145,6 +145,7 @@ class Candidate:
     distance_km: float | None = None
     late: bool = False
     reasons: list[str] = field(default_factory=list)
+    model_version: str = ""  # which risk source ranked it (model or calibrated rules)
 
     @property
     def deadline_day(self) -> int | None:
@@ -153,12 +154,26 @@ class Candidate:
         return max(0, math.floor(self.hours_remaining / 24.0))
 
 
+@dataclass(frozen=True)
+class ModelRisk:
+    probability: float  # P(this vehicle breaks down within 7 days), from the live scorer
+    model_version: str
+
+
 def build_candidates(
     alerts: list[OpenAlert],
     calibration: Calibration,
     costs: dict[tuple[str, str], Costs],
+    model_risk: dict[str, ModelRisk] | None = None,
 ) -> list[Candidate]:
-    """One candidate per (vehicle, failure mode): the alert with the highest calibrated risk."""
+    """One candidate per (vehicle, failure mode): the alert with the highest calibrated risk.
+
+    When the live model has a fresh score for the vehicle, that probability is used
+    instead (it beat the calibrated rules on held-out data, ADR-007); the alert still
+    names the likely failure mode, and the rule still sets the deadline.
+    """
+    model_risk = model_risk or {}
+    rules_version = f"rules-calibrated-{calibration.version}"
     best: dict[tuple[str, str], tuple[float, OpenAlert]] = {}
     deadline: dict[tuple[str, str], float] = {}
     for a in alerts:
@@ -178,7 +193,14 @@ def build_candidates(
     out: list[Candidate] = []
     for key, (p, a) in best.items():
         c = costs.get((a.tenant_id, a.failure_mode))
-        reasons = [f"{a.rule_code} ({a.severity}) -> P(fail in 7 d) = {p:.2f}"]
+        scored = model_risk.get(a.vehicle_id)
+        if scored is not None:
+            p, version = scored.probability, scored.model_version
+            reasons = [f"{version}: P(breakdown in 7 d) = {p:.2f}; "
+                       f"alert {a.rule_code} ({a.severity}) names the failure mode"]  # fmt: skip
+        else:
+            version = rules_version
+            reasons = [f"{a.rule_code} ({a.severity}) -> P(fail in 7 d) = {p:.2f}"]
         if c is not None and c.sourced:
             avoided = round(p * c.avoided(), 2)
             value, basis, currency = avoided, "cost", c.currency
@@ -193,6 +215,7 @@ def build_candidates(
                 source_alert_id=a.alert_id, rule_code=a.rule_code, severity=a.severity,
                 p_failure=p, hours_remaining=deadline.get(key), value=value, value_basis=basis,
                 expected_cost_avoided=avoided, currency=currency, reasons=reasons,
+                model_version=version,
             )
         )  # fmt: skip
     return out

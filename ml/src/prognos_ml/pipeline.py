@@ -29,11 +29,12 @@ import pyarrow.parquet as pq
 from prognos_ml import model as m
 from prognos_ml.dataset import RunConfig, generate
 from prognos_ml.features import FEATURES as FEATURE_NAMES
-from prognos_ml.features import FeatureConfig, build
+from prognos_ml.features import FEATURES_VERSION, FeatureConfig, build
 
 
 def features_for(run_dir: Path, cfg: FeatureConfig) -> pa.Table:
-    key = hashlib.sha256(json.dumps(cfg.__dict__, sort_keys=True).encode()).hexdigest()[:10]
+    spec = {**cfg.__dict__, "features_version": FEATURES_VERSION}
+    key = hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()[:10]
     cache = run_dir / f"features-{key}.parquet"
     if cache.exists() and cache.stat().st_mtime >= (run_dir / "run.json").stat().st_mtime:
         return pq.read_table(cache)
@@ -135,6 +136,7 @@ def run(
                     "train_runs": train_runs,
                     "label": result["label"],
                     "feature_config": cfg.__dict__,
+                    "features_version": FEATURES_VERSION,
                 },
             ).items()
             if k in {"name", "version", "model_sha256", "model_bytes", "best_iteration"}
@@ -153,6 +155,8 @@ def main(argv: list[str] | None = None) -> int:
     gen.add_argument("--fault-rate", type=float, default=0.2)
     gen.add_argument("--time-scale", type=float, default=48.0)
     gen.add_argument("--seed", type=int, required=True)
+    gen.add_argument("--report-interval", type=float, default=1.0,
+                     help="seconds between reports per vehicle (1 = 1 Hz)")  # fmt: skip
     ev = sub.add_parser("run", help="train on some runs, evaluate on others")
     ev.add_argument("--data", type=Path, default=Path("ml/data/m8"))
     ev.add_argument("--train", required=True, help="comma-separated run names")
@@ -165,7 +169,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "generate":
         info = generate(
             RunConfig(
-                args.name, args.vehicles, args.hours, args.fault_rate, args.time_scale, args.seed
+                args.name,
+                args.vehicles,
+                args.hours,
+                args.fault_rate,
+                args.time_scale,
+                args.seed,
+                args.report_interval,
             ),
             args.data / args.name,
         )

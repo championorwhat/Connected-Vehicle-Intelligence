@@ -1,4 +1,26 @@
-# Model card: failure-7d-v1
+# Model card: failure-7d (v1 → v3)
+
+> **Current version: failure-7d-v3 (M9)**, served by `prognos-scorer` in **shadow mode**
+> ([ADR-008](../architecture/adr/ADR-008.md)).
+>
+> | | v1 (M8) | v3 (M9) |
+> |---|---|---|
+> | DTC inputs | counts | per-event rates (reporting-rate independent) |
+> | Event count as input | yes | no (used only by the data gate) |
+> | Tyre ratio | all engines, implicit NULL handling | only when all four pressures are present |
+> | Held-out PR-AUC (rules: 0.508) | 0.742 | 0.739 |
+> | Held-out run, vehicles reporting every 10 s (rules: 0.478) | not tested | **0.679**, gain +0.20 [0.15, 0.25] |
+>
+> - **Parity.** Serving computes features in ClickHouse and DuckDB with the training SQL.
+>   A parity test proves the buckets, features and predictions are equal.
+> - **Data gate.** A vehicle is scored only with at least 30 events covering at least
+>   45 minutes of the 60-minute window. Without the gate, 6 minutes of live data put 8%
+>   of the fleet above 0.5 ([evidence](../../evidence/benchmarks/m9-scorer-live.json)).
+> - **Live distribution over full windows:** NOT YET MEASURED.
+> - v3 evidence: [m9-model-v3-vs-baseline.json](../../evidence/benchmarks/m9-model-v3-vs-baseline.json).
+>   The rest of this card describes v1, whose data, method and limits v3 shares.
+
+## failure-7d-v1 (M8)
 
 **What it predicts:** the probability that a vehicle has a breakdown (any failure mode) within
 the next **7 days** (168 h real time), from its recent telemetry.

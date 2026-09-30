@@ -23,8 +23,8 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests
-      - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests --cov --cov-report=xml
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
+      - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-unit
@@ -66,7 +66,7 @@ jobs:
         run: |
           docker compose logs migrate-postgres migrate-clickhouse --no-color
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
-            "SELECT count(*) FROM schema_migrations" | grep -qx 2
+            "SELECT count(*) FROM schema_migrations" | grep -qx 3
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -82,7 +82,7 @@ jobs:
           EVENTS_PER_SECOND: "10000"
         run: |
           docker compose --profile pipeline build
-          docker compose --profile pipeline up -d normalizer detector sink radar
+          docker compose --profile pipeline up -d normalizer detector sink radar api
           docker compose --profile pipeline run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
             simulator --summary /tmp/sim.json
           group_lag() { docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
@@ -116,6 +116,30 @@ jobs:
           money=$(psql "SELECT count(*) FROM work_orders WHERE expected_cost_avoided IS NOT NULL")
           echo "proposed=$first audit=$audit after_rerun=$second with_money=$money"
           [ "$first" -gt 0 ] && [ "$audit" = "$first" ] && [ "$second" = "$first" ] && [ "$money" = "0" ]
+      - name: live scorer runs a full cycle and the data gate holds back thin windows
+        run: |
+          docker compose --profile pipeline run --rm -e SCORER_LAG_SECONDS=0 scorer --once \
+            --output /dev/stdout | tee score.json
+          # 20 s of traffic is far below the 45-minute coverage gate: nothing may be scored.
+          jq -e '.vehicles_scored == 0 and .vehicles_insufficient_data > 90000' score.json
+      - name: API end to end (login, RBAC, tenant data, at-risk, OpenAPI)
+        run: |
+          set -a; . ./.env; set +a
+          tenant=$(docker compose exec -T postgres psql -U prognos -d prognos -tAc \
+            "SELECT slug FROM tenants ORDER BY slug LIMIT 1")
+          echo "ci-password-not-secret" | docker compose --profile pipeline run --rm -T api \
+            create-user --email manager@ci.test --tenant "$tenant" --role fleet_manager
+          for i in $(seq 1 30); do curl -fsS localhost:8000/readyz && break; sleep 2; done
+          token=$(curl -fsS -X POST localhost:8000/v1/auth/token \
+            -d username=manager@ci.test -d password=ci-password-not-secret | jq -r .access_token)
+          auth="Authorization: Bearer $token"
+          curl -fsS -H "$auth" localhost:8000/v1/auth/me | jq -e '.roles == ["fleet_manager"]'
+          curl -fsS -H "$auth" "localhost:8000/v1/vehicles?limit=5" | jq -e '.items | length == 5'
+          curl -fsS -H "$auth" localhost:8000/v1/vehicles/at-risk \
+            | jq -e '.source == "rules:health_score"'
+          curl -fsS -H "$auth" "localhost:8000/v1/work-orders?limit=5" | jq -e '.items | type == "array"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/v1/vehicles)" = 401
+          curl -fsS localhost:8000/openapi.json | jq -e '.paths["/v1/alerts"]'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

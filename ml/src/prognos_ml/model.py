@@ -29,7 +29,12 @@ from numpy.typing import NDArray
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
 from prognos_common.catalog import VEHICLE_MODELS, Powertrain
-from prognos_ml.features import CATEGORICAL_FEATURES, FEATURES, NUMERIC_FEATURES
+from prognos_ml.features import (
+    CATEGORICAL_FEATURES,
+    FEATURES,
+    FEATURES_VERSION,
+    NUMERIC_FEATURES,
+)
 
 CATEGORIES: dict[str, list[str]] = {
     "model_code": [m.model_code for m in VEHICLE_MODELS],
@@ -274,4 +279,6 @@ def load(directory: Path) -> TrainedModel:
         raise ValueError(f"model file in {directory} does not match its metadata checksum")
     if meta["features"] != FEATURES:
         raise ValueError("model was trained on a different feature list")
+    if meta.get("features_version") != FEATURES_VERSION:
+        raise ValueError("model was trained on a different feature definition version")
     return TrainedModel(booster, meta["best_iteration"], meta["no_alert_rate"], 0, 0.0)
