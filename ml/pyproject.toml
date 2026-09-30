@@ -12,10 +12,16 @@ dependencies = [
     "lightgbm>=4.5",
     "numpy>=2.0",
     "scikit-learn>=1.6",
+    "clickhouse-connect>=0.8",
+    "psycopg[binary]>=3.2",
+    "redis>=5.2",
+    "orjson>=3.10",
+    "prometheus-client>=0.21",
 ]
 
 [project.scripts]
 prognos-ml = "prognos_ml.pipeline:main"
+prognos-scorer = "prognos_ml.scorer:main"
 
 [tool.uv.sources]
 prognos-common = { workspace = true }

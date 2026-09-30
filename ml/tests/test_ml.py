@@ -13,7 +13,7 @@ import pytest
 
 from prognos_ml import model as m
 from prognos_ml.dataset import RunConfig, generate
-from prognos_ml.features import FEATURES, FeatureConfig, build
+from prognos_ml.features import FEATURES, FEATURES_VERSION, FeatureConfig, build
 from prognos_ml.pipeline import run
 
 CFG = FeatureConfig(snapshot_s=60, long_window_s=600, short_window_s=120)
@@ -96,7 +96,9 @@ def test_train_explain_save_load(tmp_path: Path, table: pa.Table) -> None:
     assert ((p >= 0) & (p <= 1)).all()
     names = {name for row in m.explain(trained, x[:3]) for name, _ in row}
     assert names <= set(FEATURES)
-    meta = m.save(trained, tmp_path / "v-test", {"name": "failure-7d"})
+    meta = m.save(
+        trained, tmp_path / "v-test", {"name": "failure-7d", "features_version": FEATURES_VERSION}
+    )
     loaded = m.load(tmp_path / "v-test")
     assert np.allclose(loaded.predict(x), p)
     assert meta["model_sha256"]

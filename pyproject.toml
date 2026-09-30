@@ -28,6 +28,8 @@ dev = [
     "prognos-simulator",
     "prognos-stream",
     "prognos-ml",
+    "prognos-api",
+    "httpx>=0.28",
 ]
 
 [tool.uv]
@@ -38,9 +40,10 @@ prognos-common = { workspace = true }
 prognos-simulator = { workspace = true }
 prognos-stream = { workspace = true }
 prognos-ml = { workspace = true }
+prognos-api = { workspace = true }
 
 [tool.uv.workspace]
-members = ["packages/common", "apps/simulator", "apps/stream-processor", "ml"]
+members = ["packages/common", "apps/simulator", "apps/stream-processor", "ml", "apps/api"]
 
 # --- Ruff (lint + format) ----------------------------------------------------
 [tool.ruff]
@@ -67,11 +70,13 @@ ignore = ["S101"]  # assert is fine; tests rely on it
 "**/tests/**" = ["S", "PT011"]
 # SQL there is assembled only from constants, generated identifiers and our own file paths.
 "ml/src/prognos_ml/features.py" = ["S608"]
+# Queries join constant column lists and fixed filter names; every value is a bound parameter.
+"apps/api/src/prognos_api/routers/*.py" = ["S608"]
 # Reference-data tables are kept one row per line for reviewability.
 "packages/common/src/prognos_common/catalog.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["prognos_common", "prognos_ml", "prognos_sim", "prognos_stream", "tests"]
+known-first-party = ["prognos_api", "prognos_common", "prognos_ml", "prognos_sim", "prognos_stream", "tests"]
 
 # --- mypy --------------------------------------------------------------------
 [tool.mypy]
