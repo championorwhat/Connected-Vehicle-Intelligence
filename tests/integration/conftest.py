@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import socket
 import time
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
 import clickhouse_connect
 import psycopg
 import pytest
+from confluent_kafka.admin import AdminClient, NewTopic  # type: ignore[attr-defined]
 from testcontainers.core.container import DockerContainer
 from testcontainers.postgres import PostgresContainer
 
@@ -125,6 +128,63 @@ def ch(ch_container: DockerContainer):  # type: ignore[no-untyped-def]
         password=CH_PASSWORD,
         database="telemetry",
     )
+
+
+def _free_port() -> int:
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+
+
+@pytest.fixture(scope="session")
+def kafka_bootstrap() -> Iterator[str]:
+    port = _free_port()
+    container = (
+        DockerContainer("apache/kafka:4.1.0")
+        .with_bind_ports(9092, port)
+        .with_env("KAFKA_NODE_ID", "1")
+        .with_env("KAFKA_PROCESS_ROLES", "broker,controller")
+        .with_env("KAFKA_CONTROLLER_QUORUM_VOTERS", "1@localhost:9093")
+        .with_env("KAFKA_LISTENERS", "PLAINTEXT://:9092,CONTROLLER://:9093")
+        .with_env("KAFKA_ADVERTISED_LISTENERS", f"PLAINTEXT://localhost:{port}")
+        .with_env(
+            "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+        )
+        .with_env("KAFKA_CONTROLLER_LISTENER_NAMES", "CONTROLLER")
+        .with_env("KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "1")
+        .with_env("KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR", "1")
+        .with_env("KAFKA_TRANSACTION_STATE_LOG_MIN_ISR", "1")
+    )
+    with container:
+        bootstrap = f"localhost:{port}"
+        admin = AdminClient({"bootstrap.servers": bootstrap})
+        for _ in range(60):
+            try:
+                admin.list_topics(timeout=2)
+                break
+            except Exception:  # broker still starting
+                time.sleep(1)
+        topics = ["telemetry.raw", "telemetry.canonical", "telemetry.dlq", "sim.truth"]
+        futures = admin.create_topics([NewTopic(t, 3, 1) for t in topics])
+        for future in futures.values():
+            future.result(timeout=30)
+        yield bootstrap
+
+
+@pytest.fixture
+def fresh_topics(kafka_bootstrap: str):  # type: ignore[no-untyped-def]
+    """Factory: create uniquely named topics so Kafka tests never read each other's data."""
+
+    def _make(*names: str, partitions: int = 3) -> dict[str, str]:
+        suffix = uuid.uuid4().hex[:8]
+        mapping = {name: f"{name}.{suffix}" for name in names}
+        admin = AdminClient({"bootstrap.servers": kafka_bootstrap})
+        futures = admin.create_topics([NewTopic(t, partitions, 1) for t in mapping.values()])
+        for future in futures.values():
+            future.result(timeout=30)
+        return mapping
+
+    return _make
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

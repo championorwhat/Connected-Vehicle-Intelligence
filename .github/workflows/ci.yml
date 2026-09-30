@@ -23,8 +23,8 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src
-      - run: uv run pytest tests/unit packages apps/simulator/tests --cov --cov-report=xml
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src
+      - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-unit
@@ -76,14 +76,26 @@ jobs:
           ./scripts/seed.sh --vehicles 100000 --evidence seed-100k.json
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
             "SELECT count(*) FROM vehicles" | grep -qx 100000
-      - name: simulator image builds and streams into Kafka
+      - name: pipeline (simulator -> normalizer) on the 100K seed
+        env:
+          VEHICLE_COUNT: "100000"      # must match the seed above
+          EVENTS_PER_SECOND: "10000"
         run: |
-          docker compose --profile sim build simulator
-          docker compose --profile sim run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
+          docker compose --profile pipeline build
+          docker compose --profile pipeline up -d normalizer
+          docker compose --profile pipeline run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
             simulator --summary /tmp/sim.json
-          docker compose exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
-            --bootstrap-server kafka:19092 --topic telemetry.raw \
-            | awk -F: '{s+=$3} END {print "telemetry.raw messages:", s; exit !(s > 150000)}'
+          for i in $(seq 1 30); do
+            lag=$(docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+              --bootstrap-server kafka:19092 --describe --group normalizer 2>/dev/null \
+              | awk 'NR>1 && $6 ~ /^[0-9]+$/ {s+=$6} END {print s+0}')
+            echo "normalizer lag: $lag"; [ "$lag" = "0" ] && break; sleep 2
+          done
+          count() { docker compose exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
+            --bootstrap-server kafka:19092 --topic "$1" | awk -F: '{s+=$3} END {print s+0}'; }
+          raw=$(count telemetry.raw); canonical=$(count telemetry.canonical); dlq=$(count telemetry.dlq)
+          echo "raw=$raw canonical=$canonical dlq=$dlq dropped_duplicates=$((raw-canonical-dlq))"
+          [ "$lag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ]
       - uses: actions/upload-artifact@v4
         with:
           name: seed-100k-ci

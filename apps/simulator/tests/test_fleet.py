@@ -153,3 +153,10 @@ def test_dtcs_appear_as_fault_progresses(vehicles) -> None:  # type: ignore[no-u
         sig = fleet.signals(idx, START + 980)
         late_codes.update(fleet.dtcs(idx, sig)[0])
     assert "P0A80" in late_codes
+
+
+def test_sequence_numbers_keep_rising_across_restarts(vehicles) -> None:  # type: ignore[no-untyped-def]
+    first = make_fleet(vehicles)
+    run(first, 60)  # 60 events per vehicle at most
+    restarted = Fleet.create(vehicles, seed=1, start_ts=START + 100, fault_rate=0.0)
+    assert restarted.seq.min() > first.seq.max()
