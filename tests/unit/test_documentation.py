@@ -82,3 +82,17 @@ def test_solution_document_has_the_17_template_sections() -> None:
     text = (ROOT / "docs/solution-document/solution-document.md").read_text(encoding="utf-8")
     numbered = re.findall(r"^## (\d+)\. ", text, re.M)
     assert numbered == [str(n) for n in range(1, 18)]
+
+
+def test_audit_summary_matches_its_rows() -> None:
+    text = (ROOT / "docs/audit/final-audit.md").read_text(encoding="utf-8")
+    counts = {"Met": 0, "Partial": 0, "Not met": 0}
+    for row in re.findall(r"^\| [A-Z]\d+ \|.*\|$", text, re.M):
+        status = row.rstrip("|").split("|")[-1]
+        counts[
+            "Not met" if "Not met" in status else "Partial" if "Partial" in status else "Met"
+        ] += 1
+    total = sum(counts.values())
+    met, partial, not_met = counts["Met"], counts["Partial"], counts["Not met"]
+    expected = f"| **Total ({total})** | **{met}** | **{partial}** | **{not_met}** |"
+    assert expected in text, f"summary should read {expected}"

@@ -80,6 +80,9 @@ pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEH
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures and a firmware defect for the radar
 	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
 
+pdf: ## Export the Solution Document to PDF (needs Node for mermaid-cli, and Chrome/Chromium)
+	uv run --with markdown-it-py python scripts/export_solution_pdf.py
+
 LAG_GROUPS ?= normalizer detector sink radar
 lag: ## Backlog per consumer group, from the broker (works while a consumer is down); LAG_GROUPS=detector
 	@for g in $(LAG_GROUPS); do \

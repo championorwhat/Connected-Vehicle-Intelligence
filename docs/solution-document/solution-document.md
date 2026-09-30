@@ -54,7 +54,7 @@ and why, and proposes a workshop booking before the predicted failure.
 
 | What | Result | Target |
 |---|---|---|
-| 100K-vehicle fleet (an event every 10 s) | every pipeline stage keeps up ([evidence](../../evidence/load-tests/m14-100k.json)) | 100K vehicles |
+| 100K vehicles, one event every 10 s each (10K events/s) | every pipeline stage keeps up ([evidence](../../evidence/load-tests/m14-100k.json)) | 100K vehicles at ~1 event/s each |
 | Critical alert latency, 100K vehicles | p95 **1.78 s** ([evidence](../../evidence/load-tests/m14-100k.json)) | < 5 s |
 | Event → dashboard, 100K vehicles | p95 **1.88 s** ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)) | < 2 s |
 | API with 40 users during the 100K run | p95 63–82 ms, **0 errors** ([evidence](../../evidence/load-tests/m14-api-40-users-during-100k.json)) | p95 < 200 ms |
@@ -753,8 +753,8 @@ insert all bookings in one transaction; ON CONFLICT DO NOTHING; audit each
 
 | NFR | Target (case study) | Achieved | How measured |
 |---|---|---|---|
-| **Ingest throughput** | 100K+ events/s | **Not met end to end.** Per stage: the simulator into Kafka held **100K events/s** ([evidence](../../evidence/benchmarks/m3-simulator-kafka-live-100k.json)); the normalizer does 25.8K msg/s per process, **62.9K with 3** ([benchmarks](../performance/benchmarks.md)). The whole pipeline on 4 shared vCPUs sustains **about 15K events/s** and saturates at 20K ([evidence](../../evidence/load-tests/m14-capacity-20000.json)). The brief's 100K vehicles reporting every 10 s (10K events/s) is sustained. | `scripts/load_test.py` sampling Prometheus |
-| **End-to-end latency** | < 2 s dashboard; < 5 s critical alert | **Met at 100K vehicles:** dashboard p95 1.88 s (96.7 % under 2 s); critical alert p95 1.78 s, p99 2.84 s | WebSocket client ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)); detector histogram ([evidence](../../evidence/load-tests/m14-100k.json)) |
+| **Ingest throughput** | 100K+ events/s | **Not met end to end.** Per stage: the simulator into Kafka held **100K events/s** ([evidence](../../evidence/benchmarks/m3-simulator-kafka-live-100k.json)); the normalizer does 25.8K msg/s per process, **62.9K with 3** ([benchmarks](../performance/benchmarks.md)). The whole pipeline on 4 shared vCPUs sustains **about 15K events/s** and saturates at 20K ([evidence](../../evidence/load-tests/m14-capacity-20000.json)). 100K vehicles reporting every 10 s (10K events/s) is sustained; the brief's rate of about one event per vehicle per second is not. | `scripts/load_test.py` sampling Prometheus |
+| **End-to-end latency** | < 2 s dashboard; < 5 s critical alert | **Met at 100K vehicles, 10K events/s:** dashboard p95 1.88 s (96.7 % under 2 s); critical alert p95 1.78 s, p99 2.84 s | WebSocket client ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)); detector histogram ([evidence](../../evidence/load-tests/m14-100k.json)) |
 | **API latency** | p95 < 200 ms; p99 < 500 ms | **Met:** p95 63–82 ms, p99 127–221 ms per route, 40 users during the 100K run, 0 errors | `scripts/api_load.py`, client-side ([evidence](../../evidence/load-tests/m14-api-40-users-during-100k.json)) |
 | **Resilience** | Recovers after broker / pod failure | **Met in drills:** detector stopped 13.5 min, then resumed from its committed offsets and drained a 7.4M-message backlog in 7 min 40 s (loss not separately reconciled in this drill; [evidence](../../evidence/chaos/m11-detector-outage-drill.json)); PostgreSQL stopped 90 s mid-ingestion, 0 loss over 3.77M events ([evidence](../../evidence/chaos/m13-postgres-outage-reconciliation.json)); one of 3 Kafka brokers killed: 1,000 of 1,000 `acks=all` writes succeeded, and replication healed after restart ([evidence](../../evidence/chaos/m1-kafka-ha-smoke.md)) | Drills with reconciliation |
 | **Availability** | 99.9 %, no single point of failure | **Not met.** Kafka can run 3 brokers (overlay), but PostgreSQL, ClickHouse and Redis are single instances locally. Availability over time is **NOT YET MEASURED**. The cloud design (M16) uses managed, replicated stores. | – |
@@ -860,7 +860,7 @@ apply. The ML model is guarded instead:
 | Acceptance (BDD) | pytest-bdd (Gherkin) | 5 scenarios | 5 / 5 pass: alert → scheduled repair, idempotent planning, tenant isolation, role limits, location masking | Yes |
 | Web | Vitest; Playwright against the nginx container | 7 + 4 | all pass; includes security headers | Yes |
 | Monitoring rules | promtool | 11 rule tests | each alert fires on a synthetic failure and stays quiet on normal traffic | Yes |
-| Performance / load / soak | `load_test.py`, `api_load.py`, `ws_latency.py` | 10K / 50K / 100K, 15K and 20K events/s, burst, 30-min soak, 40-user API run, 2 freshness runs | 100K vehicles sustained; alerts p95 1.78 s; API p95 < 82 ms; dashboard p95 1.88 s | No (recorded evidence) |
+| Performance / load / soak | `load_test.py`, `api_load.py`, `ws_latency.py` | 10K / 50K / 100K, 15K and 20K events/s, burst, 30-min soak, 40-user API run, 2 freshness runs | 100K vehicles at 10K events/s sustained; alerts p95 1.78 s; API p95 < 82 ms; dashboard p95 1.88 s | No (recorded evidence) |
 | Security (SAST, dependency, image, secrets) | Semgrep, Trivy (fs + image), gitleaks | 4 scanners | 0 HIGH/CRITICAL dependency findings; 0 fixable CRITICAL in images; 0 secrets. **No DAST** (not run) | Yes |
 | Compliance & chaos | pytest (RLS, erasure, audit); manual drills | 3 drills (Kafka broker, detector, PostgreSQL) | Kafka: 1,000/1,000 writes with a broker down; PostgreSQL: 0 loss over 3.77M events by reconciliation; detector: recovered from committed offsets | Tests yes; drills recorded |
 
@@ -1058,7 +1058,7 @@ same rows ([model card](../ml/model-card.md),
 | No secrets committed | Done: gitleaks on every push, 0 findings | [evidence](../../evidence/security/gitleaks.txt) |
 | `.env.example` provided | Done | [.env.example](../../.env.example) |
 | Commits from all members | Solo project: all commits by the author, assisted by Claude Code (§16) | git history |
-| Final tag `v1.0-submission` | Pending (M19) | – |
+| Final tag `v1.0-submission` | Done at submission | git tags |
 
 ## 15. Conclusion
 
@@ -1134,6 +1134,8 @@ independent academic project with no affiliation to Motorq.
 | Security and privacy | [threat-model.md](../security/threat-model.md), [privacy.md](../security/privacy.md) |
 | Testing | [strategy.md](../testing/strategy.md) |
 | Feature traceability | [feature-traceability.csv](../feature-traceability.csv) |
+| Final audit: every requirement → code → test → evidence → demo | [final-audit.md](../audit/final-audit.md) |
+| Demo script | [demo-script.md](../demo/demo-script.md) |
 | Open-source components | [open-source.md](../open-source.md) |
 
 **Evidence index.**
