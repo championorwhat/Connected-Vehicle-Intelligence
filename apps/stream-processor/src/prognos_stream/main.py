@@ -17,6 +17,8 @@ import logging
 import os
 import platform
 import sys
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 from prometheus_client import start_http_server
@@ -47,6 +49,29 @@ def build_registry() -> VehicleRegistry:
     return VehicleRegistry.from_postgres(dsn)
 
 
+def wait_for_registry(
+    build: Callable[[], VehicleRegistry], *, timeout_s: float, poll_s: float = 5.0
+) -> VehicleRegistry:
+    """Do not start consuming with an empty registry.
+
+    Consuming before the database is seeded would quarantine every event as
+    `unknown_vehicle`. Instead, wait (the consumer group simply lags and catches up
+    once vehicles exist) and fail loudly if nothing appears within the timeout.
+    """
+    deadline = time.monotonic() + timeout_s
+    while True:
+        try:
+            registry = build()
+            if len(registry):
+                return registry
+            log.warning("vehicle registry is empty; waiting for the database to be seeded")
+        except Exception as exc:  # database not reachable yet
+            log.warning("vehicle registry unavailable (%s); retrying", exc)
+        if time.monotonic() >= deadline:
+            raise RuntimeError("vehicle registry still empty/unavailable; refusing to start")
+        time.sleep(poll_s)
+
+
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
@@ -56,9 +81,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     cfg = ServiceConfig.from_env()
-    registry = build_registry()
-    if not len(registry):
-        log.warning("vehicle registry is empty: every event will go to the DLQ (seed the DB)")
+    registry = wait_for_registry(
+        build_registry, timeout_s=float(os.getenv("REGISTRY_WAIT_SECONDS", "600"))
+    )
     port = int(os.getenv("METRICS_PORT", "9102"))
     if port:
         start_http_server(port)

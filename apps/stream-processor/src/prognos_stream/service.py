@@ -86,6 +86,10 @@ class NormalizerService(BatchService):
         return ()
 
     def after_batch(self, consumed: int, elapsed: float) -> None:
+        # Refresh on a timer even under load (on_idle never runs while traffic flows),
+        # so newly onboarded vehicles stop being rejected within registry_refresh_s.
+        self.normalizer.registry.refresh_if_older_than(self.cfg.registry_refresh_s)
+        REGISTRY_SIZE.set(len(self.normalizer.registry))
         counts = self.normalizer.counts
         for key, value in counts.items():
             delta = value - self._before.get(key, 0)

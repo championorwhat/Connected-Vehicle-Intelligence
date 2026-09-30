@@ -116,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
     opened = opened_fingerprints(args.bootstrap)
 
     checks: dict[str, Any] = {
+        # Guard against a vacuous pass: every equality below holds trivially at zero.
+        "pipeline_carried_events": canonical > 0 and ch_unique > 0,
         "consumers_caught_up": all(v == 0 for v in lags.values()),
         "kafka_balances": raw - canonical - dlq >= 0,
         "clickhouse_has_every_canonical_event": ch_unique == canonical,

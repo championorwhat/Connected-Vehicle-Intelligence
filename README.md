@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M5 (real-time detection and alerts) complete. See [milestones](#milestones).
+**Status:** M6 (persistence and no-data-loss reconciliation) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -163,7 +163,19 @@ Measured:
 
 Details and caveats: [detection-baseline.md](docs/performance/detection-baseline.md).
 
-## 10. Repository structure
+## 10. Persistence (M6)
+
+- **ClickHouse** consumes `telemetry.canonical` and `alerts` directly (Kafka engine and
+  materialised views); unparseable messages go to `ingestion_errors`.
+- **`prognos-sink`** writes alerts idempotently to PostgreSQL and publishes live state to Redis:
+  per-vehicle JSON, a per-tenant health ranking, a geo index, and alert pub/sub for the dashboard.
+  It retries database outages with backoff and never commits offsets before the write.
+- **`make reconcile`** proves no data loss end to end. Latest run: 1,807,966 raw → 1,772,080
+  canonical = 1,772,080 unique rows in ClickHouse with 0 errors; 565 opened alerts = 565 rows in
+  PostgreSQL ([evidence](evidence/benchmarks/m6-reconciliation.json)).
+- Consistency per data class (CP vs AP): [ADR-004](docs/architecture/adr/ADR-004.md).
+
+## 11. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -187,7 +199,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M3 | Vehicle simulator + standalone benchmark | ✅ Done ([results](docs/algorithms/algorithms.md#measured-results-simulator)) |
 | M4 | Kafka ingestion: normalise 3 OEM formats, validate, dedup, DLQ | ✅ Done ([benchmarks](docs/performance/benchmarks.md), [ADR-005](docs/architecture/adr/ADR-005.md)) |
 | M5 | Real-time detection: critical rules, trend early-warnings, alerts | ✅ Done ([detection baseline](docs/performance/detection-baseline.md)) |
-| M6 | Persistence: ClickHouse, PostgreSQL alerts, Redis live state | ⏭ Next |
+| M6 | Persistence: ClickHouse Kafka ingestion, PostgreSQL alerts, Redis live state, reconciliation | ✅ Done ([ADR-002..004](docs/architecture/adr/)) |
+| M7 | Core intelligence: cost-aware prioritisation, work orders, emerging-fault radar | ⏭ Next |
 | M4–M19 | See the M0 document | Planned |
 
 ## Declarations
