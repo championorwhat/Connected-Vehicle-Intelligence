@@ -91,11 +91,13 @@ signals-tail: ## Follow emerging-fault signals from the radar
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
 	  --topic fleet.signals --from-beginning | cut -c1-400
 
-users: ## Create demo users for every role in the first tenant (password: DEMO_USER_PASSWORD)
+# The largest tenant is the roster's first, which holds the vehicles `SIM_SCENARIO=demo`
+# makes fail, so the demo users can see them (found in the M18 rehearsal).
+users: ## Create demo users for every role in the largest tenant (password: DEMO_USER_PASSWORD)
 	set -a; . ./.env; set +a; \
 	test -n "$$DEMO_USER_PASSWORD" || { echo "set DEMO_USER_PASSWORD in .env (see .env.example)"; exit 1; }; \
 	tenant=$$($(COMPOSE) exec -T postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \
-	  "SELECT slug FROM tenants ORDER BY slug LIMIT 1"); \
+	  "SELECT t.slug FROM tenants t JOIN vehicles v USING (tenant_id) GROUP BY t.slug ORDER BY count(*) DESC, t.slug LIMIT 1"); \
 	for role in fleet_manager technician analyst dpo; do \
 	  echo "$$DEMO_USER_PASSWORD" | $(COMPOSE) --profile pipeline run --rm -T api create-user \
 	    --email "$$role@demo.prognos.local" --tenant "$$tenant" --role $$role > /dev/null \
