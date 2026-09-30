@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 from collections.abc import AsyncIterator, Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 import redis.asyncio as aioredis
@@ -28,6 +29,9 @@ class AppState:
     tokens: TokenService
     policy: dict[str, frozenset[str]]  # role -> permissions, loaded from role_permissions
     limiter: RateLimiter
+    # One password hash at a time (see routers/auth.check_password); created with the
+    # app state inside the running event loop.
+    hashing: asyncio.Semaphore = field(default_factory=lambda: asyncio.Semaphore(1))
 
 
 def state(request: HTTPConnection) -> AppState:

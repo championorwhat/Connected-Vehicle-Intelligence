@@ -9,7 +9,7 @@ Each rule and alert is unit-tested with `promtool test rules`
 |---|---|---|---|---|
 | **Critical alerts are fast** (the brief's requirement) | share of opened alerts raised within 5 s of the device timestamp (`prognos_detector_alert_latency_seconds`) | 95 % | 5 % of alerts may be slower | `AlertLatencySLOBurn`: page at more than 10 % slow over 1 h and 5 min |
 | **The API is available** | share of API requests without a 5xx (`prognos_api_requests_total`) | 99.5 % over 30 days | 0.5 % (about 3.6 h a month) | `ApiErrorBudgetFastBurn`: page at a 14.4× burn over 1 h and 5 min. `ApiErrorBudgetSlowBurn`: ticket at 6× over 6 h and 30 min |
-| **The API is fast** | p95 of `prognos_api_request_seconds` per route | below 0.5 s | – | Dashboard only (NOT YET MEASURED under load, see M14) |
+| **The API is fast** | p95 of `prognos_api_request_seconds` per route | below 0.5 s | – | Dashboard only. M14: p95 63–82 ms per route with 40 users during the 100K load test ([load tests](../performance/load-tests.md#api-under-load)) |
 | **Data is fresh** | seconds of traffic each consumer group is behind (backlog ÷ throughput) | below 60 s | – | `PipelineFallingBehind` after 5 min; `PipelineStalled` when nothing is consumed |
 | **Data is clean** | share of raw telemetry sent to the DLQ | below 5 % | – | `DeadLetterRateHigh` after 10 min |
 
