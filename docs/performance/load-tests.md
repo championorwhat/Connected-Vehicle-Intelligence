@@ -91,6 +91,25 @@ requests at 37 requests/s, with **0 errors**
 
 The 0.5 s p95 target for the API ([SLO](../observability/slo.md)) is met on every route.
 
+### Dashboard freshness (added in M17)
+
+The brief asks for alerts on the dashboard in under 2 s.
+[`scripts/ws_latency.py`](../../scripts/ws_latency.py) subscribes one fleet manager per
+tenant to the live alert feed, exactly as the browser does, and times each opened alert
+from the vehicle's own event timestamp to its arrival on the socket. The pipeline ran at
+the same time under `load_test.py` and stayed current.
+
+| Fleet | Alerts received | Event → dashboard p50 / p95 / p99 | Under 2 s | Detected → socket p95 / max | Evidence |
+|---|---|---|---|---|---|
+| 10K vehicles, 1K events/s | 58 | 0.54 / 1.87 / 28.5 s | 96.6 % | 1.27 / 1.27 s | [json](../../evidence/load-tests/m17-dashboard-freshness-10k.json) |
+| 100K vehicles, 10K events/s | 539 | **0.82 / 1.88 / 2.68 s** | **96.7 %** | 1.03 / 1.37 s | [json](../../evidence/load-tests/m17-dashboard-freshness-100k.json) |
+
+- **95 % of alerts reach the dashboard within 2 s**, at both fleet sizes.
+- The delivery path after detection (Kafka → sink → Redis pub/sub → API → socket) never
+  took more than 1.37 s. The few slow alerts come from events the simulator delivers late
+  on purpose (2 % arrive 1–30 s late), so they are late before Prognos sees them.
+- The 10K sample is small (58 alerts); its p99 is one such late event.
+
 ## What the load tests found and fixed
 
 1. **The detector crash-looped at 100K vehicles.**

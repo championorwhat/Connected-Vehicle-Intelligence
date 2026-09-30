@@ -130,9 +130,11 @@ opening event), so a replay reproduces the same alerts (tested against real Kafk
 **Out-of-order events** update no trend state, because streaming statistics assume time order.
 Immediate threshold rules still see them.
 
-**Complexity.** O(1) time per event per signal. Per vehicle about 1 KB of state (floats plus
-a short DTC deque), so roughly 100 MB for 100K vehicles, spread across detector processes by
-partition.
+**Complexity.** O(1) time per event per signal. **Measured** state: 2.3 KB per vehicle
+(Python heap), so about 230 MB for 100K vehicles, spread across detector processes by
+partition ([benchmark](../../evidence/benchmarks/m14-detector-memory.json)). An earlier
+version kept each vehicle's whole last event (5.0 KB) and was OOM-killed at 100K vehicles
+([load tests](../performance/load-tests.md#what-the-load-tests-found-and-fixed)).
 
 ---
 
@@ -200,8 +202,9 @@ lower-value vehicle while a higher-value vehicle that could use it is still wait
 Optimality is not measured.
 
 **Measured:** tested in unit tests (ordering, capacity, late, overflow, tenant isolation,
-placeholder costs) and against real PostgreSQL (idempotent re-run, audit trail). Planner
-cycle time on the 100K seed: **NOT YET MEASURED**.
+placeholder costs) and against real PostgreSQL (idempotent re-run, audit trail). On the
+100K seed with 5,000 open alerts a cycle takes 0.90 s, and a re-run 28 ms with nothing new
+proposed ([evidence](../../evidence/benchmarks/m7-planner-100k.json)).
 
 ## A10. Emerging-fault radar (cohort DTC rates, exact Poisson tail, Bonferroni)
 

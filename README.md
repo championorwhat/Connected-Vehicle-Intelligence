@@ -5,7 +5,10 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M0–M15 complete; M16 (cloud) and M17–M19 (docs, demo, audit) remain. See [milestones](#milestones).
+**Status:** M0–M15 and M17 complete; M16 (cloud), M18 (demo) and M19 (audit) remain. See [milestones](#milestones).
+
+**Solution Document:** [docs/solution-document/solution-document.md](docs/solution-document/solution-document.md)
+(all 17 template sections, every measured claim linked to its evidence).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -59,7 +62,7 @@ Run the same checks CI runs:
 
 ```zsh
 make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
-make test-integration  # 53 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
+make test-integration  # 80 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
 ```
 
 ## 4. Environment variables
@@ -374,7 +377,6 @@ http://localhost:9090.
   - Redis and Kafka authentication and TLS (cloud, M16).
   - Token revocation before expiry.
   - Automated 2-year purge.
-  - Container image CVE scan (M13).
 
 ## 17. SQL optimisation (M15)
 
@@ -406,8 +408,9 @@ The slowest queries were **measured**, not guessed.
 [Testing strategy](docs/testing/strategy.md): every layer runs in CI on every push.
 
 - **Test counts:**
-  - 231 unit, contract and security tests.
-  - 78 integration tests against real PostgreSQL, ClickHouse, Kafka and Redis.
+  - 233 unit, contract and security tests, plus 33 documentation checks (every relative
+    link and anchor resolves; every traceability code path exists).
+  - 80 integration tests against real PostgreSQL, ClickHouse, Kafka and Redis.
   - 5 **BDD** scenarios in Gherkin
     ([feature](tests/integration/features/fleet_manager.feature)): a critical alert
     becomes a scheduled repair, planning twice books once, tenant isolation, role limits
@@ -447,6 +450,9 @@ ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured 
 
 - **Soak:** 30 minutes at 100K vehicles with every stage current, flat detector memory
   (295–305 MB) and bounded disk use.
+- **Dashboard freshness** (M17): at 100K vehicles, 95 % of alerts reach the dashboard's
+  WebSocket within 1.88 s of the vehicle event (target < 2 s)
+  ([evidence](evidence/load-tests/m17-dashboard-freshness-100k.json)).
 - **API under load:** 40 users during the 100K run; p95 of 63–82 ms on every route;
   0 errors.
 - **Burst:** the backlog peaked at 587K messages (43 s behind, inside the 60 s SLO) and
@@ -460,7 +466,24 @@ ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured 
   - Kafka filled the disk: 1 GB default segments defeat retention. Telemetry topics now
     use 128 MB segments.
 
-## 20. Repository structure
+## 20. Known issues and limits
+
+- **Throughput.** On a 4-vCPU machine the whole pipeline sustains about 15K events/s,
+  enough for 100K vehicles reporting every 10 s, but not the brief's 100K events/s end to
+  end. Individual stages reach it (the simulator into Kafka, 3 normalizers at 62.9K).
+- **Simulated data only.** Detection and model quality are measured against our own
+  simulator; real-fleet performance is NOT YET MEASURED.
+- **No money figures.** Repair and downtime costs are placeholders until sourced, so the
+  dashboard shows "not sourced".
+- **Local security.** Redis and Kafka have no authentication or TLS and there is no
+  per-device identity; ports bind to 127.0.0.1. Planned for the cloud deployment (M16).
+- **Single-node stores.** PostgreSQL, ClickHouse and Redis run one instance each, so
+  there is no high availability locally.
+- **Redis 7.4 is source-available** (RSALv2/SSPLv1), not open source
+  ([open-source list](docs/open-source.md)).
+- **Not measured on the target Mac.** All numbers come from a 4-vCPU Linux container.
+
+## 21. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -494,8 +517,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M13 | Testing: coverage, contract, BDD, chaos | ✅ Done ([strategy](docs/testing/strategy.md), [drills](docs/observability/drills.md)) |
 | M14 | Performance: 10K / 50K / 100K / burst / soak | ✅ Done ([load tests](docs/performance/load-tests.md)); on a 4-vCPU Linux container, not the Mac |
 | M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
-| M16 | Cloud deployment (Helm + Terraform) | ⏭ Next |
-| M17–M19 | Documentation, demo, final audit | Planned |
+| M16 | Cloud deployment (Helm + Terraform) | Planned (after M18/M19, by choice) |
+| M17 | Solution Document, open-source declaration (SBOM), link checks | ✅ Done ([document](docs/solution-document/solution-document.md), [open source](docs/open-source.md)) |
+| M18–M19 | Demo script and recording, final audit, `v1.0-submission` tag | ⏭ Next |
 
 ## Declarations
 
@@ -506,3 +530,5 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 - **Affiliation:** Motorq is used only as an industry reference. This is an independent academic
   project with no affiliation to Motorq.
 - **Licence:** MIT ([LICENSE](LICENSE)).
+- **Open-source components:** listed with their licences in [docs/open-source.md](docs/open-source.md),
+  generated from CycloneDX SBOMs of the built images ([evidence/sbom](evidence/sbom/)).

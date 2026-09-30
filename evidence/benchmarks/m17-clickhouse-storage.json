@@ -1,0 +1,30 @@
+{
+  "what": "ClickHouse storage per row, measured from system.parts on data written by the M14 load tests (simulated fleet, 2026-09-30 13:04-15:16 UTC)",
+  "hardware": "4-vCPU x86_64 Linux container (not the target Mac); storage per row does not depend on the CPU",
+  "clickhouse_version": "25.8.33.6",
+  "query": "select table, sum(rows), sum(bytes_on_disk), sum(data_compressed_bytes), sum(data_uncompressed_bytes) from system.parts where active and database='telemetry' group by table",
+  "events": {
+    "rows": 50697711,
+    "disk": 2411793157,
+    "comp": 2410902454,
+    "uncomp": 9531814835,
+    "parts": 11,
+    "bytes_on_disk_per_row": 47.6,
+    "compression_ratio": 3.95
+  },
+  "vehicle_minute": {
+    "rows": 8494656,
+    "disk": 347962243,
+    "comp": 347877802,
+    "uncomp": 1295594869,
+    "parts": 5,
+    "bytes_on_disk_per_row": 41.0,
+    "compression_ratio": 3.72
+  },
+  "raw_json_bytes_per_event_before_lz4": 535,
+  "raw_json_source": "evidence/benchmarks/m3-simulator-benchmark.json (simulator average)",
+  "caveats": [
+    "Simulated values compress differently from real sensor data.",
+    "Parts were not force-merged; duplicates not yet collapsed by ReplacingMergeTree are included, so this is an upper bound for the same data."
+  ]
+}
