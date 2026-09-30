@@ -73,7 +73,7 @@ chsql: ## Open a clickhouse-client shell
 
 # --- Pipeline ----------------------------------------------------------------
 .PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail signals-tail plan reconcile backtest \
-	calibrate radar-backtest sim-bench
+	calibrate radar-backtest ml-data ml-train sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
 	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar
 
@@ -114,6 +114,17 @@ radar-backtest: ## Radar: firmware-defect run vs control run on 3,000 vehicles (
 	uv run python -m prognos_stream.radar_eval --vehicles 3000 --hours 3 \
 	  --output evidence/benchmarks/m7-radar-backtest.json
 
+ml-data: ## M8 datasets: 2 training runs + held-out and shifted test runs (~25 min, parallel)
+	for spec in "train_a 42 48 0.2" "train_b 43 48 0.2" "test_heldout 7 48 0.2" \
+	            "test_slow 11 32 0.2" "test_rare 13 48 0.05"; do \
+	  set -- $$spec; uv run prognos-ml generate --name $$1 --seed $$2 --time-scale $$3 \
+	    --fault-rate $$4 > /dev/null & \
+	done; wait
+
+ml-train: ## M8: train LightGBM, compare with the calibrated rules on held-out runs, save the model
+	uv run prognos-ml run --train train_a,train_b --test test_heldout,test_slow,test_rare \
+	  --model-dir ml/models/failure-7d-v1 --output evidence/benchmarks/m8-model-vs-baseline.json
+
 dlq-peek: ## Show the 5 most recent DLQ records with their reasons
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
 	  --topic telemetry.dlq --from-beginning --max-messages 5 --property print.headers=true \
@@ -133,10 +144,10 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests
 
 test: ## Unit tests (fast, no Docker)
-	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=term
+	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests --cov --cov-report=term
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration
