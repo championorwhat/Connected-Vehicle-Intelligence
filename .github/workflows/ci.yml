@@ -23,7 +23,7 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts/reconcile.py
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts
       - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
@@ -82,16 +82,16 @@ jobs:
           EVENTS_PER_SECOND: "10000"
         run: |
           docker compose --profile pipeline build
-          docker compose --profile pipeline up -d normalizer detector sink
+          docker compose --profile pipeline up -d normalizer detector sink radar
           docker compose --profile pipeline run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
             simulator --summary /tmp/sim.json
           group_lag() { docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
             --bootstrap-server kafka:19092 --describe --group "$1" 2>/dev/null \
             | awk 'NR>1 && $6 ~ /^[0-9]+$/ {s+=$6} END {print s+0}'; }
           for i in $(seq 1 45); do
-            lag=$(group_lag normalizer); dlag=$(group_lag detector)
-            echo "lag normalizer=$lag detector=$dlag"
-            [ "$lag" = "0" ] && [ "$dlag" = "0" ] && break; sleep 2
+            lag=$(group_lag normalizer); dlag=$(group_lag detector); rlag=$(group_lag radar)
+            echo "lag normalizer=$lag detector=$dlag radar=$rlag"
+            [ "$lag" = "0" ] && [ "$dlag" = "0" ] && [ "$rlag" = "0" ] && break; sleep 2
           done
           count() { docker compose exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
             --bootstrap-server kafka:19092 --topic "$1" | awk -F: '{s+=$3} END {print s+0}'; }
@@ -99,12 +99,23 @@ jobs:
           alerts=$(count alerts); states=$(count vehicle.state)
           echo "raw=$raw canonical=$canonical dlq=$dlq dropped_duplicates=$((raw-canonical-dlq))"
           echo "alerts=$alerts vehicle.state=$states"
-          [ "$lag" = "0" ] && [ "$dlag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ] \
+          [ "$lag" = "0" ] && [ "$dlag" = "0" ] && [ "$rlag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ] \
             && [ "$alerts" -gt 0 ] && [ "$states" -gt 0 ]
       - name: reconcile Kafka vs ClickHouse vs PostgreSQL (no data loss)
         run: |
           set -a; . ./.env; set +a
           uv run python scripts/reconcile.py --wait-seconds 240 --output reconciliation.json
+      - name: planner proposes work orders once (idempotent re-run)
+        run: |
+          psql() { docker compose exec -T postgres psql -U prognos -d prognos -tAc "$1"; }
+          docker compose --profile pipeline run --rm planner --once --output /dev/stdout
+          first=$(psql "SELECT count(*) FROM work_orders WHERE status = 'proposed'")
+          audit=$(psql "SELECT count(*) FROM audit_log WHERE action = 'work_order.propose'")
+          docker compose --profile pipeline run --rm planner --once > /dev/null
+          second=$(psql "SELECT count(*) FROM work_orders WHERE status = 'proposed'")
+          money=$(psql "SELECT count(*) FROM work_orders WHERE expected_cost_avoided IS NOT NULL")
+          echo "proposed=$first audit=$audit after_rerun=$second with_money=$money"
+          [ "$first" -gt 0 ] && [ "$audit" = "$first" ] && [ "$second" = "$first" ] && [ "$money" = "0" ]
       - uses: actions/upload-artifact@v4
         if: always()
         with:

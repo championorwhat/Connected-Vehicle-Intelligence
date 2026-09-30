@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M6 (persistence and no-data-loss reconciliation) complete. See [milestones](#milestones).
+**Status:** M7 (core intelligence: calibrated risk, work-order planner, emerging-fault radar) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -59,7 +59,7 @@ Run the same checks CI runs:
 
 ```zsh
 make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
-make test-integration  # 26 tests against real PostgreSQL 17 + ClickHouse 25.8 (Testcontainers)
+make test-integration  # 33 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
 ```
 
 ## 4. Environment variables
@@ -175,7 +175,40 @@ Details and caveats: [detection-baseline.md](docs/performance/detection-baseline
   PostgreSQL ([evidence](evidence/benchmarks/m6-reconciliation.json)).
 - Consistency per data class (CP vs AP): [ADR-004](docs/architecture/adr/ADR-004.md).
 
-## 11. Repository structure
+## 11. Core intelligence (M7)
+
+- **Calibrated risk.** Each alert rule gets P(failure within 7 days) and a conservative
+  deadline (the 10th-percentile time to failure). Both are measured against simulator
+  ground truth, with Wilson intervals and right-censoring
+  ([rules-v1.json](apps/stream-processor/src/prognos_stream/calibration/rules-v1.json)).
+  Held-out check on another seed: 23 of 24 rules fall inside the held-out 95% interval.
+  However, the probabilities do **not** beat a base-rate forecast (Brier 0.0226 vs 0.0187),
+  because in the simulator almost every detected fault ends in failure. What the
+  calibration adds is the per-rule deadlines. Real fleets will differ.
+- **`prognos-planner`** turns open alerts into **proposed work orders**:
+  - The most valuable vehicles go first, to the nearest same-tenant workshop with free
+    capacity before the predicted failure. Bookings made after that point are flagged as
+    late.
+  - Proposals are idempotent (a partial unique index) and audited (`work_order.propose`).
+  - **No fabricated money:** while repair costs are placeholders, ranking uses risk ×
+    severity and `expected_cost_avoided` stays empty.
+  - Measured on 100K vehicles with 5,000 open alerts: a planning cycle takes 0.9 s, and a
+    re-run takes 28 ms and proposes nothing new
+    ([evidence](evidence/benchmarks/m7-planner-100k.json)).
+- **`prognos-radar`** finds a DTC that is suddenly common in one firmware release or model.
+  It compares each cohort with its peers using an exact Poisson tail and a Bonferroni
+  correction, and publishes the result to `fleet.signals`. In the back-test it caught the
+  injected firmware defect in every window with no other signals, and raised 0 signals on
+  the control run ([evidence](evidence/benchmarks/m7-radar-backtest.json)). On the full live
+  stack (100K vehicles, 10K ev/s), it flagged only the defective cohort
+  ([evidence](evidence/benchmarks/m7-radar-live.json)).
+- Try it: `make pipeline-demo` (with the firmware defect), then `make plan` and `make signals-tail`.
+- Details: [algorithms A8–A10](docs/algorithms/algorithms.md) and [ADR-006](docs/architecture/adr/ADR-006.md).
+
+> **Costs needed:** real planned/unplanned repair and downtime costs (with a source) are
+> required before any money figure is shown. Until then they are labelled placeholders.
+
+## 12. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -200,8 +233,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M4 | Kafka ingestion: normalise 3 OEM formats, validate, dedup, DLQ | ✅ Done ([benchmarks](docs/performance/benchmarks.md), [ADR-005](docs/architecture/adr/ADR-005.md)) |
 | M5 | Real-time detection: critical rules, trend early-warnings, alerts | ✅ Done ([detection baseline](docs/performance/detection-baseline.md)) |
 | M6 | Persistence: ClickHouse Kafka ingestion, PostgreSQL alerts, Redis live state, reconciliation | ✅ Done ([ADR-002..004](docs/architecture/adr/)) |
-| M7 | Core intelligence: cost-aware prioritisation, work orders, emerging-fault radar | ⏭ Next |
-| M4–M19 | See the M0 document | Planned |
+| M7 | Core intelligence: calibrated risk, capacity-aware work orders, emerging-fault radar | ✅ Done ([A8–A10](docs/algorithms/algorithms.md), [ADR-006](docs/architecture/adr/ADR-006.md)) |
+| M8 | ML failure model vs the calibrated-rules baseline (held-out) | ⏭ Next |
+| M9–M19 | See the M0 document | Planned |
 
 ## Declarations
 

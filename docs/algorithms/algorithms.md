@@ -136,6 +136,117 @@ partition.
 
 ---
 
+## A8. Rule calibration: P(failure within 7 days | rule fired)
+
+**Problem.** A rule firing is not a probability. The planner needs "how likely is this
+vehicle to fail within the week, and by when".
+
+**Method** (`evaluate.calibrate`, `scripts/build_calibration.py`). From the back-test
+against ground truth, for each rule: of the alerts it opened, how many were followed by a
+failure of the same mode on the same vehicle within 168 h (real time). Alerts whose 168 h
+window runs past the end of the simulation are excluded (right-censoring), so "no failure
+seen yet" is never counted as "no failure". Each rate has a 95% **Wilson** interval (valid
+at 0 and 1, unlike the normal approximation). The deadline for planning is the rule's
+**10th-percentile** time to failure (nearest rank), which is conservative. Rules with fewer
+than 10 eligible alerts use the pooled rate instead of their own noisy estimate.
+
+**Held-out check.** Fitted on seed 42 and scored on seed 7 with the **Brier score**
+(mean squared error of the probability), against a no-skill forecast that always predicts
+the held-out base rate.
+
+**Measured** ([fit](../../evidence/benchmarks/m7-calibration-fit-seed42.json),
+[held-out](../../evidence/benchmarks/m7-calibration-holdout-seed7.json),
+[shipped file](../../apps/stream-processor/src/prognos_stream/calibration/rules-v1.json)):
+- 315 held-out alerts. Base rate of failure after an alert: 98.1%.
+- Brier score 0.0226, against 0.0187 for the no-skill forecast. **The per-rule
+  probabilities do not beat the base rate.** In this simulated world almost every detected
+  fault progresses to failure, so there is little for probabilities to separate.
+- 23 of 24 fitted rule probabilities fall inside the held-out 95% interval.
+- What the calibration does add is **deadlines**. For example, the p10 time to failure is
+  2.4 h after COOLANT_OVERHEAT but 99.9 h after HV_CELL_IMBALANCE. The planner schedules on
+  these deadlines.
+- In real fleets, many warnings do not end in failure. The same code measures that as soon
+  as real outcomes (work-order results) exist; the M8 model is scored the same way.
+
+## A9. Capacity-aware maintenance planner (greedy by value)
+
+**Problem.** Given at-risk vehicles and workshops with a daily capacity, decide who goes
+where and when, before the predicted failure.
+
+**Algorithm** (`planner.py`):
+1. **One candidate per (vehicle, failure mode).** Risk is the **max** over its alerts,
+   because correlated evidence must not be multiplied as if it were independent
+   (noisy-OR would). The deadline is the tightest of: the alert's own estimate (for
+   example, tyre hours to critical) or the rule's p10, minus the time since the alert.
+2. **Value.** `p × (unplanned − planned + downtime/day × extra days)` when the tenant's
+   costs are **sourced**. Costs tagged `PLACEHOLDER` are never turned into money: the value
+   is `p × severity weight` and `expected_cost_avoided` stays NULL.
+3. **Greedy assignment.** Sort by value, then earliest deadline, then vehicle id (O(n log n);
+   the id makes the order deterministic). For each candidate, over the tenant's K = 3
+   nearest workshops (haversine), take the earliest day with free capacity on or before
+   the deadline, and the nearest workshop on that day. Otherwise take the earliest slot in
+   the 7-day horizon and flag it **late**. If the horizon is full, the vehicle stays
+   unscheduled and the gauge reports it.
+   Total cost: O(n log n + n·K·D) for n candidates, K workshops and D days.
+4. **Persistence.** One transaction under an advisory lock. A partial unique index allows
+   one active work order per (vehicle, mode), and `ON CONFLICT DO NOTHING` makes re-runs
+   and a second replica harmless. Every proposal writes an `audit_log` row: actor `system`,
+   action `work_order.propose`, with the reasons.
+
+**Why greedy.** Assigning vehicles to workshop-days is an assignment problem that an ILP or
+min-cost flow would solve optimally. Greedy is predictable, explainable ("most valuable
+first, nearest free slot"), and runs in milliseconds. It never gives a slot to a
+lower-value vehicle while a higher-value vehicle that could use it is still waiting.
+Optimality is not measured.
+
+**Measured:** tested in unit tests (ordering, capacity, late, overflow, tenant isolation,
+placeholder costs) and against real PostgreSQL (idempotent re-run, audit trail). Planner
+cycle time on the 100K seed: **NOT YET MEASURED**.
+
+## A10. Emerging-fault radar (cohort DTC rates, exact Poisson tail, Bonferroni)
+
+**Problem.** A bad firmware release or parts batch shows up as the *same* DTC across many
+vehicles of one cohort. No single-vehicle rule can see it.
+
+**Algorithm** (`radar.py`). Tumbling 1-hour **event-time** windows, closed by a watermark
+(the maximum event time minus 120 s of allowed lateness). Later events are counted and dropped.
+In each window, for every DTC and cohort:
+- `k` is the number of **distinct vehicles** in the cohort that reported the DTC, and `n`
+  the cohort's registered vehicles. Counting distinct vehicles stops one chatty vehicle
+  from faking a pattern.
+- **Like-for-like baselines.** A firmware cohort is compared with the same model on other
+  firmware; a model is compared with other models of the **same powertrain** (HV codes
+  exist only on EVs).
+- `p0 = (K + 0.5)/(N + 1)`, a smoothed baseline rate, so a zero baseline can still be tested.
+- The p-value is the exact tail `P(X ≥ k)` for `X ~ Poisson(n·p0)`, computed in log space
+  with a direct tail sum so it does not cancel to 0.
+- **Bonferroni** correction multiplies by the number of tests in the window. A signal fires
+  when k ≥ 5, the rate ratio is at least 3× and the adjusted p < 0.001.
+
+**Data structure.** `dict[dtc][cohort] → set(vehicle_id)` for open windows only. A
+**Count-Min Sketch was rejected**: there are only about 9 models × 2 firmwares × 20 DTCs
+of keys, so exact sets take a few MB, and a sketch would add error (over-counting) with no
+memory saved. Events without a DTC are skipped by a byte check, without JSON parsing.
+
+**Measured** (simulated fleet; the simulator's `firmware_defect` scenario makes Lyra EV7V4
+on firmware 2026.7 raise U0100 on 0.2% of its events):
+- **Offline back-test** ([evidence](../../evidence/benchmarks/m7-radar-backtest.json)): 3,000
+  vehicles and 3 simulated hours (3.2 M events), run twice with the same seed:
+  - **Defect run.** A firmware-level signal for EV7V4 2026.7 / U0100 fired in all 4 windows,
+    the first at 0.78 h. In the first window, 73 of 175 vehicles were affected against 6 of
+    188 on the other firmware: 12× the baseline, adjusted p = 3e-50. A model-level signal
+    for EV7V4 also fired. There were **0 other signals**.
+  - **Control run** (no defect, same fleet and background noise): **0 signals**.
+- **Hot path** ([evidence](../../evidence/benchmarks/m7-radar-hot-path.json)): 695 ns per
+  canonical event (about 1.4 M events/s), counting the byte check and parsing only DTC events.
+  Kafka consumption is not included. This is why a single radar consumer is enough for
+  100K events/s.
+- **Live, full stack** ([evidence](../../evidence/benchmarks/m7-radar-live.json)): 100K
+  vehicles at 10K events/s through Kafka for 8 minutes, with 5-minute windows. The only
+  complete window raised two signals and nothing else:
+  - U0100 on EV7V4 2026.7: 384 of 6,082 vehicles, 12.5× the other firmware.
+  - U0100 on EV7V4 (all firmware): 414 of 12,122 vehicles, 7.0× the other BEV models.
+
 ## Measured results (simulator)
 
 All measured in a Linux container, 4 vCPU / 15 GB, x86_64 — **not** the target MacBook Air.

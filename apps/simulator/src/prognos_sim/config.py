@@ -44,7 +44,14 @@ class SimConfig:
 
     fault_rate: float = 0.01  # fraction of eligible vehicles degrading at any time
     fault_time_scale: float = 1.0  # >1 compresses degradation timelines (demo/backfill)
-    scenario: str = "none"  # "demo": a few vehicles fail within minutes
+    # Comma-separated. "demo": a few vehicles fail within minutes.
+    # "firmware_defect": one firmware release (DEFECT_MODEL / DEFECT_FIRMWARE) raises
+    # DEFECT_DTC on DEFECT_RATE of its events - a fleet-level fault for the radar.
+    scenario: str = "none"
+    defect_model: str = "EV7V4"
+    defect_firmware: str = "2026.7"
+    defect_dtc: str = "U0100"
+    defect_rate: float = 0.002
 
     publisher: PublisherKind = PublisherKind.KAFKA
     kafka_bootstrap_servers: str = "localhost:9092"
@@ -63,11 +70,15 @@ class SimConfig:
         if peak_per_tick > self.vehicle_count:
             raise ValueError("peak events per tick exceeds vehicle count; raise TICK_HZ")
         for name in ("duplicate_rate", "out_of_order_rate", "malformed_rate",
-                     "missing_field_rate", "fault_rate"):  # fmt: skip
+                     "missing_field_rate", "fault_rate", "defect_rate"):  # fmt: skip
             if not 0.0 <= getattr(self, name) <= 1.0:
                 raise ValueError(f"{name} must be within [0, 1]")
         if self.fault_time_scale <= 0 or self.burst_multiplier <= 0:
             raise ValueError("fault_time_scale and burst_multiplier must be positive")
+
+    @property
+    def scenarios(self) -> frozenset[str]:
+        return frozenset(s.strip() for s in self.scenario.split(",") if s.strip())
 
     def rate_multiplier(self, elapsed: float) -> float:
         """Burst schedule: BURST_MULTIPLIER x during [start, start + duration)."""

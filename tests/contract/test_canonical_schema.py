@@ -78,3 +78,23 @@ def test_detector_alerts_match_alert_schema() -> None:
         errors = list(validator.iter_errors(alert))
         assert not errors, errors[0].message
     assert {a["status"] for a in pipe.alerts} == {"open", "cleared"}
+
+
+def test_radar_signals_match_fleet_signal_schema() -> None:
+    from prognos_stream.radar import Cohort, Radar
+
+    schema = json.loads(
+        (Path(__file__).parents[2] / "packages/schemas/fleet-signal-v1.schema.json").read_text()
+    )
+    validator = Draft202012Validator(schema)
+    cohorts = {f"a{i}": Cohort("LYRA", "EV7V4", "2026.7", "BEV") for i in range(50)}
+    cohorts |= {f"b{i}": Cohort("LYRA", "EV7V4", "2026.3", "BEV") for i in range(50)}
+    cohorts |= {f"c{i}": Cohort("LYRA", "EC8S6", "2026.3", "BEV") for i in range(100)}
+    radar = Radar(cohorts)
+    for i in range(20):
+        radar.add(f"a{i}", START + i, ["U0100"])
+    signals = radar.advance(START + 3 * 3600)
+    assert {s["level"] for s in signals} == {"firmware", "model"}
+    for signal in signals:
+        errors = list(validator.iter_errors(signal))
+        assert not errors, errors[0].message

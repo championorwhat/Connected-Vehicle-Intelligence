@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import platform
 import statistics
@@ -86,8 +87,79 @@ class PipelinePublisher:
         return {"published": self.raw}
 
 
+def wilson(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for a binomial proportion (well-behaved at 0 and 1)."""
+    if n == 0:
+        return (0.0, 1.0)
+    p = successes / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return (round(max(0.0, centre - half), 3), round(min(1.0, centre + half), 3))
+
+
+def _quantile(values: list[float], q: float) -> float | None:
+    """Nearest-rank quantile (no interpolation: small samples stay honest)."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    return round(ordered[max(0, math.ceil(q * len(ordered)) - 1)], 1)
+
+
+def calibrate(
+    failures: list[tuple[tuple[str, str], float, float]],
+    opened: list[dict[str, Any]],
+    scale: float,
+    run_end: float,
+    horizon_hours: float = 168.0,
+) -> dict[str, Any]:
+    """P(failure of the alert's mode within `horizon_hours` real time | rule opened).
+
+    Only alerts whose whole horizon lies inside the run are counted (right-censoring),
+    so an alert near the end is not wrongly scored as "no failure followed".
+    """
+    horizon_s = horizon_hours * 3600.0 / scale
+    failure_times: dict[tuple[str, str], list[float]] = defaultdict(list)
+    for key, _onset, failure in failures:
+        failure_times[key].append(failure)
+    per_rule: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {"eligible": 0, "failed": 0, "hours": []}
+    )
+    for alert in opened:
+        ts = _ts(alert["event_ts"])
+        if ts > run_end - horizon_s:
+            continue  # outcome not observable within the run
+        stats = per_rule[alert["rule_code"]]
+        stats["eligible"] += 1
+        key = (alert["vehicle_id"], alert["failure_mode"])
+        following = [f for f in failure_times.get(key, ()) if ts <= f <= ts + horizon_s]
+        if following:
+            stats["failed"] += 1
+            stats["hours"].append((min(following) - ts) * scale / 3600.0)
+    return {
+        "horizon_hours": horizon_hours,
+        "rules": {
+            rule: {
+                "eligible_alerts": s["eligible"],
+                "followed_by_failure": s["failed"],
+                "p_failure": round(s["failed"] / s["eligible"], 3),
+                "p_failure_ci95": wilson(s["failed"], s["eligible"]),
+                "median_hours_to_failure": (
+                    round(statistics.median(s["hours"]), 1) if s["hours"] else None
+                ),
+                # 10th percentile: the planner's conservative deadline for this rule
+                "hours_to_failure_p10": _quantile(s["hours"], 0.10),
+            }
+            for rule, s in sorted(per_rule.items())
+            if s["eligible"]
+        },
+    }
+
+
 def score(
-    truth: list[dict[str, Any]], alerts: list[dict[str, Any]], scale: float
+    truth: list[dict[str, Any]],
+    alerts: list[dict[str, Any]],
+    scale: float,
+    run_end: float | None = None,
 ) -> dict[str, Any]:
     downtime_s = DOWNTIME_HOURS[1] * 3600.0 / scale
     episodes: dict[tuple[str, str], list[tuple[float, float]]] = defaultdict(list)
@@ -134,7 +206,9 @@ def score(
     total_warned = sum(s["warned"] for s in per_mode.values())
     all_leads = [lt for s in per_mode.values() for lt in s["lead_times_s"]]
     true_alerts = sum(r["true"] for r in per_rule.values())
+    calibration = calibrate(failures, opened, scale, run_end) if run_end is not None else None
     return {
+        "calibration": calibration,
         "failures": total_failures,
         "failures_warned_before_breakdown": total_warned,
         "recall": round(total_warned / total_failures, 3) if total_failures else None,
@@ -173,7 +247,7 @@ def run(vehicles: int, hours: float, fault_rate: float, scale: float, seed: int)
         sim.tick(clock[0], 1.0)
     sim.finish()
     elapsed = time.perf_counter() - wall
-    result = score(pipe.truth, pipe.alerts, scale)
+    result = score(pipe.truth, pipe.alerts, scale, run_end=clock[0])
     result["run"] = {
         "vehicles": vehicles, "simulated_hours": hours, "fault_rate": fault_rate,
         "fault_time_scale": scale, "seed": seed, "raw_messages": pipe.raw,
