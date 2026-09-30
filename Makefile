@@ -75,13 +75,13 @@ chsql: ## Open a clickhouse-client shell
 .PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail signals-tail users score plan reconcile backtest \
 	calibrate radar-backtest ml-data ml-train sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
-	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api
+	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
 
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures and a firmware defect for the radar
-	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api
+	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
 
 pipeline-stop: ## Stop the pipeline services gracefully (flush + commit)
-	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar scorer api
+	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar scorer api web
 
 alerts-tail: ## Follow alerts as they are raised
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
@@ -93,6 +93,7 @@ signals-tail: ## Follow emerging-fault signals from the radar
 
 users: ## Create demo users for every role in the first tenant (password: DEMO_USER_PASSWORD)
 	set -a; . ./.env; set +a; \
+	test -n "$$DEMO_USER_PASSWORD" || { echo "set DEMO_USER_PASSWORD in .env (see .env.example)"; exit 1; }; \
 	tenant=$$($(COMPOSE) exec -T postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \
 	  "SELECT slug FROM tenants ORDER BY slug LIMIT 1"); \
 	for role in fleet_manager technician analyst dpo; do \
@@ -146,6 +147,20 @@ dlq-peek: ## Show the 5 most recent DLQ records with their reasons
 
 sim-bench: ## Standalone generation benchmark at 100K vehicles (no Kafka)
 	uv run python -m prognos_sim.bench --vehicles 100000 --seconds 20 --workers 1,2,4
+
+# --- Dashboard ---------------------------------------------------------------
+.PHONY: web-install web-dev web-test web-e2e
+web-install: ## Install dashboard dependencies (Node 22)
+	cd apps/web && npm ci --no-audit --no-fund
+
+web-dev: ## Dashboard dev server on :5173 (proxies the API on :8000)
+	cd apps/web && npm run dev
+
+web-test: ## Dashboard typecheck + unit tests
+	cd apps/web && npm run typecheck && npm test
+
+web-e2e: ## Playwright end-to-end against :8080 (needs `make pipeline-demo users`)
+	cd apps/web && npx playwright test
 
 # --- Quality -----------------------------------------------------------------
 .PHONY: lint fmt typecheck test test-integration check
