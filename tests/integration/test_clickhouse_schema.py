@@ -6,7 +6,9 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from tests.integration.conftest import run_ch_migrations
+from tests.integration.conftest import CH_DIR, run_ch_migrations
+
+CH_MIGRATIONS = CH_DIR / "migrations"
 
 COLUMNS = [
     "event_id", "tenant_id", "vehicle_id", "vin", "oem", "schema_version", "seq", "event_ts",
@@ -37,6 +39,7 @@ def event(
 def test_tables_exist(ch) -> None:  # type: ignore[no-untyped-def]
     tables = set(ch.query("SHOW TABLES").result_columns[0])
     assert {"events", "vehicle_minute", "vehicle_minute_mv", "risk_scores", "dlq_events"} <= tables
+    assert {"canonical_queue", "canonical_to_events", "alert_history", "ingestion_errors"} <= tables
 
 
 def test_replacing_merge_tree_collapses_replays(ch) -> None:  # type: ignore[no-untyped-def]
@@ -112,4 +115,12 @@ def test_migration_runner_is_idempotent(ch, ch_container) -> None:  # type: igno
     output = run_ch_migrations(ch_container)
     assert "Applying" not in output
     versions = ch.query("SELECT count() FROM schema_migrations FINAL").result_rows[0][0]
-    assert versions == 1
+    migration_files = len(list((CH_MIGRATIONS).glob("*.sql")))
+    assert versions == migration_files
+
+
+def test_ignition_is_nullable_after_migration(ch) -> None:  # type: ignore[no-untyped-def]
+    column_type = ch.query(
+        "SELECT type FROM system.columns WHERE table = 'events' AND name = 'ignition_on'"
+    ).result_rows[0][0]
+    assert column_type == "Nullable(Bool)"
