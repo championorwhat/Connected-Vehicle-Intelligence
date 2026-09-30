@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Prognos dashboard: Vite build served by nginx, proxying /v1 to the API.
 #   docker build -f apps/web/Dockerfile -t prognos-web apps/web
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=secret,id=extra_ca,required=false \
