@@ -102,3 +102,20 @@ def test_env_example_covers_compose_variables() -> None:
         if line and not line.startswith("#") and "=" in line
     }
     assert used <= declared, f"undeclared in .env.example: {sorted(used - declared)}"
+
+
+def test_topics_file_has_no_quotes() -> None:
+    """create-topics.sh reads every line through xargs, which fails on a lone quote (an
+    apostrophe in a comment broke topic creation during M14)."""
+    text = (ROOT / "kafka/topics/topics.conf").read_text()
+    assert "'" not in text
+    assert '"' not in text
+
+
+def test_telemetry_segments_are_small_enough_for_retention_to_work() -> None:
+    """Retention deletes only closed segments: 1 GB defaults kept ~1 GB per partition."""
+    lines = (ROOT / "kafka/topics/topics.conf").read_text().splitlines()
+    rows = [line for line in lines if line.startswith(("telemetry.raw", "telemetry.canonical"))]
+    assert len(rows) == 2
+    for row in rows:
+        assert "segment.bytes=134217728" in row, row
