@@ -79,6 +79,34 @@ more than doubles; failure → breakdown → repair cycle (`apps/simulator/tests
 See `packages/common/src/prognos_common/vin.py` (ISO 3779 transliteration, weights, mod 11;
 O(1)) and `dtc.py` (SAE J2012 regex; O(len) extraction from free text).
 
+## A6. Exact duplicate detection with a per-vehicle sliding sequence window (normalizer)
+
+**Problem.** Drop duplicate deliveries (1% injected, some arriving up to 10 s late) without
+dropping genuine out-of-order events (2% arriving 1–30 s late). A Bloom filter would give false
+positives, which here means silently lost events.
+
+**Algorithm.** IPsec-style anti-replay window: per vehicle, the highest sequence number seen plus
+a W-bit bitmap (W = 1024) of which of the W numbers below it have been seen.
+
+```
+check(v, seq):
+    if no state: state[v] = (seq, 1); return NEW
+    high, bits = state[v]
+    if seq > high:  bits = (bits << (seq-high) | 1) & mask; high = seq; return NEW
+    d = high - seq
+    if d >= W: return TOO_OLD            # forwarded, flagged late; ClickHouse is the backstop
+    if bits >> d & 1: return DUPLICATE
+    bits |= 1 << d; return NEW_LATE      # forwarded, flagged late
+```
+
+**Complexity.** O(1) time per event (shift/mask on a 1024-bit Python int); O(V·W/8) memory:
+~13 MB for 100K vehicles.
+
+**Measured.** Over 1,190,234 raw messages (including a simulator restart), **0 duplicate
+event_ids** reached `telemetry.canonical`, and 23,000+ out-of-order events were forwarded and
+flagged `late` (`evidence/benchmarks/m4-pipeline-*.json`). Unit semantics:
+`apps/stream-processor/tests/test_dedup.py`.
+
 ---
 
 ## Measured results (simulator)

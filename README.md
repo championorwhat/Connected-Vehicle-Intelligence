@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M3 (vehicle simulator) complete. See [milestones](#milestones).
+**Status:** M4 (Kafka ingestion: normalise, validate, deduplicate, DLQ) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -120,7 +120,29 @@ Measured on a 4-vCPU Linux container (not yet on the Mac):
 
 Details: [algorithms.md](docs/algorithms/algorithms.md).
 
-## 8. Repository structure
+## 8. Ingestion and normalisation (M4)
+
+`apps/stream-processor` (`prognos-normalizer`) consumes `telemetry.raw` in a consumer group and
+handles each message in order:
+
+1. Maps each OEM format to the canonical, metric, UTC event (adapters per OEM and schema version).
+2. Validates it: required fields, types, ranges, VIN check digit, clock skew.
+3. Enriches it with `vehicle_id` and `tenant_id` from PostgreSQL.
+4. Drops exact duplicates with a per-vehicle sliding sequence window.
+5. Publishes to `telemetry.canonical`, or the original bytes to `telemetry.dlq` with a reason.
+
+Offsets are committed only after every output is acknowledged (at-least-once delivery), and
+each event carries a deterministic `event_id` for idempotent sinks. The contract is
+[canonical-telemetry-v1.schema.json](packages/schemas/canonical-telemetry-v1.schema.json)
+and [asyncapi.yaml](docs/api/asyncapi.yaml).
+
+Measured on a 4-vCPU container shared with Kafka:
+- **Throughput:** 25.8K msg/s per process, 62.9K msg/s with 3 processes.
+- **Reconciliation:** exact over 1.19 M messages, including a simulator restart, with 0
+  duplicate event_ids.
+- **Ingest latency, on-time events:** p50 0.35 s, p95 1.04 s.
+
+## 9. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -142,7 +164,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M1 | Repo bootstrap, Docker Compose, CI, lint/format | ✅ Done |
 | M2 | PostgreSQL 3NF + ClickHouse schema, migrations, 100K-vehicle seed | ✅ Done ([data model](docs/database/data-model.md), [ER diagram](docs/database/er-diagram.md)) |
 | M3 | Vehicle simulator + standalone benchmark | ✅ Done ([results](docs/algorithms/algorithms.md#measured-results-simulator)) |
-| M4 | Kafka ingestion, validation, DLQ | ⏭ Next |
+| M4 | Kafka ingestion: normalise 3 OEM formats, validate, dedup, DLQ | ✅ Done ([benchmarks](docs/performance/benchmarks.md), [ADR-005](docs/architecture/adr/ADR-005.md)) |
+| M5 | Stream processing: detection, aggregation, alerts | ⏭ Next |
 | M4–M19 | See the M0 document | Planned |
 
 ## Declarations

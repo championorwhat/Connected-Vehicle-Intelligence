@@ -38,7 +38,7 @@ up-ha: env ## Start core with a 3-broker Kafka cluster (needs more memory)
 	$(COMPOSE_HA) up -d --wait
 
 down: ## Stop the stack (keeps data volumes)
-	$(COMPOSE) --profile observability down --remove-orphans
+	$(COMPOSE) --profile observability --profile pipeline down --remove-orphans
 
 clean: ## Stop the stack AND delete all data volumes
 	$(COMPOSE_HA) --profile observability down -v --remove-orphans
@@ -71,16 +71,21 @@ psql: ## Open a psql shell
 chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
-# --- Simulator ---------------------------------------------------------------
-.PHONY: sim sim-demo sim-stop sim-bench
-sim: env ## Stream simulated telemetry into Kafka (VEHICLE_COUNT / EVENTS_PER_SECOND from .env)
-	$(COMPOSE) --profile sim up -d --build simulator
+# --- Pipeline ----------------------------------------------------------------
+.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek sim-bench
+pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
+	$(COMPOSE) --profile pipeline up -d --build simulator normalizer
 
-sim-demo: env ## As `sim`, plus 5 scripted failures 10-18 minutes after start
-	SIM_SCENARIO=demo $(COMPOSE) --profile sim up -d --build simulator
+pipeline-demo: env ## As `pipeline`, plus 5 scripted failures 10-18 minutes after start
+	SIM_SCENARIO=demo $(COMPOSE) --profile pipeline up -d --build simulator normalizer
 
-sim-stop: ## Stop the simulator gracefully (releases held-back events, flushes Kafka)
-	$(COMPOSE) --profile sim stop simulator
+pipeline-stop: ## Stop simulator and normalizer gracefully (flush + commit)
+	$(COMPOSE) --profile pipeline stop simulator normalizer
+
+dlq-peek: ## Show the 5 most recent DLQ records with their reasons
+	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
+	  --topic telemetry.dlq --from-beginning --max-messages 5 --property print.headers=true \
+	  --timeout-ms 10000 2>/dev/null | cut -c1-400
 
 sim-bench: ## Standalone generation benchmark at 100K vehicles (no Kafka)
 	uv run python -m prognos_sim.bench --vehicles 100000 --seconds 20 --workers 1,2,4
@@ -96,10 +101,10 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src
 
 test: ## Unit tests (fast, no Docker)
-	uv run pytest tests/unit packages apps/simulator/tests --cov --cov-report=term
+	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=term
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration

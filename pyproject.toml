@@ -23,8 +23,10 @@ dev = [
     "psycopg[binary]>=3.2",
     "clickhouse-connect>=0.8",
     "testcontainers>=4.10",
+    "jsonschema>=4.23",
     "prognos-common",
     "prognos-simulator",
+    "prognos-stream",
 ]
 
 [tool.uv]
@@ -33,9 +35,10 @@ package = false
 [tool.uv.sources]
 prognos-common = { workspace = true }
 prognos-simulator = { workspace = true }
+prognos-stream = { workspace = true }
 
 [tool.uv.workspace]
-members = ["packages/common", "apps/simulator"]
+members = ["packages/common", "apps/simulator", "apps/stream-processor"]
 
 # --- Ruff (lint + format) ----------------------------------------------------
 [tool.ruff]
@@ -64,7 +67,7 @@ ignore = ["S101"]  # assert is fine; tests rely on it
 "packages/common/src/prognos_common/catalog.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["prognos_common", "prognos_sim", "tests"]
+known-first-party = ["prognos_common", "prognos_sim", "prognos_stream", "tests"]
 
 # --- mypy --------------------------------------------------------------------
 [tool.mypy]
@@ -78,7 +81,7 @@ exclude = ["apps/web/", "node_modules/"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
-testpaths = ["tests", "packages", "apps/simulator/tests"]
+testpaths = ["tests", "packages", "apps/simulator/tests", "apps/stream-processor/tests"]
 markers = [
     "integration: needs Docker (Testcontainers)",
     "slow: long-running (benchmarks, soak)",
@@ -87,7 +90,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["prognos_common", "prognos_sim"]
+source = ["prognos_common", "prognos_sim", "prognos_stream"]
 omit = ["**/tests/**"]
 
 [tool.coverage.report]

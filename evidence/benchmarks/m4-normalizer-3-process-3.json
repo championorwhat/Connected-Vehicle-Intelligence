@@ -1,0 +1,24 @@
+{
+  "environment": {
+    "machine": "x86_64",
+    "cpu_count": 4
+  },
+  "batch_size": 2000,
+  "consumed": 1420000,
+  "wall_seconds": 67.68,
+  "busy_seconds": 57.52,
+  "messages_per_busy_second": 24685.1,
+  "outcomes": {
+    "canonical": 1393275,
+    "dlq": 13960,
+    "dlq_missing_required_field": 6852,
+    "dlq_unknown_oem": 984,
+    "dlq_malformed_json": 2021,
+    "duplicate": 12765,
+    "dlq_out_of_range": 999,
+    "dlq_invalid_timestamp": 1071,
+    "dlq_invalid_vin": 1027,
+    "dlq_invalid_type": 1006,
+    "late": 17712
+  }
+}
