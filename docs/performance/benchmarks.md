@@ -26,8 +26,11 @@ make dlq-peek                                     # inspect rejects with reasons
 ```
 
 ## Known gaps (NOT YET MEASURED)
-- 100K ev/s end to end through the normalizer. This needs about 5 dedicated cores (M14).
-- 3× burst end to end.
+- 100K events/s end to end (every vehicle reporting every second). M14 measured the
+  capacity of this 4-vCPU machine at about 15K events/s, with everything sharing the CPUs
+  ([load tests](load-tests.md)).
+- A true 3× burst end to end: the simulator delivered about 22K/s when asked for 30K/s
+  (M14).
 - Any measurement on the target MacBook Air.
 
 ## M7: planner and radar (4 vCPU Linux container, not the target Mac)

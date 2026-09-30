@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Form, Request
 
 from prognos_api import audit
-from prognos_api.deps import DbDep, PrincipalDep, StateDep, client_ip
+from prognos_api.deps import AppState, PrincipalDep, StateDep, client_ip
 from prognos_api.errors import ApiError
 from prognos_api.security import verify_password
+
+
+async def check_password(st: AppState, password_hash: str | None, password: str) -> bool:
+    """argon2id costs ~70 ms of CPU and 64 MiB of memory per check. Run it off the event
+    loop so a burst of logins (every user at shift start) does not stall all other
+    requests, one at a time (st.hashing) so a burst cannot exhaust the API container's
+    memory. M14: synchronous checks froze the API for 10-14 s in a 40-user login burst.
+    """
+    async with st.hashing:
+        return await asyncio.to_thread(verify_password, password_hash, password)
+
 
 router = APIRouter()
 
@@ -24,7 +36,7 @@ _USER = """
 
 @router.post("/v1/auth/token", tags=["auth"])
 async def token(
-    request: Request, st: StateDep, conn: DbDep,
+    request: Request, st: StateDep,
     username: Annotated[str, Form(max_length=254)],
     password: Annotated[str, Form(max_length=1024)],
     grant_type: Annotated[str, Form()] = "password",
@@ -39,28 +51,34 @@ async def token(
     if await st.limiter.count(limit_key) >= st.settings.login_attempts_per_minute:
         raise ApiError(429, "too many failed login attempts; try again shortly",
                        code="rate-limited", headers={"Retry-After": "60"})  # fmt: skip
-    row = await (await conn.execute(_USER, (username,))).fetchone()
-    ok = verify_password(row["password_hash"] if row else None, password)
+    # A pool connection is held only around the queries, never during the password
+    # check: a login burst queued on hashing must not starve every other request of
+    # connections (M14 load test).
+    async with st.pool.connection() as conn:
+        row = await (await conn.execute(_USER, (username,))).fetchone()
+    ok = await check_password(st, row["password_hash"] if row else None, password)
     rid = getattr(request.state, "request_id", None)
     if not ok or row is None or not row["is_active"]:
         await st.limiter.hit(limit_key, st.settings.login_attempts_per_minute)
-        await audit.record(
-            conn, tenant_id=row["tenant_id"] if row else None,
-            actor_id=row["user_id"] if row else None, action="auth.login",
-            resource_type="user", resource_id=row["user_id"] if row else None,
-            outcome="denied", request_id=rid, client_ip=ip,
-            details={"reason": "inactive" if row and ok else "bad_credentials"},
-        )  # fmt: skip
+        async with st.pool.connection() as conn:
+            await audit.record(
+                conn, tenant_id=row["tenant_id"] if row else None,
+                actor_id=row["user_id"] if row else None, action="auth.login",
+                resource_type="user", resource_id=row["user_id"] if row else None,
+                outcome="denied", request_id=rid, client_ip=ip,
+                details={"reason": "inactive" if row and ok else "bad_credentials"},
+            )  # fmt: skip
         # One message for every failure: do not reveal whether the account exists.
         raise ApiError(401, "invalid credentials", code="invalid-credentials")
     access, ttl = st.tokens.issue(row["user_id"], row["tenant_id"], list(row["roles"]))
-    await conn.execute("UPDATE users SET last_login_at = now() WHERE user_id = %s",
-                       (row["user_id"],))  # fmt: skip
-    await audit.record(
-        conn, tenant_id=row["tenant_id"], actor_id=row["user_id"], action="auth.login",
-        resource_type="user", resource_id=row["user_id"], outcome="success", request_id=rid,
-        client_ip=ip,
-    )  # fmt: skip
+    async with st.pool.connection() as conn:
+        await conn.execute("UPDATE users SET last_login_at = now() WHERE user_id = %s",
+                           (row["user_id"],))  # fmt: skip
+        await audit.record(
+            conn, tenant_id=row["tenant_id"], actor_id=row["user_id"], action="auth.login",
+            resource_type="user", resource_id=row["user_id"], outcome="success",
+            request_id=rid, client_ip=ip,
+        )  # fmt: skip
     return {"access_token": access, "token_type": "bearer", "expires_in": ttl}
 
 

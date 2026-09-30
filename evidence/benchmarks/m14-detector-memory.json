@@ -1,0 +1,9 @@
+{
+  "measured_at": "2026-09-30",
+  "tool": "scripts/bench_detector_memory.py 20000 (tracemalloc; Python heap growth only, excludes interpreter baseline and librdkafka buffers)",
+  "hardware": "x86_64 Linux container; not the target Mac",
+  "input": "20,000 vehicles x 3 realistic canonical events (29 fields), 2 % with a DTC, 20 tenants",
+  "before": {"bytes_per_vehicle": 4966, "projected_100k_mb": 497, "note": "full last event kept per vehicle (3.6 KB of it), eager empty DTC deque (760 B), per-vehicle tenant-id strings"},
+  "after": {"bytes_per_vehicle": 2299, "projected_100k_mb": 230, "change": "keep only the 6 fields the snapshot reports; create the DTC window lazily; intern tenant ids"},
+  "why": "M14 100K-vehicle load test: the detector container hit its 512 MB limit and was OOM-killed 25 times in 5 minutes (dmesg: 'Memory cgroup out of memory: Killed process ... prognos-detecto ... anon-rss:521896kB'), processing ~2.2K of 10K msg/s"
+}

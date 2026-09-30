@@ -105,6 +105,21 @@ see it (found in the M11 failure drill).
 3. The scorer is optional (shadow mode). If it is not deployed on purpose, silence this
    alert for `job="scorer"`.
 
+## Restarting
+
+**Alert:** `ServiceRestarting` (page). A process restarted more than twice in 15 minutes.
+A crash loop is easy to miss: between restarts the service answers, so `ServiceDown`
+stays quiet. Meanwhile it processes little and falls behind.
+
+1. `docker compose ps` shows the restart count. Check whether it was killed for memory:
+   `dmesg | grep -i "out of memory"`, or `docker inspect <container>` → `OOMKilled`.
+2. **Memory limit.** State that grows with the fleet (the detector holds one state per
+   vehicle) must fit the limit. Measure with `scripts/bench_detector_memory.py`. Add a
+   replica (`DETECTOR_REPLICAS=2` splits the vehicles by partition) or raise the limit
+   in `docker-compose.yml`. M14 found and fixed exactly this at 100K vehicles.
+3. Otherwise read the last lines before each restart:
+   `docker compose logs --tail 50 <service>`.
+
 ## Target down
 
 **Alert:** `TargetDown` (page). One replica cannot be scraped for 2 minutes while the
