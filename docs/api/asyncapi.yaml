@@ -1,0 +1,75 @@
+asyncapi: 3.0.0
+info:
+  title: Prognos telemetry streams
+  version: 1.0.0
+  description: |
+    Kafka topics of the Prognos pipeline. Delivery is at-least-once end to end;
+    consumers must be idempotent on `event_id` (canonical) or on the record key.
+servers:
+  local:
+    host: localhost:9092
+    protocol: kafka
+    description: docker compose (single broker; 3-broker overlay in infra/docker)
+channels:
+  telemetryRaw:
+    address: telemetry.raw
+    description: |
+      OEM payloads as delivered (JSON, OEM-specific shape and units). Key = VIN.
+      Headers: `oem` (ORION|VEGA|LYRA), `schema` (orion.v1|vega.2.3|lyra.v1), `content-type`.
+      Producer: simulator (standing in for OEM-cloud connectors). Retention 24 h.
+    messages:
+      rawTelemetry:
+        $ref: '#/components/messages/RawTelemetry'
+  telemetryCanonical:
+    address: telemetry.canonical
+    description: Normalised, validated, deduplicated events. Key = vehicle_id (per-vehicle ordering).
+    messages:
+      canonicalTelemetry:
+        $ref: '#/components/messages/CanonicalTelemetry'
+  telemetryDlq:
+    address: telemetry.dlq
+    description: |
+      Rejected raw payloads, byte-for-byte, with the original headers plus
+      `dlq.reason`, `dlq.detail`, `dlq.source` (topic/partition/offset), `dlq.at` (epoch ms).
+      Retention 7 days, for inspection and replay after a fix.
+    messages:
+      deadLetter:
+        $ref: '#/components/messages/DeadLetter'
+  simTruth:
+    address: sim.truth
+    description: Simulator ground truth (FAULT_ONSET, FAILURE). Evaluation only; never read by the product path.
+operations:
+  normalize:
+    action: receive
+    channel:
+      $ref: '#/channels/telemetryRaw'
+    description: Consumer group `normalizer`; offsets committed only after all outputs are acknowledged.
+  publishCanonical:
+    action: send
+    channel:
+      $ref: '#/channels/telemetryCanonical'
+  publishDeadLetter:
+    action: send
+    channel:
+      $ref: '#/channels/telemetryDlq'
+components:
+  messages:
+    RawTelemetry:
+      contentType: application/json
+      payload:
+        type: object
+        description: One of three OEM formats; see apps/simulator/src/prognos_sim/formats.py
+    CanonicalTelemetry:
+      contentType: application/json
+      payload:
+        $ref: '../../packages/schemas/canonical-telemetry-v1.schema.json'
+    DeadLetter:
+      contentType: application/octet-stream
+      headers:
+        type: object
+        properties:
+          dlq.reason:
+            type: string
+            enum: [malformed_json, unknown_oem, unknown_schema_version, invalid_type, invalid_timestamp,
+                   unsupported_unit, missing_required_field, invalid_vin, out_of_range, invalid_event_type,
+                   future_timestamp, stale_event, unknown_vehicle, oem_mismatch, processing_error]

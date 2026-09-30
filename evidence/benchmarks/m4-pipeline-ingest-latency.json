@@ -1,0 +1,29 @@
+{
+  "canonical_messages": 1166748,
+  "unique_event_ids": 1166748,
+  "duplicate_event_ids": 0,
+  "late_flagged": 22608,
+  "ingest_latency_seconds_all": {
+    "n": 116674,
+    "p50": 0.361,
+    "p95": 1.197,
+    "p99": 12.262,
+    "max": 30.672
+  },
+  "ingest_latency_seconds_steady_state": {
+    "n": 97836,
+    "p50": 0.359,
+    "p95": 1.184,
+    "p99": 11.533,
+    "max": 30.672
+  },
+  "ingest_latency_seconds_steady_on_time": {
+    "n": 95924,
+    "p50": 0.353,
+    "p95": 1.04,
+    "p99": 1.518,
+    "max": 3.417
+  },
+  "steady_state_definition": "events generated >= 20 s after the first event (after consumer-group join)",
+  "note": "ingest latency = normalizer ingest_ts - device event_ts; includes the simulator's injected network delay (Exp mean 0.3 s) and out-of-order holds (2% held 1-30 s)"
+}

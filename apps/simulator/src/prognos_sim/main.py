@@ -65,6 +65,9 @@ def run_worker(
     sim = ShardSimulator(cfg, worker_id, vehicles, publisher, start_ts)
 
     dt = 1.0 / cfg.tick_hz
+    # Live mode: anchor the simulated clock to wall time *after* fleet setup, so
+    # event timestamps match when events are actually emitted (setup takes ~1-2 s).
+    clock0 = time.time() if cfg.mode is Mode.LIVE else start_ts
     wall_start = time.monotonic()
     last_report = wall_start
     tick_no = 0
@@ -73,7 +76,7 @@ def run_worker(
         elapsed = tick_no * dt
         if cfg.duration_seconds and elapsed >= cfg.duration_seconds:
             break
-        sim.tick(start_ts + elapsed, dt, cfg.rate_multiplier(elapsed))
+        sim.tick(clock0 + elapsed, dt, cfg.rate_multiplier(elapsed))
         tick_no += 1
         now = time.monotonic()
         if cfg.mode is Mode.LIVE:

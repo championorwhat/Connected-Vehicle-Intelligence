@@ -163,12 +163,14 @@ services:
           memory: 384m
 
   # ---------------------------------------------------------------------------
-  # Vehicle simulator (opt-in until the stream processor consumes telemetry, M5)
-  #   docker compose --profile sim up -d simulator
+  # Telemetry pipeline (opt-in profile: needs a seeded database)
+  #   make seed && make pipeline
+  # The simulator and the seeded database must use the same VEHICLE_COUNT,
+  # TENANT_COUNT and SIM_SEED, or the normalizer rejects every VIN as unknown.
   # ---------------------------------------------------------------------------
   simulator:
     <<: *restart
-    profiles: ["sim"]
+    profiles: ["pipeline"]
     build:
       context: .
       dockerfile: apps/simulator/Dockerfile
@@ -204,6 +206,36 @@ services:
       resources:
         limits:
           memory: 768m
+
+  # Scale out with NORMALIZER_REPLICAS (<= telemetry.raw partitions).
+  normalizer:
+    <<: *restart
+    profiles: ["pipeline"]
+    build:
+      context: .
+      dockerfile: apps/stream-processor/Dockerfile
+      secrets: [extra_ca]
+    image: prognos/stream:local
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      migrate-postgres:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:19092}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      NORMALIZER_BATCH_SIZE: ${NORMALIZER_BATCH_SIZE:-2000}
+      REGISTRY_REFRESH_SECONDS: ${REGISTRY_REFRESH_SECONDS:-300}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    stop_grace_period: 30s   # finishes the batch, flushes, commits offsets
+    deploy:
+      replicas: ${NORMALIZER_REPLICAS:-2}
+      resources:
+        limits:
+          memory: 384m
 
   # ---------------------------------------------------------------------------
   # Schema migrations (one-shot, idempotent). dbmate applies plain SQL files and

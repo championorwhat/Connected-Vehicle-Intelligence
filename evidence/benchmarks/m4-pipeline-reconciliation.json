@@ -1,0 +1,13 @@
+{
+  "measured_at": "2026-09-30T03:38:08Z",
+  "environment": "Linux container, 4 vCPU / 15 GB, x86_64 (not the target Mac); simulator 2 workers + normalizer 2 replicas + Kafka/Postgres/ClickHouse/Redis on the same host",
+  "scenario": "clean stack, 10,000 seeded vehicles, simulator 10,000 ev/s for ~90 s, stopped, restarted for ~30 s (tests sequence continuity), 1% duplicates, 2% out-of-order, 0.5% malformed, 1% missing field",
+  "simulator_raw_messages": {"run_1": 897866, "run_2": 292368, "total": 1190234},
+  "kafka_topics": {"telemetry.raw": 1190234, "telemetry.canonical": 1166748, "telemetry.dlq": 11882},
+  "duplicates_dropped_by_normalizer": 11604,
+  "balance": "raw = canonical + dlq + duplicates_dropped",
+  "normalizer_consumer_lag_after_run": 0,
+  "canonical_unique_event_ids": 1166748,
+  "canonical_duplicate_event_ids": 0,
+  "dlq_reasons": {"invalid_timestamp": 857,"invalid_type": 857,"invalid_vin": 828,"malformed_json": 1689,"missing_required_field": 5925,"out_of_range": 865,"unknown_oem": 861}
+}
