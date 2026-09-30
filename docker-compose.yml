@@ -122,6 +122,7 @@ services:
     volumes:
       - clickhouse-data:/var/lib/clickhouse
       - ./infra/docker/clickhouse/config.d/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro
+      - ./infra/docker/clickhouse/config.d/prometheus.xml:/etc/clickhouse-server/config.d/prometheus.xml:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8123/ping | grep -q Ok"]
       interval: 5s
@@ -499,6 +500,7 @@ services:
       - "${PROMETHEUS_HOST_PORT:-9090}:9090"
     volumes:
       - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/monitoring/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     deploy:
       resources:

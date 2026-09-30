@@ -31,9 +31,10 @@ from typing import Any
 import orjson
 import psycopg
 import redis
-from prometheus_client import Counter, Gauge, start_http_server
+from prometheus_client import Counter, Gauge, Histogram, start_http_server
 from psycopg.types.json import Jsonb
 
+from prognos_common.logs import configure
 from prognos_stream.planner import (
     Calibration,
     Candidate,
@@ -52,6 +53,10 @@ PROPOSED = Counter("prognos_planner_work_orders_proposed", "Work orders proposed
 LATE = Counter("prognos_planner_late_proposals", "Proposals booked after the predicted failure")
 UNSCHEDULED = Gauge("prognos_planner_unscheduled", "At-risk vehicles with no free slot")
 QUEUE = Gauge("prognos_planner_queue", "At-risk vehicles considered in the last cycle")
+LAST_SUCCESS = Gauge("prognos_planner_last_success_timestamp_seconds",
+                     "Unix time of the last completed planning cycle")  # fmt: skip
+CYCLE = Histogram("prognos_planner_cycle_seconds", "Duration of one planning cycle",
+                  buckets=(0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30))  # fmt: skip
 
 _ALERTS = """
     SELECT a.alert_id, a.tenant_id::text, a.vehicle_id::text, a.failure_mode, a.rule_code,
@@ -202,6 +207,8 @@ def plan_once(
     LATE.inc(late)
     UNSCHEDULED.set(len(unscheduled))
     QUEUE.set(len(ordered))
+    CYCLE.observe(time.perf_counter() - started)
+    LAST_SUCCESS.set_to_current_time()
     return {
         "planned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "calibration_version": calibration.version,
@@ -252,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--once", action="store_true", help="plan one cycle and exit")
     parser.add_argument("--output", type=Path, help="write the cycle summary as JSON")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(message)s")
+    configure("planner")
     env = os.environ
     interval = float(env.get("PLANNER_INTERVAL_SECONDS", "60"))
     horizon = int(env.get("PLANNER_HORIZON_DAYS", "7"))
