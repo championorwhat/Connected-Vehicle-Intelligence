@@ -24,7 +24,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
-      - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=xml
+      - run: uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-unit
@@ -90,7 +90,7 @@ jobs:
         run: |
           docker compose logs migrate-postgres migrate-clickhouse --no-color
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
-            "SELECT count(*) FROM schema_migrations" | grep -qx 3
+            "SELECT count(*) FROM schema_migrations" | grep -qx "$(ls database/postgres/migrations/*.sql | wc -l)"
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"

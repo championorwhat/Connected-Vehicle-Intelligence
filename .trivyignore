@@ -1,0 +1,3 @@
+# Accepted risks for the Trivy gate (.github/workflows/security.yml).
+# One ID per line, each with the reason, the owner and a review date. Empty at the M12
+# baseline: there are no HIGH/CRITICAL findings to accept.

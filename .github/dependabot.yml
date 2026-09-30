@@ -1,0 +1,17 @@
+# Weekly update PRs for every dependency manifest; CI and the Trivy gate check each one.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directories: [/apps/api, /apps/simulator, /apps/stream-processor, /apps/web, /ml]
+    schedule: { interval: weekly }

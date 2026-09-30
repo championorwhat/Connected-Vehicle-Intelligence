@@ -61,6 +61,15 @@ COMMENT ON EXTENSION pg_stat_statements IS 'track planning and execution statist
 
 
 --
+-- Name: app_tenant(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.app_tenant() RETURNS uuid
+    LANGUAGE sql STABLE PARALLEL SAFE
+    AS $$ SELECT nullif(current_setting('app.tenant_id', true), '')::uuid $$;
+
+
+--
 -- Name: audit_log_is_append_only(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1001,6 +1010,13 @@ CREATE INDEX alerts_failure_mode_idx ON public.alerts USING btree (failure_mode)
 
 
 --
+-- Name: alerts_tenant_detected_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX alerts_tenant_detected_idx ON public.alerts USING btree (tenant_id, detected_at DESC, alert_id DESC);
+
+
+--
 -- Name: alerts_vehicle_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1085,6 +1101,13 @@ CREATE INDEX work_orders_created_by_idx ON public.work_orders USING btree (creat
 
 
 --
+-- Name: work_orders_failure_mode_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_orders_failure_mode_idx ON public.work_orders USING btree (failure_mode);
+
+
+--
 -- Name: work_orders_one_active_per_vehicle_mode; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1096,6 +1119,20 @@ CREATE UNIQUE INDEX work_orders_one_active_per_vehicle_mode ON public.work_order
 --
 
 CREATE INDEX work_orders_source_alert_idx ON public.work_orders USING btree (source_alert_id);
+
+
+--
+-- Name: work_orders_tenant_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_orders_tenant_created_idx ON public.work_orders USING btree (tenant_id, created_at DESC, work_order_id DESC);
+
+
+--
+-- Name: work_orders_vehicle_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_orders_vehicle_idx ON public.work_orders USING btree (vehicle_id);
 
 
 --
@@ -1363,6 +1400,182 @@ ALTER TABLE ONLY public.work_orders
 ALTER TABLE ONLY public.workshops
     ADD CONSTRAINT workshops_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
 
+
+--
+-- Name: alerts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.alerts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: audit_log; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: cost_parameters; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.cost_parameters ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: driver_assignments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.driver_assignments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: drivers; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.drivers ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: erasure_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.erasure_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: fleets; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.fleets ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: subscriptions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: audit_log tenant_append; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_append ON public.audit_log FOR INSERT TO prognos_tenant WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: alerts tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.alerts TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: cost_parameters tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.cost_parameters TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: driver_assignments tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.driver_assignments TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: drivers tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.drivers TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: erasure_requests tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.erasure_requests TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: fleets tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.fleets TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: subscriptions tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.subscriptions TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: tenants tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.tenants TO prognos_tenant USING ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: users tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.users TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: vehicles tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.vehicles TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: work_orders tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.work_orders TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: workshops tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.workshops TO prognos_tenant USING ((tenant_id = public.app_tenant())) WITH CHECK ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: audit_log tenant_read; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_read ON public.audit_log FOR SELECT TO prognos_tenant USING ((tenant_id = public.app_tenant()));
+
+
+--
+-- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: users; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: vehicles; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: work_orders; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.work_orders ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: workshops; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.workshops ENABLE ROW LEVEL SECURITY;
 
 --
 -- PostgreSQL database dump complete

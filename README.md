@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M11 (observability) complete. See [milestones](#milestones).
+**Status:** M12 (security and privacy) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -336,7 +336,47 @@ http://localhost:9090.
     user-visible impact of the outage.
   - Measured on a 4-vCPU Linux container, not the target Mac.
 
-## 16. Repository structure
+## 16. Security and privacy (M12)
+
+- **Threat model:** [STRIDE](docs/security/threat-model.md). Each threat links to its
+  control, the code and the test that checks it. Eight residual risks are listed with a
+  severity and a plan.
+- **Two layers of tenant isolation:**
+  - API requests run as a restricted PostgreSQL role with row-level security.
+  - A query that forgets its tenant filter returns nothing rather than another fleet's
+    data ([ADR-010](docs/architecture/adr/ADR-010.md)). Tests run such queries on
+    purpose.
+- **Right to erasure** ([privacy](docs/security/privacy.md)):
+  - A data protection officer files a request (`POST /v1/privacy/erasure-requests`).
+  - The `erasure-worker` service removes a vehicle's location history from ClickHouse,
+    Redis and the driver links. For a driver, it unlinks the pseudonym.
+  - Every step is audited. The request records what remains, and for how long (Kafka
+    retention).
+  - Live run: 1,935 location rows erased in about 14 s in a table of 19.2M rows
+    ([evidence](evidence/security/m12-erasure-live.json)).
+- **Tests for known attacks:**
+  - 14 forged-token cases: `alg=none`, HS256 key confusion, edited claims, wrong audience.
+  - All 5 roles × 17 endpoints checked against the permission policy. The test fails
+    if a new endpoint has no access decision.
+  - Security headers on every response.
+- **Found and fixed:**
+  - The dashboard's nginx silently dropped all security headers (CSP,
+    X-Frame-Options, …) on every page ([evidence](evidence/security/m12-nginx-headers.txt)).
+  - Every database port was published on all interfaces, which exposed Redis and Kafka
+    (no auth locally) to the LAN. Ports now bind to `127.0.0.1` (`HOST_BIND`).
+- **Supply chain:**
+  - Trivy now **fails CI** on any HIGH or CRITICAL finding. The baseline is 0
+    ([report](evidence/security/trivy-fs.txt)).
+  - Gitleaks: no leaks in the history ([report](evidence/security/gitleaks.txt)).
+  - Semgrep on every push; Dependabot weekly. Run locally with `make security-scan`.
+- **Not done yet (tracked):**
+  - Device identity for Kafka.
+  - Redis and Kafka authentication and TLS (cloud, M16).
+  - Token revocation before expiry.
+  - Automated 2-year purge.
+  - Container image CVE scan (M13).
+
+## 17. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -366,8 +406,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ✅ Done ([API guide](docs/api/README.md), [ADR-008](docs/architecture/adr/ADR-008.md)) |
 | M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ✅ Done ([screens](#14-dashboard-m10)) |
 | M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ✅ Done ([SLOs](docs/observability/slo.md), [drill](docs/observability/drills.md), [ADR-009](docs/architecture/adr/ADR-009.md)) |
-| M12 | Security hardening | ⏭ Next |
-| M13–M19 | See the M0 document | Planned |
+| M12 | Security and privacy: STRIDE, row-level security, erasure workflow, headers, scan gate | ✅ Done ([threat model](docs/security/threat-model.md), [privacy](docs/security/privacy.md), [ADR-010](docs/architecture/adr/ADR-010.md)) |
+| M13 | Testing: coverage, contract, BDD, chaos | ⏭ Next |
+| M14–M19 | See the M0 document | Planned |
 
 ## Declarations
 

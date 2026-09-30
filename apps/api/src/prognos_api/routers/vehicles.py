@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from redis.exceptions import RedisError
 
 from prognos_api import pagination
-from prognos_api.deps import DbDep, StateDep, require
+from prognos_api.deps import StateDep, TenantDbDep, require
 from prognos_api.errors import ApiError
 from prognos_api.security import Principal
 
@@ -68,7 +68,7 @@ async def live(st: Any, principal: Principal, vehicle_ids: list[str]) -> dict[st
 
 @router.get("/v1/vehicles")
 async def list_vehicles(
-    st: StateDep, conn: DbDep, principal: VehicleReader,
+    st: StateDep, conn: TenantDbDep, principal: VehicleReader,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=pagination.MAX_LIMIT)] = 50,
     status: Annotated[str | None, Query(pattern="^(active|in_workshop|retired)$")] = None,
@@ -97,7 +97,7 @@ async def list_vehicles(
 
 @router.get("/v1/vehicles/at-risk")
 async def at_risk(
-    st: StateDep, conn: DbDep, principal: VehicleReader,
+    st: StateDep, conn: TenantDbDep, principal: VehicleReader,
     limit: Annotated[int, Query(ge=1, le=pagination.MAX_LIMIT)] = 25,
     source: Annotated[str | None, Query(pattern="^(rules|model)$")] = None,
 ) -> dict[str, Any]:  # fmt: skip
@@ -142,7 +142,7 @@ async def at_risk(
 
 @router.get("/v1/vehicles/{vehicle_id}")
 async def get_vehicle(
-    vehicle_id: uuid.UUID, st: StateDep, conn: DbDep, principal: VehicleReader
+    vehicle_id: uuid.UUID, st: StateDep, conn: TenantDbDep, principal: VehicleReader
 ) -> dict[str, Any]:
     row = await (await conn.execute(
         f"SELECT {_COLUMNS}, (SELECT count(*) FROM alerts a WHERE a.vehicle_id = v.vehicle_id"
