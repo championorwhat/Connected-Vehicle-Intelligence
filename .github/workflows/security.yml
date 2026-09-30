@@ -37,12 +37,15 @@ jobs:
       # Pinned Trivy image rather than the wrapper action: one less third-party action
       # in the supply chain, and the same command runs locally (scripts/security-scan.sh).
       - name: trivy fs scan
+        # Gate (M12 baseline: 0 HIGH/CRITICAL findings). A new one fails the build; an
+        # accepted risk goes in .trivyignore with a reason and an expiry date.
         run: |
+          set -o pipefail
           docker run --rm -v "$PWD":/src aquasec/trivy:0.67.2 fs \
             --scanners vuln,misconfig,secret --severity CRITICAL,HIGH \
-            --exit-code 0 --format table /src | tee trivy-fs.txt
-          # report-only until M12 sets the baseline; then --exit-code 1
+            --ignorefile /src/.trivyignore --exit-code 1 --format table /src | tee trivy-fs.txt
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: trivy-fs-report
           path: trivy-fs.txt

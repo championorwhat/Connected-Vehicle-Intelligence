@@ -55,5 +55,6 @@ observability profiles running.
    never in a status colour.
 
 **Not verified in this drill:** end-to-end reconciliation after the outage. Offsets were
-committed and Kafka keeps 7 days of data, so no loss is expected. The M4 and M6
+committed and Kafka keeps telemetry for 1 day by default (an outage of 13.5 minutes is far
+inside that), so no loss is expected. The M4 and M6
 reconciliations cover the no-loss property.

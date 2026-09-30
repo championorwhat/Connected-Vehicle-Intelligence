@@ -3,6 +3,7 @@
 prognos-api serve                      # uvicorn on :8000
 prognos-api create-user --email a@b.c --tenant acme-logistics --role fleet_manager
                                         # password read from stdin, never argv
+prognos-api erasure-worker [--once]    # carry out right-to-erasure requests
 """
 
 from __future__ import annotations
@@ -29,9 +30,9 @@ from psycopg_pool import AsyncConnectionPool
 
 from prognos_api import errors
 from prognos_api.config import Settings
-from prognos_api.deps import AppState, load_policy
+from prognos_api.deps import AppState, load_policy, reset_session
 from prognos_api.ratelimit import RateLimiter
-from prognos_api.routers import alerts, auth, live, vehicles, work_orders
+from prognos_api.routers import alerts, auth, live, privacy, vehicles, work_orders
 from prognos_api.security import TokenService, hash_password
 from prognos_common import logs
 from prognos_common.logs import configure
@@ -61,7 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] = AsyncConnectionPool(
             settings.postgres_dsn, min_size=1, max_size=10, open=False,
-            kwargs={"row_factory": dict_row, "autocommit": True},
+            kwargs={"row_factory": dict_row, "autocommit": True}, reset=reset_session,
         )  # fmt: skip
         await pool.open(wait=True, timeout=30)
         client = aioredis.Redis(host=settings.redis_host, port=settings.redis_port,
@@ -125,7 +126,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def metrics() -> Response:
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-    for module in (auth, vehicles, alerts, work_orders, live):
+    for module in (auth, vehicles, alerts, work_orders, privacy, live):
         app.include_router(module.router)
     return app
 
@@ -155,6 +156,29 @@ async def create_user(dsn: str, email: str, tenant_slug: str | None, roles: list
         return str(row[0])
 
 
+def erasure_worker(settings: Settings, *, once: bool, interval: float) -> int:
+    import clickhouse_connect
+    import redis
+
+    from prognos_api import erasure
+
+    ch = clickhouse_connect.get_client(
+        host=settings.clickhouse_host, port=settings.clickhouse_port,
+        username=settings.clickhouse_user, password=settings.clickhouse_password,
+        database=settings.clickhouse_db,
+    )  # fmt: skip
+    client = redis.Redis(host=settings.redis_host, port=settings.redis_port,
+                         password=settings.redis_password, socket_timeout=5)  # fmt: skip
+    while True:
+        outcomes = erasure.process_pending(settings.postgres_dsn, ch, client)
+        if outcomes:
+            log.info("erasure requests processed: %s",
+                     {o.request_id: o.status for o in outcomes})  # fmt: skip
+        if once:
+            return 0
+        time.sleep(interval)
+
+
 def main(argv: list[str] | None = None) -> int:
     configure("api")
     parser = argparse.ArgumentParser(prog="prognos-api")
@@ -167,8 +191,13 @@ def main(argv: list[str] | None = None) -> int:
     user.add_argument("--tenant", help="tenant slug (omit for platform staff)")
     user.add_argument("--role", action="append", required=True)
     user.add_argument("--name", default="")
+    worker = sub.add_parser("erasure-worker")
+    worker.add_argument("--once", action="store_true", help="process the queue, then exit")
+    worker.add_argument("--interval", type=float, default=60.0, help="seconds between polls")
     args = parser.parse_args(argv)
 
+    if args.cmd == "erasure-worker":
+        return erasure_worker(Settings.from_env(), once=args.once, interval=args.interval)
     if args.cmd == "serve":
         import uvicorn
 

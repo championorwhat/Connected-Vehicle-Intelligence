@@ -8,7 +8,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query, Request
 
 from prognos_api import audit, pagination
-from prognos_api.deps import DbDep, client_ip, require
+from prognos_api.deps import TenantDbDep, client_ip, require
 from prognos_api.errors import ApiError
 from prognos_api.security import Principal
 
@@ -23,7 +23,7 @@ _COLUMNS = """
 
 @router.get("/v1/alerts")
 async def list_alerts(
-    conn: DbDep, principal: Annotated[Principal, Depends(require("alert:read"))],
+    conn: TenantDbDep, principal: Annotated[Principal, Depends(require("alert:read"))],
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=pagination.MAX_LIMIT)] = 50,
     status: Annotated[
@@ -51,7 +51,7 @@ async def list_alerts(
 
 @router.post("/v1/alerts/{alert_id}/acknowledge")
 async def acknowledge(
-    alert_id: int, request: Request, conn: DbDep,
+    alert_id: int, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("alert:ack"))],
 ) -> dict[str, Any]:  # fmt: skip
     """open -> acknowledged. Repeating it is a no-op; a resolved alert cannot be acknowledged."""

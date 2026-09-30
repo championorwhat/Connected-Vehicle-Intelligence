@@ -38,7 +38,7 @@ services:
   kafka-2:
     <<: *kafka-common
     hostname: kafka-2
-    ports: ["9094:9094"]
+    ports: ["${HOST_BIND:-127.0.0.1}:9094:9094"]
     environment:
       <<: *kafka-env
       KAFKA_NODE_ID: 2
@@ -49,7 +49,7 @@ services:
   kafka-3:
     <<: *kafka-common
     hostname: kafka-3
-    ports: ["9095:9095"]
+    ports: ["${HOST_BIND:-127.0.0.1}:9095:9095"]
     environment:
       <<: *kafka-env
       KAFKA_NODE_ID: 3

@@ -1,0 +1,25 @@
+{
+  "measured_at": "2026-09-30T11:19:24Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, Docker Compose stack; not the target Mac",
+  "setup": "prognos/api image running the erasure-worker service (60 s poll); ClickHouse events table with 19,195,190 rows left from the M11 pipeline run",
+  "request": {
+    "filed_by": "dpo role via nginx -> API (POST /v1/privacy/erasure-requests)",
+    "subject_type": "vehicle",
+    "subject_id": "2f191516-5fbb-4da5-a64a-1fe8b646e2b1",
+    "requested_at": "2026-09-30T11:19:10.800Z",
+    "worker_finished_at": "2026-09-30T11:19:24.366Z (worker log)",
+    "end_to_end_seconds": 14
+  },
+  "result": {
+    "status": "completed",
+    "clickhouse_events_for_vehicle": 1935,
+    "clickhouse_rows_with_location_erased_before": 0,
+    "clickhouse_rows_with_location_erased_after": 1935,
+    "redis_live_state_deleted": 1,
+    "redis_position_deleted": 1,
+    "driver_assignments_deleted": 1,
+    "redis_key_exists_after": 0
+  },
+  "finding": "completed_at was stored as 11:19:16 (transaction start, from now()) although the worker finished at 11:19:24 after an ~8 s ClickHouse mutation. Fixed: clock_timestamp().",
+  "residual": "Raw Kafka topics keep payloads until retention (telemetry 1 day, DLQ 7 days); compacted vehicle.state keeps the latest snapshot until the next one (threat model R6)."
+}
