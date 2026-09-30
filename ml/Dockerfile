@@ -21,7 +21,7 @@ RUN --mount=type=secret,id=extra_ca,required=false \
 FROM python:3.12-slim
 # LightGBM needs the OpenMP runtime (libgomp). apt over HTTPS; the optional `extra_ca`
 # build secret is trusted too, for builds behind a TLS-intercepting proxy.
-RUN --mount=type=secret,id=extra_ca,required=false \
+RUN --mount=type=secret,id=extra_ca,required=false,mode=0444 \
     sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
     && CA=""; if [ -s /run/secrets/extra_ca ]; then CA="-o Acquire::https::CAInfo=/run/secrets/extra_ca"; fi \
     && apt-get $CA update && apt-get $CA install -y --no-install-recommends libgomp1 \
