@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M0–M15 and M17 complete; M16 (cloud), M18 (demo) and M19 (audit) remain. See [milestones](#milestones).
+**Status:** M0–M15, M17 and M18 (script) complete; M19 (audit) and M16 (cloud) remain. See [milestones](#milestones).
 
 **Solution Document:** [docs/solution-document/solution-document.md](docs/solution-document/solution-document.md)
 (all 17 template sections, every measured claim linked to its evidence).
@@ -57,6 +57,24 @@ make topics     # shows the Kafka topics and partitions
 make up-obs     # optional: + Prometheus (localhost:9090) and Grafana (localhost:3000)
 make down       # stop (keeps data); `make clean` also deletes data
 ```
+
+Run the whole product (simulator, pipeline, API, dashboard) with the scripted demo failures:
+
+```zsh
+make env && make bootstrap   # then set DEMO_USER_PASSWORD in .env
+make up-obs                  # data stores + Prometheus and Grafana
+make seed                    # 10,000 vehicles
+make pipeline-demo           # builds the images on first run (several minutes), then starts everything
+make users                   # demo logins, in the tenant where the scripted failures happen
+make demo-timeline           # prints each scripted alert and work order as it appears
+```
+
+Open http://localhost:8080 and sign in as `fleet_manager@demo.prognos.local` with
+`DEMO_USER_PASSWORD`. The first scripted warning appears about 3 minutes after
+`make pipeline-demo`, and the first critical alert after about 8
+([demo script](docs/demo/demo-script.md)). Grafana is at http://localhost:3000. The stack
+used about 2.7 GB of memory in the rehearsal. `make lag` shows each consumer's backlog;
+`make pipeline-stop` and `make down` stop everything.
 
 Run the same checks CI runs:
 
@@ -519,7 +537,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
 | M16 | Cloud deployment (Helm + Terraform) | Planned (after M18/M19, by choice) |
 | M17 | Solution Document, open-source declaration (SBOM), link checks | ✅ Done ([document](docs/solution-document/solution-document.md), [open source](docs/open-source.md)) |
-| M18–M19 | Demo script and recording, final audit, `v1.0-submission` tag | ⏭ Next |
+| M18 | Demo script timed from a real rehearsal; demo fixes (`make users` tenant, `make lag`, `make demo-timeline`) | ✅ Script done ([script](docs/demo/demo-script.md)); the video is recorded by the author |
+| M19 | Final audit, PDF export, `v1.0-submission` tag | ⏭ Next |
 
 ## Declarations
 

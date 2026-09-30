@@ -1,0 +1,256 @@
+{
+  "what": "demo rehearsal: when each scripted failure becomes visible",
+  "simulator_started_utc": "2026-09-30T16:46:08.140645+00:00",
+  "demo_vehicles": {
+    "PG1HL2B71KC000001": "COOLING_FAILURE",
+    "PG2PK5C82NC000001": "IGNITION_MISFIRE",
+    "PG2TR4D28MC000002": "LV_BATTERY_FAILURE",
+    "PG3EC8S64NC000003": "TYRE_SLOW_LEAK",
+    "PG3ET9T5XRC000004": "HV_BATTERY_THERMAL"
+  },
+  "tenants": [
+    "blue-harbor"
+  ],
+  "alerts": [
+    {
+      "vin": "PG3EC8S64NC000003",
+      "tenant": "blue-harbor",
+      "rule": "TYRE_SLOW_LEAK",
+      "severity": "warning",
+      "at": "02:53",
+      "seconds": 173.5,
+      "latency_s": 0.27
+    },
+    {
+      "vin": "PG2PK5C82NC000001",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0301",
+      "severity": "warning",
+      "at": "05:33",
+      "seconds": 333.5,
+      "latency_s": 0.39
+    },
+    {
+      "vin": "PG2TR4D28MC000002",
+      "tenant": "blue-harbor",
+      "rule": "LV_BATTERY_WEAK",
+      "severity": "warning",
+      "at": "05:48",
+      "seconds": 348.6,
+      "latency_s": 1.18
+    },
+    {
+      "vin": "PG1HL2B71KC000001",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0118",
+      "severity": "warning",
+      "at": "06:34",
+      "seconds": 394.8,
+      "latency_s": 0.55
+    },
+    {
+      "vin": "PG2PK5C82NC000001",
+      "tenant": "blue-harbor",
+      "rule": "MISFIRE_ROUGHNESS",
+      "severity": "warning",
+      "at": "07:09",
+      "seconds": 429.6,
+      "latency_s": 0.59
+    },
+    {
+      "vin": "PG1HL2B71KC000001",
+      "tenant": "blue-harbor",
+      "rule": "COOLANT_OVERHEAT",
+      "severity": "critical",
+      "at": "08:18",
+      "seconds": 498.6,
+      "latency_s": 0.56
+    },
+    {
+      "vin": "PG1HL2B71KC000001",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0217",
+      "severity": "critical",
+      "at": "08:18",
+      "seconds": 498.6,
+      "latency_s": 0.56
+    },
+    {
+      "vin": "PG2TR4D28MC000002",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0562",
+      "severity": "warning",
+      "at": "08:22",
+      "seconds": 502.6,
+      "latency_s": 0.35
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "HV_CELL_IMBALANCE",
+      "severity": "warning",
+      "at": "08:35",
+      "seconds": 515.7,
+      "latency_s": 0.99
+    },
+    {
+      "vin": "PG3EC8S64NC000003",
+      "tenant": "blue-harbor",
+      "rule": "DTC_C1A13",
+      "severity": "warning",
+      "at": "08:38",
+      "seconds": 518.6,
+      "latency_s": 0.36
+    },
+    {
+      "vin": "PG2TR4D28MC000002",
+      "tenant": "blue-harbor",
+      "rule": "LV_BATTERY_CRITICAL",
+      "severity": "critical",
+      "at": "10:00",
+      "seconds": 600.7,
+      "latency_s": 0.38
+    },
+    {
+      "vin": "PG1HL2B71KC000001",
+      "tenant": "blue-harbor",
+      "rule": "VEHICLE_BREAKDOWN",
+      "severity": "critical",
+      "at": "10:02",
+      "seconds": 602.8,
+      "latency_s": 0.8
+    },
+    {
+      "vin": "PG3EC8S64NC000003",
+      "tenant": "blue-harbor",
+      "rule": "TYRE_PRESSURE_CRITICAL",
+      "severity": "critical",
+      "at": "10:17",
+      "seconds": 617.5,
+      "latency_s": 0.24
+    },
+    {
+      "vin": "PG2PK5C82NC000001",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0300",
+      "severity": "critical",
+      "at": "10:21",
+      "seconds": 621.7,
+      "latency_s": 0.54
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0A7F",
+      "severity": "warning",
+      "at": "10:56",
+      "seconds": 656.8,
+      "latency_s": 0.5
+    },
+    {
+      "vin": "PG2PK5C82NC000001",
+      "tenant": "blue-harbor",
+      "rule": "VEHICLE_BREAKDOWN",
+      "severity": "critical",
+      "at": "12:02",
+      "seconds": 722.7,
+      "latency_s": 0.43
+    },
+    {
+      "vin": "PG2TR4D28MC000002",
+      "tenant": "blue-harbor",
+      "rule": "VEHICLE_BREAKDOWN",
+      "severity": "critical",
+      "at": "14:02",
+      "seconds": 842.5,
+      "latency_s": 0.3
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "HV_CELL_CRITICAL",
+      "severity": "critical",
+      "at": "14:45",
+      "seconds": 885.6,
+      "latency_s": 0.99
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0AFA",
+      "severity": "warning",
+      "at": "14:50",
+      "seconds": 890.5,
+      "latency_s": 0.22
+    },
+    {
+      "vin": "PG3EC8S64NC000003",
+      "tenant": "blue-harbor",
+      "rule": "VEHICLE_BREAKDOWN",
+      "severity": "critical",
+      "at": "16:02",
+      "seconds": 962.7,
+      "latency_s": 0.5
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "DTC_P0A80",
+      "severity": "critical",
+      "at": "16:14",
+      "seconds": 974.4,
+      "latency_s": 0.15
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "tenant": "blue-harbor",
+      "rule": "VEHICLE_BREAKDOWN",
+      "severity": "critical",
+      "at": "18:02",
+      "seconds": 1082.4,
+      "latency_s": 0.43
+    }
+  ],
+  "work_orders": [
+    {
+      "vin": "PG3EC8S64NC000003",
+      "failure_mode": "TYRE_SLOW_LEAK",
+      "status": "proposed",
+      "at": "03:02",
+      "seconds": 182.8,
+      "scheduled_for": "2026-09-30"
+    },
+    {
+      "vin": "PG2PK5C82NC000001",
+      "failure_mode": "IGNITION_MISFIRE",
+      "status": "proposed",
+      "at": "06:03",
+      "seconds": 363.0,
+      "scheduled_for": "2026-09-30"
+    },
+    {
+      "vin": "PG2TR4D28MC000002",
+      "failure_mode": "LV_BATTERY_FAILURE",
+      "status": "proposed",
+      "at": "06:03",
+      "seconds": 363.0,
+      "scheduled_for": "2026-09-30"
+    },
+    {
+      "vin": "PG1HL2B71KC000001",
+      "failure_mode": "COOLING_FAILURE",
+      "status": "proposed",
+      "at": "07:03",
+      "seconds": 423.1,
+      "scheduled_for": "2026-09-30"
+    },
+    {
+      "vin": "PG3ET9T5XRC000004",
+      "failure_mode": "HV_BATTERY_THERMAL",
+      "status": "proposed",
+      "at": "09:03",
+      "seconds": 543.2,
+      "scheduled_for": "2026-09-30"
+    }
+  ]
+}
