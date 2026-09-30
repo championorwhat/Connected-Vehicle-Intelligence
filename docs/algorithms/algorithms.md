@@ -107,6 +107,33 @@ event_ids** reached `telemetry.canonical`, and 23,000+ out-of-order events were 
 flagged `late` (`evidence/benchmarks/m4-pipeline-*.json`). Unit semantics:
 `apps/stream-processor/tests/test_dedup.py`.
 
+## A7. Streaming change and trend detection with hysteresis (detector)
+
+**Problem.** Warn about each of the five failure modes early (hours to days before breakdown)
+and raise critical alerts within seconds. The state must be O(1) per vehicle, because 100K
+vehicles each emit 1 event/s.
+
+**Algorithms** (`apps/stream-processor/src/prognos_stream/features.py`, `detector.py`):
+
+| Signal | Statistic | Update | Open / clear |
+|---|---|---|---|
+| Coolant drift | Page's CUSUM of `coolant − (88 + 0.03·speed)` with k = 4 °C, only after 15 min of ignition | `s ← max(0, s + x − k)` | s > 60 / s < 5 |
+| Misfire roughness | EW mean and variance (West) of `rpm − (750 + 28·speed)`, α = 0.02 | `m += α·d; v = (1−α)(v + d·α·d)` | σ > 90 / σ < 70 rpm |
+| 12 V battery | EWMA of resting voltage (ignition off), α = 0.05 | `m += α(x − m)` | < 12.25 V / > 12.45 V (critical < 11.8) |
+| Tyre slow leak | per tyre: deficit vs the **median of the other three** (cancels temperature and load), EWMA plus exponentially time-weighted least-squares slope → leak rate and hours to critical | weighted sums decayed by `exp(−Δt/τ)` | > 8% / < 5% (critical > 25%) |
+| HV cell imbalance | EWMA of cell ΔV | as above | > 40 mV / < 25 mV (critical > 100) |
+| Critical / warning DTCs | per-vehicle 10-min deque of codes; critical codes fire at once, warning codes need ≥ 3 in the window | amortised O(1) | present / absent for 10 min |
+
+**Hysteresis.** Separate open and clear thresholds give one alert per episode rather than a
+storm near the threshold. **Idempotency:** fingerprint = BLAKE2b(vehicle, rule, seq of the
+opening event), so a replay reproduces the same alerts (tested against real Kafka).
+**Out-of-order events** update no trend state, because streaming statistics assume time order.
+Immediate threshold rules still see them.
+
+**Complexity.** O(1) time per event per signal. Per vehicle about 1 KB of state (floats plus
+a short DTC deque), so roughly 100 MB for 100K vehicles, spread across detector processes by
+partition.
+
 ---
 
 ## Measured results (simulator)

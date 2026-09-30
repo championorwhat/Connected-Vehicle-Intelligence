@@ -11,11 +11,17 @@ dependencies = [
     "psycopg[binary]>=3.2",
 ]
 
+[project.optional-dependencies]
+# evaluate.py (offline back-test) drives the simulator in-process; not needed at runtime.
+backtest = ["prognos-simulator"]
+
 [project.scripts]
 prognos-normalizer = "prognos_stream.main:main"
+prognos-detector = "prognos_stream.detector_main:main"
 
 [tool.uv.sources]
 prognos-common = { workspace = true }
+prognos-simulator = { workspace = true }
 
 [build-system]
 requires = ["hatchling>=1.25"]

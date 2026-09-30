@@ -1,0 +1,25 @@
+{
+  "window_start": "2026-09-30T04:20:42.408587678Z",
+  "definition": "detected_at (detector wall clock) - event_ts (device clock) for alerts opened on events generated during this run; includes the simulator's injected network delay (Exp mean 0.3 s) and 1-30 s out-of-order holds on 2% of events",
+  "all_opened": {
+    "n": 683,
+    "p50": 0.485,
+    "p95": 1.147,
+    "p99": 1.791,
+    "max": 29.996
+  },
+  "critical": {
+    "n": 344,
+    "p50": 0.495,
+    "p95": 1.105,
+    "p99": 3.592,
+    "max": 29.996
+  },
+  "warning": {
+    "n": 339,
+    "p50": 0.474,
+    "p95": 1.181,
+    "p99": 1.631,
+    "max": 2.322
+  }
+}

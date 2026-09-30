@@ -76,26 +76,31 @@ jobs:
           ./scripts/seed.sh --vehicles 100000 --evidence seed-100k.json
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
             "SELECT count(*) FROM vehicles" | grep -qx 100000
-      - name: pipeline (simulator -> normalizer) on the 100K seed
+      - name: pipeline (simulator -> normalizer -> detector) on the 100K seed
         env:
           VEHICLE_COUNT: "100000"      # must match the seed above
           EVENTS_PER_SECOND: "10000"
         run: |
           docker compose --profile pipeline build
-          docker compose --profile pipeline up -d normalizer
+          docker compose --profile pipeline up -d normalizer detector
           docker compose --profile pipeline run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
             simulator --summary /tmp/sim.json
-          for i in $(seq 1 30); do
-            lag=$(docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
-              --bootstrap-server kafka:19092 --describe --group normalizer 2>/dev/null \
-              | awk 'NR>1 && $6 ~ /^[0-9]+$/ {s+=$6} END {print s+0}')
-            echo "normalizer lag: $lag"; [ "$lag" = "0" ] && break; sleep 2
+          group_lag() { docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+            --bootstrap-server kafka:19092 --describe --group "$1" 2>/dev/null \
+            | awk 'NR>1 && $6 ~ /^[0-9]+$/ {s+=$6} END {print s+0}'; }
+          for i in $(seq 1 45); do
+            lag=$(group_lag normalizer); dlag=$(group_lag detector)
+            echo "lag normalizer=$lag detector=$dlag"
+            [ "$lag" = "0" ] && [ "$dlag" = "0" ] && break; sleep 2
           done
           count() { docker compose exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
             --bootstrap-server kafka:19092 --topic "$1" | awk -F: '{s+=$3} END {print s+0}'; }
           raw=$(count telemetry.raw); canonical=$(count telemetry.canonical); dlq=$(count telemetry.dlq)
+          alerts=$(count alerts); states=$(count vehicle.state)
           echo "raw=$raw canonical=$canonical dlq=$dlq dropped_duplicates=$((raw-canonical-dlq))"
-          [ "$lag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ]
+          echo "alerts=$alerts vehicle.state=$states"
+          [ "$lag" = "0" ] && [ "$dlag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ] \
+            && [ "$alerts" -gt 0 ] && [ "$states" -gt 0 ]
       - uses: actions/upload-artifact@v4
         with:
           name: seed-100k-ci

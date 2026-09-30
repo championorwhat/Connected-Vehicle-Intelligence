@@ -35,6 +35,17 @@ channels:
     messages:
       deadLetter:
         $ref: '#/components/messages/DeadLetter'
+  alerts:
+    address: alerts
+    description: |
+      Alert transitions (open / cleared) from the detector, keyed by vehicle_id.
+      Consumers upsert on `fingerprint` (deterministic per vehicle, rule and opening event).
+    messages:
+      alert:
+        $ref: '#/components/messages/Alert'
+  vehicleState:
+    address: vehicle.state
+    description: Latest health snapshot per vehicle (compacted; key = vehicle_id), every 15 s of event time.
   simTruth:
     address: sim.truth
     description: Simulator ground truth (FAULT_ONSET, FAILURE). Evaluation only; never read by the product path.
@@ -52,6 +63,15 @@ operations:
     action: send
     channel:
       $ref: '#/channels/telemetryDlq'
+  detect:
+    action: receive
+    channel:
+      $ref: '#/channels/telemetryCanonical'
+    description: Consumer group `detector`; per-vehicle streaming state, alerts with hysteresis.
+  publishAlert:
+    action: send
+    channel:
+      $ref: '#/channels/alerts'
 components:
   messages:
     RawTelemetry:
@@ -63,6 +83,10 @@ components:
       contentType: application/json
       payload:
         $ref: '../../packages/schemas/canonical-telemetry-v1.schema.json'
+    Alert:
+      contentType: application/json
+      payload:
+        $ref: '../../packages/schemas/alert-v1.schema.json'
     DeadLetter:
       contentType: application/octet-stream
       headers:

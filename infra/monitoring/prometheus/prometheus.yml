@@ -19,3 +19,8 @@ scrape_configs:
       - names: ["normalizer"]
         type: A
         port: 9102
+  - job_name: detector
+    dns_sd_configs:
+      - names: ["detector"]
+        type: A
+        port: 9103

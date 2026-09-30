@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M4 (Kafka ingestion: normalise, validate, deduplicate, DLQ) complete. See [milestones](#milestones).
+**Status:** M5 (real-time detection and alerts) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -142,7 +142,28 @@ Measured on a 4-vCPU container shared with Kafka:
   duplicate event_ids.
 - **Ingest latency, on-time events:** p50 0.35 s, p95 1.04 s.
 
-## 9. Repository structure
+## 9. Real-time detection (M5)
+
+`prognos-detector` consumes `telemetry.canonical` and keeps O(1) streaming state per vehicle.
+It raises alerts in two tiers:
+- **Critical, within seconds:** overheating, critical DTCs, tyre, HV and 12 V critical levels,
+  and breakdowns.
+- **Early warnings from trends:** coolant CUSUM, misfire roughness, resting 12 V voltage,
+  tyre deficit against the other tyres (with estimated hours to critical), and HV cell imbalance.
+
+Alerts use hysteresis and deterministic fingerprints (idempotent). The latest health snapshot
+per vehicle goes to the compacted `vehicle.state` topic.
+
+Measured:
+- **Back-test against ground truth:** 98.6% of breakdowns warned, with a median
+  lead of 49.6 h. Precision is 100% in the simulated
+  world, which is not a field claim.
+- **Live critical alert latency:** p50 0.495 s, p95 1.105 s,
+  p99 3.592 s (target < 5 s).
+
+Details and caveats: [detection-baseline.md](docs/performance/detection-baseline.md).
+
+## 10. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -165,7 +186,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M2 | PostgreSQL 3NF + ClickHouse schema, migrations, 100K-vehicle seed | ✅ Done ([data model](docs/database/data-model.md), [ER diagram](docs/database/er-diagram.md)) |
 | M3 | Vehicle simulator + standalone benchmark | ✅ Done ([results](docs/algorithms/algorithms.md#measured-results-simulator)) |
 | M4 | Kafka ingestion: normalise 3 OEM formats, validate, dedup, DLQ | ✅ Done ([benchmarks](docs/performance/benchmarks.md), [ADR-005](docs/architecture/adr/ADR-005.md)) |
-| M5 | Stream processing: detection, aggregation, alerts | ⏭ Next |
+| M5 | Real-time detection: critical rules, trend early-warnings, alerts | ✅ Done ([detection baseline](docs/performance/detection-baseline.md)) |
+| M6 | Persistence: ClickHouse, PostgreSQL alerts, Redis live state | ⏭ Next |
 | M4–M19 | See the M0 document | Planned |
 
 ## Declarations
