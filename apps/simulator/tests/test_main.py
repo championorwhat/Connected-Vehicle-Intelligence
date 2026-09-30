@@ -39,6 +39,7 @@ def test_two_workers_split_the_rate_exactly() -> None:
 def test_demo_scenario_reports_vins() -> None:
     summary = run(_config(scenario="demo", sim_workers=1))
     assert len(summary["demo_vins"]) == 5  # one vehicle per failure mode
+    assert len(set(summary["demo_vins"])) == 5  # distinct vehicles (regression)
 
 
 def test_file_publisher_writes_jsonl(tmp_path: Path) -> None:
