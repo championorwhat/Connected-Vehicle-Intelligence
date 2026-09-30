@@ -533,6 +533,30 @@
         ]
       }
     },
+    "/v1/fleet/summary": {
+      "get": {
+        "description": "Headline counts for the dashboard (one round trip, tenant-scoped).",
+        "operationId": "fleet_summary_v1_fleet_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Fleet Summary V1 Fleet Summary Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Fleet Summary",
+        "tags": [
+          "fleet"
+        ]
+      }
+    },
     "/v1/vehicles": {
       "get": {
         "operationId": "list_vehicles_v1_vehicles_get",

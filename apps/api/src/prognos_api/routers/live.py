@@ -102,6 +102,36 @@ async def signals(
                       for row in result.result_rows]}  # fmt: skip
 
 
+@router.get("/v1/fleet/summary", tags=["fleet"])
+async def fleet_summary(
+    conn: DbDep, principal: Annotated[Principal, Depends(require("fleet:read"))]
+) -> dict[str, Any]:
+    """Headline counts for the dashboard (one round trip, tenant-scoped)."""
+    row = await (await conn.execute(
+        """
+        SELECT
+          (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s) AS vehicles,
+          (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s AND status = 'in_workshop')
+              AS vehicles_in_workshop,
+          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+              AND severity = 'critical') AS open_critical_alerts,
+          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+              AND severity = 'warning') AS open_warning_alerts,
+          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'acknowledged')
+              AS acknowledged_alerts,
+          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'proposed')
+              AS work_orders_proposed,
+          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'scheduled')
+              AS work_orders_scheduled,
+          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'in_progress')
+              AS work_orders_in_progress
+        """,
+        {"t": principal.tenant_id},
+    )).fetchone()  # fmt: skip
+    assert row is not None
+    return row
+
+
 @router.get("/healthz", tags=["ops"])
 async def healthz() -> dict[str, str]:
     """Liveness: the process is serving requests."""

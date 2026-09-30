@@ -431,6 +431,24 @@ services:
         limits:
           memory: 256m
 
+  # Dashboard (http://localhost:8080): static build + same-origin proxy to the API.
+  web:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/web:local
+    build:
+      context: apps/web
+      secrets: [extra_ca]
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_HOST_PORT:-8080}:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
   # ---------------------------------------------------------------------------
   # Schema migrations (one-shot, idempotent). dbmate applies plain SQL files and
   # records them in schema_migrations; re-running is a no-op.

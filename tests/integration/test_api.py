@@ -157,6 +157,13 @@ def test_other_tenants_vehicle_is_not_found(client: TestClient, world: dict[str,
     )
 
 
+def test_fleet_summary_counts_only_this_tenant(client: TestClient, world: dict[str, Any]) -> None:
+    body = client.get("/v1/fleet/summary", headers=login(client, "analyst_a")).json()
+    assert body["vehicles"] == len(world["vehicles"][world["a"]])
+    assert set(body) >= {"open_critical_alerts", "work_orders_proposed"}
+    problem(client.get("/v1/fleet/summary", headers=login(client, "tech_a")), 403)
+
+
 def test_platform_admin_has_no_fleet_access(client: TestClient) -> None:
     problem(client.get("/v1/vehicles", headers=login(client, "admin")), 403)
 
@@ -185,7 +192,7 @@ def test_at_risk_uses_model_when_scored_else_rules(
     a, vids = world["a"], world["vehicles"][world["a"]]
     r = redis_lib.Redis(host=redis_url[0], port=redis_url[1])
     r.delete(f"tenant:{a}:risk")
-    r.zadd(f"tenant:{a}:health", {vids[2]: 20, vids[3]: 90})
+    r.zadd(f"tenant:{a}:health", {vids[2]: 20, vids[3]: 90, vids[6]: 100})
     h = login(client, "manager_a")
     body = client.get("/v1/vehicles/at-risk", headers=h, params={"source": "model"}).json()
     assert body["source"] == "rules:health_score"  # no model scores yet
@@ -195,6 +202,7 @@ def test_at_risk_uses_model_when_scored_else_rules(
     default = client.get("/v1/vehicles/at-risk", headers=h).json()
     assert default["source"] == "rules:health_score"  # shadow mode: rules by default
     assert default["fallback"] is False
+    assert vids[6] not in [i["vehicle_id"] for i in default["items"]]  # healthy: not listed
     body = client.get("/v1/vehicles/at-risk", headers=h, params={"source": "model"}).json()
     assert body["source"].startswith("model:")
     assert [i["vehicle_id"] for i in body["items"]][:2] == [vids[3], vids[2]]  # unknown id dropped
