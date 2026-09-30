@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M7 (core intelligence: calibrated risk, work-order planner, emerging-fault radar) complete. See [milestones](#milestones).
+**Status:** M8 (7-day failure model, LightGBM vs the calibrated rules on held-out data) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -208,7 +208,36 @@ Details and caveats: [detection-baseline.md](docs/performance/detection-baseline
 > **Costs needed:** real planned/unplanned repair and downtime costs (with a source) are
 > required before any money figure is shown. Until then they are labelled placeholders.
 
-## 12. Repository structure
+## 12. Failure model (M8)
+
+`ml/` (`prognos-ml`) builds a 7-day failure model and tests it against the M7 rules:
+
+- **Data.** Five 8-hour simulated runs of 300 vehicles (about 8.5 M events each) go through
+  the production normalizer and detector, and are stored as Parquet.
+- **Features.** DuckDB computes per-minute buckets, then 60-minute and 10-minute window
+  features. A test proves there is no look-ahead.
+- **Model.** LightGBM, trained on two runs and tested on three unseen ones: a held-out run
+  and two shifted variants (slower faults, rarer faults).
+- **Held-out result** (same rows, same capacity rule for both scorers):
+
+  | | Model | Rules (M7) |
+  |---|---|---|
+  | PR-AUC | **0.742** | 0.508 |
+  | Precision of the top 5% list | **99.7%** | 72.5% |
+  | Failures listed ≥ 48 h ahead | **34.7%** | 23.2% |
+
+  The PR-AUC gain is +0.23, with a 95% interval of [0.17, 0.30]. The model also wins on
+  both shifted sets ([evidence](evidence/benchmarks/m8-model-vs-baseline.json)).
+- **Explanations** (TreeSHAP) come with every prediction. Scoring takes 0.024 ms per vehicle.
+- **Versioned artefact** with a checksum: [ml/models/failure-7d-v1](ml/models/failure-7d-v1).
+
+**Limits:** simulated data only; lead times are compressed (median 50 h, below the 72 h
+target); money is not computed, because costs are still placeholders; the planner switches
+to the model once live scoring exists (M9). Read the
+[model card](docs/ml/model-card.md) and [ADR-007](docs/architecture/adr/ADR-007.md) before
+quoting any number.
+
+## 13. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -234,8 +263,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M5 | Real-time detection: critical rules, trend early-warnings, alerts | ✅ Done ([detection baseline](docs/performance/detection-baseline.md)) |
 | M6 | Persistence: ClickHouse Kafka ingestion, PostgreSQL alerts, Redis live state, reconciliation | ✅ Done ([ADR-002..004](docs/architecture/adr/)) |
 | M7 | Core intelligence: calibrated risk, capacity-aware work orders, emerging-fault radar | ✅ Done ([A8–A10](docs/algorithms/algorithms.md), [ADR-006](docs/architecture/adr/ADR-006.md)) |
-| M8 | ML failure model vs the calibrated-rules baseline (held-out) | ⏭ Next |
-| M9–M19 | See the M0 document | Planned |
+| M8 | ML failure model vs the calibrated-rules baseline (held-out) | ✅ Done ([model card](docs/ml/model-card.md), [ADR-007](docs/architecture/adr/ADR-007.md)) |
+| M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ⏭ Next |
+| M10–M19 | See the M0 document | Planned |
 
 ## Declarations
 

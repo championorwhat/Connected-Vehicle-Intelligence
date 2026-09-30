@@ -1,0 +1,91 @@
+{
+  "note": "M8 backfill datasets (simulated, in-process pipeline: simulator -> normalizer -> detector); data files are not committed, regenerate with `make ml-data`",
+  "hardware": "x86_64 Linux container, 4 vCPU, 5 runs in parallel (not the target Mac)",
+  "runs": {
+    "test_heldout": {
+      "config": {
+        "name": "test_heldout",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 48,
+        "seed": 7
+      },
+      "start_ts": 1790000000.0,
+      "end_ts": 1790028799.0,
+      "raw_messages": 8726401,
+      "canonical_events": 8498588,
+      "alerts": 1096,
+      "failures": 120,
+      "wall_seconds": 881.4
+    },
+    "test_rare": {
+      "config": {
+        "name": "test_rare",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.05,
+        "time_scale": 48,
+        "seed": 13
+      },
+      "start_ts": 1790000000.0,
+      "end_ts": 1790028799.0,
+      "raw_messages": 8726606,
+      "canonical_events": 8473926,
+      "alerts": 295,
+      "failures": 29,
+      "wall_seconds": 824.1
+    },
+    "test_slow": {
+      "config": {
+        "name": "test_slow",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 32,
+        "seed": 11
+      },
+      "start_ts": 1790000000.0,
+      "end_ts": 1790028799.0,
+      "raw_messages": 8726707,
+      "canonical_events": 8499080,
+      "alerts": 978,
+      "failures": 102,
+      "wall_seconds": 910.7
+    },
+    "train_a": {
+      "config": {
+        "name": "train_a",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 48,
+        "seed": 42
+      },
+      "start_ts": 1790000000.0,
+      "end_ts": 1790028799.0,
+      "raw_messages": 8726351,
+      "canonical_events": 8522583,
+      "alerts": 1314,
+      "failures": 138,
+      "wall_seconds": 912.0
+    },
+    "train_b": {
+      "config": {
+        "name": "train_b",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 48,
+        "seed": 43
+      },
+      "start_ts": 1790000000.0,
+      "end_ts": 1790028799.0,
+      "raw_messages": 8726489,
+      "canonical_events": 8540395,
+      "alerts": 1211,
+      "failures": 131,
+      "wall_seconds": 897.0
+    }
+  }
+}
