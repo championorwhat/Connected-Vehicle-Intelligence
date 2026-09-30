@@ -38,7 +38,7 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -164,7 +164,7 @@ jobs:
           curl -fsS -H "$auth" "localhost:8000/v1/work-orders?limit=5" | jq -e '.items | type == "array"'
           test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/v1/vehicles)" = 401
           curl -fsS localhost:8000/openapi.json | jq -e '.paths["/v1/alerts"]'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: dashboard end to end (nginx container + Playwright)
