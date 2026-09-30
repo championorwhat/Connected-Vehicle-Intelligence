@@ -61,22 +61,38 @@ make up-obs     # optional: + Prometheus (localhost:9090) and Grafana (localhost
 make down       # stop (keeps data); `make clean` also deletes data
 ```
 
-Run the whole product (simulator, pipeline, API, dashboard) with the scripted demo failures:
+Run the whole product (simulator, pipeline, API, dashboard) with the scripted demo failures.
+Run these one at a time; zsh does not treat `#` as a comment when commands are pasted, so
+none are included:
 
 ```zsh
-make env && make bootstrap   # then set DEMO_USER_PASSWORD in .env
-make up-obs                  # data stores + Prometheus and Grafana
-make seed                    # 10,000 vehicles
-make pipeline-demo           # builds the images on first run (several minutes), then starts everything
-make users                   # demo logins, in the tenant where the scripted failures happen
-make demo-timeline           # prints each scripted alert and work order as it appears
+make env
+make bootstrap
+make up-obs
+make seed
+make pipeline-demo
+make users
+make demo-timeline
 ```
+
+- `make env` creates `.env`: set `DEMO_USER_PASSWORD` in it before `make users`.
+- `make up-obs` starts the data stores plus Prometheus and Grafana; `make seed` loads
+  10,000 vehicles.
+- `make pipeline-demo` builds the images on the first run (several minutes), then starts
+  everything; `make users` creates the demo logins in the tenant where the scripted
+  failures happen.
+- `make demo-timeline` prints each scripted alert and work order as it appears.
+- **Port already in use?** If a local PostgreSQL (or anything else) holds port 5432, add
+  `POSTGRES_HOST_PORT=5433` to `.env` and run `make down` then `make up-obs` again. Every
+  published port can be moved the same way (`REDIS_HOST_PORT`, `WEB_HOST_PORT`,
+  `API_HOST_PORT`, `KAFKA_HOST_PORT`, …).
 
 Open http://localhost:8080 and sign in as `fleet_manager@demo.prognos.local` with
 `DEMO_USER_PASSWORD`. The first scripted warning appears about 3 minutes after
 `make pipeline-demo`, and the first critical alert after about 8
 ([demo script](docs/demo/demo-script.md)). Grafana is at http://localhost:3000. The stack
-used about 2.7 GB of memory in the rehearsal. `make lag` shows each consumer's backlog;
+used about 2.7 GB of memory in the rehearsal. The full demo also ran on the author's 8 GB
+MacBook Air M2 on 2026-09-30, with Docker at 5 GB; nothing was measured there. `make lag` shows each consumer's backlog;
 `make pipeline-stop` and `make down` stop everything.
 
 Run the same checks CI runs:

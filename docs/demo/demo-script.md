@@ -13,16 +13,23 @@ sheet shows about 07:00.**
   rehearsal).
 - Close other heavy apps.
 
-**Start from a clean state:**
+**Start from a clean state.** Run these one at a time (zsh does not treat `#` as a
+comment when pasted). `make clean` deletes all local data; `.env` is kept, so set
+`DEMO_USER_PASSWORD` there, and `POSTGRES_HOST_PORT=5433` if a local PostgreSQL uses 5432.
+
 ```zsh
-make clean              # deletes all local data (asks nothing: be sure)
-make env                # then set DEMO_USER_PASSWORD in .env
-make up-obs             # Kafka, PostgreSQL, ClickHouse, Redis, Prometheus, Grafana
-make seed               # 10,000 vehicles
-make pipeline-demo      # simulator (5 scripted failures + a firmware defect), pipeline, API, dashboard
-make users              # demo logins, in the tenant where the failures happen
-make demo-timeline      # leave this terminal visible: it prints each event as it happens
+make clean
+make up-obs
+make seed
+make pipeline-demo
+make users
+make demo-timeline
 ```
+
+- `make pipeline-demo` starts the simulator (5 scripted failures and a firmware defect),
+  the pipeline, the API and the dashboard.
+- `make users` creates the demo logins in the tenant where the failures happen.
+- Leave the `make demo-timeline` terminal visible: it prints each event as it happens.
 
 `make pipeline-demo` starts the simulator's clock. The first scripted event appears at
 about **02:53** on the cue sheet.
