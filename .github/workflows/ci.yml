@@ -90,7 +90,7 @@ jobs:
         run: |
           docker compose logs migrate-postgres migrate-clickhouse --no-color
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
-            "SELECT count(*) FROM schema_migrations" | grep -qx 3
+            "SELECT count(*) FROM schema_migrations" | grep -qx "$(ls database/postgres/migrations/*.sql | wc -l)"
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
