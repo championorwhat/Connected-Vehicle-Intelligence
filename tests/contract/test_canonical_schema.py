@@ -50,3 +50,31 @@ def test_every_canonical_event_matches_schema() -> None:
             assert not errors, errors[0].message
             checked += 1
     assert checked > 2_500
+
+
+def test_detector_alerts_match_alert_schema() -> None:
+    from prognos_stream.detector import Detector
+    from prognos_stream.evaluate import PipelinePublisher
+
+    alert_schema = json.loads(
+        (Path(__file__).parents[2] / "packages/schemas/alert-v1.schema.json").read_text()
+    )
+    validator = Draft202012Validator(alert_schema)
+    roster = generate_roster(60, 3, 7)
+    cfg = SimConfig(
+        vehicle_count=60, events_per_second=60.0, tenant_count=3, mode=Mode.FAST, tick_hz=1,
+        burst_multiplier=1.0, publisher=PublisherKind.NULL, metrics_port=0, fault_rate=0.6,
+        fault_time_scale=960.0,
+    )  # fmt: skip
+    clock = [START]
+    pipe = PipelinePublisher(Normalizer(VehicleRegistry.from_roster(roster)), Detector(), clock)
+    sim = ShardSimulator(cfg, 0, roster.vehicles, pipe, START)
+    for tick in range(1_200):
+        clock[0] = START + tick
+        sim.tick(clock[0], 1.0)
+    sim.finish()
+    assert len(pipe.alerts) > 20
+    for alert in pipe.alerts:
+        errors = list(validator.iter_errors(alert))
+        assert not errors, errors[0].message
+    assert {a["status"] for a in pipe.alerts} == {"open", "cleared"}

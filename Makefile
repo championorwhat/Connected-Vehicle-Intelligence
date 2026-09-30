@@ -72,15 +72,23 @@ chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
 # --- Pipeline ----------------------------------------------------------------
-.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek sim-bench
+.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail backtest sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
-	$(COMPOSE) --profile pipeline up -d --build simulator normalizer
+	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector
 
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures 10-18 minutes after start
-	SIM_SCENARIO=demo $(COMPOSE) --profile pipeline up -d --build simulator normalizer
+	SIM_SCENARIO=demo $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector
 
-pipeline-stop: ## Stop simulator and normalizer gracefully (flush + commit)
-	$(COMPOSE) --profile pipeline stop simulator normalizer
+pipeline-stop: ## Stop simulator, normalizer and detector gracefully (flush + commit)
+	$(COMPOSE) --profile pipeline stop simulator normalizer detector
+
+alerts-tail: ## Follow alerts as they are raised
+	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
+	  --topic alerts | cut -c1-300
+
+backtest: ## Detection back-test against simulator ground truth (~10 min)
+	uv run python -m prognos_stream.evaluate --vehicles 300 --hours 8 --fault-rate 0.2 \
+	  --time-scale 48 --output evidence/benchmarks/m5-detection-backtest.json
 
 dlq-peek: ## Show the 5 most recent DLQ records with their reasons
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
