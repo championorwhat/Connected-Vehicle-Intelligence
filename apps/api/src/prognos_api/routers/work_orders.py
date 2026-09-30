@@ -23,7 +23,7 @@ from psycopg import errors as pg_errors
 from pydantic import BaseModel, Field
 
 from prognos_api import audit, pagination
-from prognos_api.deps import DbDep, client_ip, require
+from prognos_api.deps import TenantDbDep, client_ip, require
 from prognos_api.errors import ApiError
 from prognos_api.security import Principal
 
@@ -64,7 +64,7 @@ class Complete(BaseModel):
 
 @router.get("/v1/work-orders")
 async def list_work_orders(
-    conn: DbDep, principal: Annotated[Principal, Depends(require("work_order:read"))],
+    conn: TenantDbDep, principal: Annotated[Principal, Depends(require("work_order:read"))],
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=pagination.MAX_LIMIT)] = 50,
     status: Annotated[
@@ -91,7 +91,7 @@ async def list_work_orders(
 
 @router.post("/v1/work-orders", status_code=201)
 async def create_work_order(
-    body: CreateWorkOrder, request: Request, conn: DbDep,
+    body: CreateWorkOrder, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("work_order:write"))],
 ) -> dict[str, Any]:  # fmt: skip
     status = "scheduled" if body.scheduled_for else "proposed"
@@ -119,7 +119,7 @@ async def create_work_order(
 
 
 async def _transition(
-    work_order_id: uuid.UUID, action: str, request: Request, conn: DbDep,
+    work_order_id: uuid.UUID, action: str, request: Request, conn: TenantDbDep,
     principal: Principal, updates: dict[str, Any],
 ) -> dict[str, Any]:  # fmt: skip
     allowed_from, target, permission = TRANSITIONS[action]
@@ -148,7 +148,7 @@ async def _transition(
 
 
 async def _audit(
-    conn: DbDep, request: Request, principal: Principal, action: str, resource_id: str,
+    conn: TenantDbDep, request: Request, principal: Principal, action: str, resource_id: str,
     details: dict[str, Any],
 ) -> None:  # fmt: skip
     await audit.record(
@@ -161,7 +161,7 @@ async def _audit(
 
 @router.post("/v1/work-orders/{work_order_id}/schedule")
 async def schedule(
-    work_order_id: uuid.UUID, body: Schedule, request: Request, conn: DbDep,
+    work_order_id: uuid.UUID, body: Schedule, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("work_order:write"))],
 ) -> dict[str, Any]:  # fmt: skip
     if body.scheduled_for < dt.date.today():
@@ -172,7 +172,7 @@ async def schedule(
 
 @router.post("/v1/work-orders/{work_order_id}/cancel")
 async def cancel(
-    work_order_id: uuid.UUID, request: Request, conn: DbDep,
+    work_order_id: uuid.UUID, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("work_order:write"))],
 ) -> dict[str, Any]:  # fmt: skip
     return await _transition(work_order_id, "cancel", request, conn, principal, {})
@@ -180,7 +180,7 @@ async def cancel(
 
 @router.post("/v1/work-orders/{work_order_id}/start")
 async def start(
-    work_order_id: uuid.UUID, request: Request, conn: DbDep,
+    work_order_id: uuid.UUID, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("work_order:complete"))],
 ) -> dict[str, Any]:  # fmt: skip
     return await _transition(work_order_id, "start", request, conn, principal, {})
@@ -188,7 +188,7 @@ async def start(
 
 @router.post("/v1/work-orders/{work_order_id}/complete")
 async def complete(
-    work_order_id: uuid.UUID, body: Complete, request: Request, conn: DbDep,
+    work_order_id: uuid.UUID, body: Complete, request: Request, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("work_order:complete"))],
 ) -> dict[str, Any]:  # fmt: skip
     updates = {"outcome": body.outcome, "completed_at": dt.datetime.now(dt.UTC)}

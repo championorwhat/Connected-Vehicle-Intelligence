@@ -36,7 +36,7 @@ configured signing key, with default passwords, or with wildcard CORS.
 | fleet_manager | read fleet, vehicles, alerts, precise location; acknowledge alerts; create/schedule/cancel work orders |
 | technician | read vehicles, alerts, work orders; start and complete work orders |
 | analyst | read fleet, vehicles, alerts; location is **masked to ~1 km** |
-| dpo | read vehicles and the audit trail |
+| dpo | read vehicles and the audit trail; file and track erasure requests |
 | platform_admin | tenant administration only, **no fleet data** |
 
 - **Tenant isolation.** Every query is filtered by the caller's tenant.
@@ -44,6 +44,9 @@ configured signing key, with default passwords, or with wildcard CORS.
     revealed.
   - Composite foreign keys make a cross-tenant work order impossible even at the
     database level.
+  - Since M12, each request also runs as a PostgreSQL role under row-level security
+    ([ADR-010](../architecture/adr/ADR-010.md)). A query that misses its tenant filter
+    returns nothing.
 - **Audit.** Denied requests are recorded as `access.deny`. Logins and every
   state-changing action are also written to the append-only `audit_log`.
 
@@ -63,6 +66,8 @@ configured signing key, with default passwords, or with wildcard CORS.
 | POST | `/v1/work-orders/{id}/schedule\|cancel` | work_order:write | state machine enforced (`409` otherwise) |
 | POST | `/v1/work-orders/{id}/start\|complete` | work_order:complete | `complete` requires an `outcome` |
 | GET | `/v1/fleet/signals` | fleet:read | radar signals for your models; rates only, no other fleets' counts |
+| POST | `/v1/privacy/erasure-requests` | privacy:erase | body `subject_type` (`vehicle`\|`driver`), `subject_id`, optional `reason`; `202`, or `200` with the open request ([privacy](../security/privacy.md)) |
+| GET | `/v1/privacy/erasure-requests[/{id}]` | privacy:erase | status `received` → `in_progress` → `completed`\|`rejected`, with what was erased |
 | WS | `/v1/ws/alerts` | alert:read | send `{"token": "..."}` first; then this tenant's alert transitions |
 | GET | `/healthz`, `/readyz`, `/metrics` | none | liveness, readiness (PostgreSQL required), Prometheus |
 

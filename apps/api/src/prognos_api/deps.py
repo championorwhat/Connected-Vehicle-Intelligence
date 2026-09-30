@@ -45,6 +45,14 @@ async def db(st: StateDep) -> AsyncIterator[AsyncConnection[dict[str, Any]]]:
 
 DbDep = Annotated[AsyncConnection[dict[str, Any]], Depends(db)]
 
+TENANT_ROLE = "prognos_tenant"
+RESET_SESSION = "RESET ROLE; RESET app.tenant_id"  # RESET ALL does not reset the role
+
+
+async def reset_session(conn: AsyncConnection[Any]) -> None:
+    """Pool `reset` hook: a connection never goes back to the pool as a tenant."""
+    await conn.execute(RESET_SESSION)
+
 
 def client_ip(request: HTTPConnection) -> str | None:
     """Peer address if it is a valid IP (unix sockets and test clients are not)."""
@@ -87,6 +95,25 @@ async def current_principal(request: Request, st: StateDep) -> Principal:
 
 
 PrincipalDep = Annotated[Principal, Depends(current_principal)]
+
+
+async def tenant_db(
+    st: StateDep, principal: PrincipalDep
+) -> AsyncIterator[AsyncConnection[dict[str, Any]]]:
+    """A connection bound to the caller's tenant by PostgreSQL row-level security.
+
+    Queries still filter by tenant; RLS is the second barrier (ADR-010). Callers without
+    a tenant (platform staff) get NULL, which matches no row.
+    """
+    async with st.pool.connection() as conn:
+        await conn.execute(
+            "SELECT set_config('app.tenant_id', %s, false), set_config('role', %s, false)",
+            (principal.tenant_id or "", TENANT_ROLE),
+        )
+        yield conn
+
+
+TenantDbDep = Annotated[AsyncConnection[dict[str, Any]], Depends(tenant_db)]
 
 
 def require(permission: str) -> Callable[..., Awaitable[Principal]]:

@@ -176,13 +176,13 @@ typecheck: ## Static type check
 	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
 
 test: ## Unit tests (fast, no Docker)
-	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=term
+	uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=term
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration
 
 PROMTOOL = docker run --rm --entrypoint promtool -v "$(CURDIR)/infra/monitoring/prometheus:/etc/prometheus:ro" -w /etc/prometheus prom/prometheus:v3.5.0
-.PHONY: dashboards obs-check
+.PHONY: dashboards obs-check security-scan
 dashboards: ## Regenerate Grafana dashboards from scripts/gen_dashboards.py
 	uv run python scripts/gen_dashboards.py
 
@@ -190,5 +190,8 @@ obs-check: ## Validate Prometheus config and alert rules; run the rule unit test
 	$(PROMTOOL) check config prometheus.yml
 	$(PROMTOOL) check rules rules/prognos.rules.yml
 	$(PROMTOOL) test rules tests/prognos.test.yml
+
+security-scan: ## Trivy gate (HIGH/CRITICAL fails) over deps, Dockerfiles and secrets; report in evidence/security
+	./scripts/security-scan.sh
 
 check: lint typecheck test config ## Everything CI runs locally (except integration)

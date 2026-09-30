@@ -11,7 +11,7 @@ import clickhouse_connect
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from redis.exceptions import RedisError
 
-from prognos_api.deps import DbDep, StateDep, authenticate, require, state
+from prognos_api.deps import StateDep, TenantDbDep, authenticate, require, state
 from prognos_api.errors import ApiError
 from prognos_api.security import Principal
 
@@ -65,7 +65,7 @@ async def alerts_feed(websocket: WebSocket) -> None:
 
 @router.get("/v1/fleet/signals", tags=["fleet"])
 async def signals(
-    st: StateDep, conn: DbDep,
+    st: StateDep, conn: TenantDbDep,
     principal: Annotated[Principal, Depends(require("fleet:read"))],
     since_hours: Annotated[int, Query(ge=1, le=24 * 90)] = 72,
 ) -> dict[str, Any]:  # fmt: skip
@@ -104,7 +104,7 @@ async def signals(
 
 @router.get("/v1/fleet/summary", tags=["fleet"])
 async def fleet_summary(
-    conn: DbDep, principal: Annotated[Principal, Depends(require("fleet:read"))]
+    conn: TenantDbDep, principal: Annotated[Principal, Depends(require("fleet:read"))]
 ) -> dict[str, Any]:
     """Headline counts for the dashboard (one round trip, tenant-scoped)."""
     row = await (await conn.execute(
