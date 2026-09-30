@@ -1,0 +1,539 @@
+{
+  "version": "v1",
+  "horizon_hours": 168.0,
+  "provenance": {
+    "source": "evidence/benchmarks/m7-calibration-fit-seed42.json",
+    "method": "P(failure of the alert's mode within the horizon | rule opened), right-censored, Wilson 95% CI; simulated fleet, not field data",
+    "run": {
+      "vehicles": 300,
+      "simulated_hours": 8.0,
+      "fault_rate": 0.2,
+      "fault_time_scale": 48.0,
+      "seed": 42,
+      "raw_messages": 8726351,
+      "wall_seconds": 530.0,
+      "pipeline_us_per_message": 60.7,
+      "alerts_opened": 712,
+      "alerts_cleared": 602
+    },
+    "holdout": {
+      "source": "evidence/benchmarks/m7-calibration-holdout-seed7.json",
+      "alerts": 315,
+      "brier": 0.0226,
+      "brier_no_skill_base_rate": 0.0187,
+      "holdout_base_rate": 0.981,
+      "rules": {
+        "COOLANT_DRIFT": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.785,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 14
+        },
+        "COOLANT_OVERHEAT": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.757,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 12
+        },
+        "DTC_C1A10": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.701,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 9
+        },
+        "DTC_C1A11": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.757,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 12
+        },
+        "DTC_C1A12": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.566,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 5
+        },
+        "DTC_C1A13": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.676,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 8
+        },
+        "DTC_P0118": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.824,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 18
+        },
+        "DTC_P0217": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.757,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 12
+        },
+        "DTC_P0300": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.772,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 13
+        },
+        "DTC_P0301": {
+          "fitted_p": 0.954,
+          "holdout_p": 0.8,
+          "holdout_ci95": [
+            0.376,
+            0.964
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 5
+        },
+        "DTC_P0302": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.438,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 3
+        },
+        "DTC_P0303": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.566,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 5
+        },
+        "DTC_P0304": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.342,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 2
+        },
+        "DTC_P0562": {
+          "fitted_p": 0.892,
+          "holdout_p": 0.915,
+          "holdout_ci95": [
+            0.801,
+            0.966
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 47
+        },
+        "DTC_P0A7F": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.566,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 5
+        },
+        "DTC_P0A80": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.438,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 3
+        },
+        "DTC_P0AFA": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.438,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 3
+        },
+        "HV_CELL_CRITICAL": {
+          "fitted_p": 0.954,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.438,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 3
+        },
+        "HV_CELL_IMBALANCE": {
+          "fitted_p": 0.583,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.61,
+            1.0
+          ],
+          "fitted_within_holdout_ci": false,
+          "holdout_alerts": 6
+        },
+        "LV_BATTERY_CRITICAL": {
+          "fitted_p": 0.941,
+          "holdout_p": 0.952,
+          "holdout_ci95": [
+            0.773,
+            0.992
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 21
+        },
+        "LV_BATTERY_WEAK": {
+          "fitted_p": 0.875,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.875,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 27
+        },
+        "MISFIRE_ROUGHNESS": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.772,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 13
+        },
+        "TYRE_PRESSURE_CRITICAL": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.898,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 34
+        },
+        "TYRE_SLOW_LEAK": {
+          "fitted_p": 1.0,
+          "holdout_p": 1.0,
+          "holdout_ci95": [
+            0.901,
+            1.0
+          ],
+          "fitted_within_holdout_ci": true,
+          "holdout_alerts": 35
+        }
+      }
+    }
+  },
+  "fallback": {
+    "p_failure": 0.954,
+    "hours_to_failure_p10": null
+  },
+  "rules": {
+    "COOLANT_DRIFT": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 11.0,
+      "eligible_alerts": 16,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.806,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "COOLANT_OVERHEAT": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 2.4,
+      "eligible_alerts": 18,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.824,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_C1A10": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 11.1,
+      "eligible_alerts": 8,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.676,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_C1A11": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 6.7,
+      "eligible_alerts": 12,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.757,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_C1A12": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 9.9,
+      "eligible_alerts": 8,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.676,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_C1A13": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 12.2,
+      "eligible_alerts": 11,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.741,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_P0118": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 19.5,
+      "eligible_alerts": 20,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.839,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_P0217": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 2.4,
+      "eligible_alerts": 18,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.824,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_P0300": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 15.1,
+      "eligible_alerts": 11,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.741,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "DTC_P0301": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 70.0,
+      "eligible_alerts": 4,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.51,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0302": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 52.8,
+      "eligible_alerts": 3,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.438,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0303": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 37.8,
+      "eligible_alerts": 5,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.566,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0304": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 18.9,
+      "eligible_alerts": 5,
+      "measured_p_failure": 0.6,
+      "p_failure_ci95": [
+        0.231,
+        0.882
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0562": {
+      "p_failure": 0.892,
+      "hours_to_failure_p10": 7.0,
+      "eligible_alerts": 37,
+      "measured_p_failure": 0.892,
+      "p_failure_ci95": [
+        0.753,
+        0.957
+      ],
+      "basis": "measured"
+    },
+    "DTC_P0A7F": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 74.0,
+      "eligible_alerts": 9,
+      "measured_p_failure": 0.889,
+      "p_failure_ci95": [
+        0.565,
+        0.98
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0A80": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 18.5,
+      "eligible_alerts": 6,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.61,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "DTC_P0AFA": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 38.7,
+      "eligible_alerts": 6,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.61,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "HV_CELL_CRITICAL": {
+      "p_failure": 0.954,
+      "hours_to_failure_p10": 36.6,
+      "eligible_alerts": 6,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.61,
+        1.0
+      ],
+      "basis": "pooled (fewer than 10 alerts)"
+    },
+    "HV_CELL_IMBALANCE": {
+      "p_failure": 0.583,
+      "hours_to_failure_p10": 99.9,
+      "eligible_alerts": 12,
+      "measured_p_failure": 0.583,
+      "p_failure_ci95": [
+        0.32,
+        0.807
+      ],
+      "basis": "measured"
+    },
+    "LV_BATTERY_CRITICAL": {
+      "p_failure": 0.941,
+      "hours_to_failure_p10": 8.4,
+      "eligible_alerts": 17,
+      "measured_p_failure": 0.941,
+      "p_failure_ci95": [
+        0.73,
+        0.99
+      ],
+      "basis": "measured"
+    },
+    "LV_BATTERY_WEAK": {
+      "p_failure": 0.875,
+      "hours_to_failure_p10": 34.9,
+      "eligible_alerts": 24,
+      "measured_p_failure": 0.875,
+      "p_failure_ci95": [
+        0.69,
+        0.957
+      ],
+      "basis": "measured"
+    },
+    "MISFIRE_ROUGHNESS": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 37.2,
+      "eligible_alerts": 17,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.816,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "TYRE_PRESSURE_CRITICAL": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 6.7,
+      "eligible_alerts": 38,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.908,
+        1.0
+      ],
+      "basis": "measured"
+    },
+    "TYRE_SLOW_LEAK": {
+      "p_failure": 1.0,
+      "hours_to_failure_p10": 9.9,
+      "eligible_alerts": 40,
+      "measured_p_failure": 1.0,
+      "p_failure_ci95": [
+        0.912,
+        1.0
+      ],
+      "basis": "measured"
+    }
+  }
+}

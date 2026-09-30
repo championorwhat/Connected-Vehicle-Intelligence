@@ -46,6 +46,12 @@ channels:
   vehicleState:
     address: vehicle.state
     description: Latest health snapshot per vehicle (compacted; key = vehicle_id), every 15 s of event time.
+  fleetSignals:
+    address: fleet.signals
+    description: |
+      Emerging cross-vehicle fault patterns from the radar (a DTC over-represented in one
+      model/firmware cohort), keyed by `model/firmware/dtc`. Aggregates only: no vehicle or
+      tenant identifiers. Schema: packages/schemas/fleet-signal-v1.schema.json.
   simTruth:
     address: sim.truth
     description: Simulator ground truth (FAULT_ONSET, FAILURE). Evaluation only; never read by the product path.
@@ -63,6 +69,15 @@ operations:
     action: send
     channel:
       $ref: '#/channels/telemetryDlq'
+  radar:
+    action: receive
+    channel:
+      $ref: '#/channels/telemetryCanonical'
+    description: Consumer group `radar` (single consumer, whole fleet); tumbling event-time windows.
+  publishSignals:
+    action: send
+    channel:
+      $ref: '#/channels/fleetSignals'
   detect:
     action: receive
     channel:

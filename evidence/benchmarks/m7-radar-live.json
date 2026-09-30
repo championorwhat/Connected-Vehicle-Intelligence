@@ -1,0 +1,67 @@
+{
+  "measured_at": "2026-09-30T05:44:29Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, full Docker Compose stack (not the target Mac)",
+  "setup": {
+    "vehicles": 100000,
+    "events_per_second": 10000,
+    "sim_duration_seconds": 480,
+    "scenario": "firmware_defect (EV7V4 / 2026.7 raises U0100 on 0.2% of its events)",
+    "radar_window_seconds": 300,
+    "allowed_lateness_seconds": 120,
+    "path": "simulator -> Kafka -> normalizer -> telemetry.canonical -> prognos-radar -> fleet.signals"
+  },
+  "windows": {
+    "05:30-05:35": "held only ~1 s of the run (10,286 events, 2 with U0100): below min_vehicles, no signal - correct",
+    "05:35-05:40": "complete window: signals below",
+    "05:40-05:45": "run ended at ~05:42:40, so the watermark never passed 05:47: window not closed (by design)"
+  },
+  "signals": [
+    {
+      "schema_version": 1,
+      "signal_type": "EMERGING_DTC",
+      "level": "model",
+      "dtc": "U0100",
+      "oem": "LYRA",
+      "model_code": "EV7V4",
+      "firmware_version": null,
+      "powertrain": "BEV",
+      "window_start": 1790746500.0,
+      "window_end": 1790746800.0,
+      "affected_vehicles": 414,
+      "cohort_vehicles": 12122,
+      "rate": 0.03415,
+      "baseline": "other BEV models",
+      "baseline_affected": 63,
+      "baseline_vehicles": 12983,
+      "baseline_rate": 0.00485,
+      "rate_ratio": 6.98,
+      "p_value": 9.313919302059837e-198,
+      "p_adjusted": 1.71376115157901e-195,
+      "tests_in_window": 184
+    },
+    {
+      "schema_version": 1,
+      "signal_type": "EMERGING_DTC",
+      "level": "firmware",
+      "dtc": "U0100",
+      "oem": "LYRA",
+      "model_code": "EV7V4",
+      "firmware_version": "2026.7",
+      "powertrain": "BEV",
+      "window_start": 1790746500.0,
+      "window_end": 1790746800.0,
+      "affected_vehicles": 384,
+      "cohort_vehicles": 6082,
+      "rate": 0.06314,
+      "baseline": "same model, other firmware versions",
+      "baseline_affected": 30,
+      "baseline_vehicles": 6040,
+      "baseline_rate": 0.00497,
+      "rate_ratio": 12.51,
+      "p_value": 3.1183028023663355e-270,
+      "p_adjusted": 5.737677156354057e-268,
+      "tests_in_window": 184
+    }
+  ],
+  "other_signals": 0
+}

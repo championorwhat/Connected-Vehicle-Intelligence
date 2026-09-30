@@ -1,0 +1,102 @@
+{
+  "measured_at": "2026-09-30T05:29:50Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, PostgreSQL 17 in Docker (not the target Mac)",
+  "fleet_vehicles": 100000,
+  "workshops": 82,
+  "workshop_slots_per_day": 1212,
+  "synthetic_open_alerts": 5000,
+  "note": "alerts are synthetic (one per sampled vehicle, rule by powertrain); timings include reading, scheduling, inserting work orders and audit rows in one transaction; Redis not used (home workshop locations)",
+  "first_cycle": {
+    "planned_at": "2026-09-30T05:29:50Z",
+    "calibration_version": "v1",
+    "open_alerts_without_work_order": 5000,
+    "at_risk_vehicle_modes": 5000,
+    "work_orders_proposed": 4204,
+    "proposed_after_predicted_failure": 2792,
+    "unscheduled_no_capacity": 796,
+    "value_basis": [
+      "risk_only"
+    ],
+    "elapsed_ms": 894.8,
+    "wall_seconds": 0.898
+  },
+  "rerun_cycle": {
+    "planned_at": "2026-09-30T05:29:50Z",
+    "calibration_version": "v1",
+    "open_alerts_without_work_order": 796,
+    "at_risk_vehicle_modes": 796,
+    "work_orders_proposed": 0,
+    "proposed_after_predicted_failure": 0,
+    "unscheduled_no_capacity": 796,
+    "value_basis": [
+      "risk_only"
+    ],
+    "elapsed_ms": 27.9,
+    "wall_seconds": 0.028
+  },
+  "example_proposals": [
+    {
+      "vehicle_id": "d9a80164-c4a0-47dc-816c-cc8996021239",
+      "failure_mode": "COOLING_FAILURE",
+      "rule_code": "COOLANT_OVERHEAT",
+      "p_failure_7d": 1.0,
+      "hours_to_predicted_failure": -3.6,
+      "value": 1.0,
+      "value_basis": "risk_only",
+      "expected_cost_avoided": null,
+      "currency": null,
+      "workshop_id": "c08384fb-5349-4a96-b4c0-be21ed571251",
+      "day_offset": 0,
+      "distance_km": 0.0,
+      "after_predicted_failure": true,
+      "reasons": [
+        "COOLANT_OVERHEAT (critical) -> P(fail in 7 d) = 1.00",
+        "repair costs not sourced: ranked by risk x severity",
+        "day +0 at workshop c08384fb (0.0 km) - AFTER the predicted failure: escalate"
+      ],
+      "work_order_id": "5555e254-fd1f-4b65-b6fb-13ef2b971893"
+    },
+    {
+      "vehicle_id": "79000712-df11-4236-b1d7-b07f97ace1b5",
+      "failure_mode": "COOLING_FAILURE",
+      "rule_code": "COOLANT_OVERHEAT",
+      "p_failure_7d": 1.0,
+      "hours_to_predicted_failure": -3.6,
+      "value": 1.0,
+      "value_basis": "risk_only",
+      "expected_cost_avoided": null,
+      "currency": null,
+      "workshop_id": "30bd854c-60cf-4de9-9929-fca20b476d37",
+      "day_offset": 0,
+      "distance_km": 0.0,
+      "after_predicted_failure": true,
+      "reasons": [
+        "COOLANT_OVERHEAT (critical) -> P(fail in 7 d) = 1.00",
+        "repair costs not sourced: ranked by risk x severity",
+        "day +0 at workshop 30bd854c (0.0 km) - AFTER the predicted failure: escalate"
+      ],
+      "work_order_id": "cb0c921e-bf66-4c0e-9e3d-63aa28086a8a"
+    },
+    {
+      "vehicle_id": "643b8bb2-d38b-45db-ae10-e865f6317664",
+      "failure_mode": "COOLING_FAILURE",
+      "rule_code": "COOLANT_OVERHEAT",
+      "p_failure_7d": 1.0,
+      "hours_to_predicted_failure": -3.6,
+      "value": 1.0,
+      "value_basis": "risk_only",
+      "expected_cost_avoided": null,
+      "currency": null,
+      "workshop_id": "25e91251-c8f8-41d1-95a2-a44f8368d150",
+      "day_offset": 0,
+      "distance_km": 0.0,
+      "after_predicted_failure": true,
+      "reasons": [
+        "COOLANT_OVERHEAT (critical) -> P(fail in 7 d) = 1.00",
+        "repair costs not sourced: ranked by risk x severity",
+        "day +0 at workshop 25e91251 (0.0 km) - AFTER the predicted failure: escalate"
+      ],
+      "work_order_id": "4e815b79-abb1-49ef-8c46-d56db5b5c1d9"
+    }
+  ]
+}

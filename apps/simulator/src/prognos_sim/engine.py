@@ -90,7 +90,16 @@ class ShardSimulator:
         self._tiebreak = itertools.count()
         self.counts: Counter[str] = Counter()
         self.demo_vins: list[str] = []
-        if cfg.scenario == "demo" and worker_id == 0:
+        self.defect = np.array(
+            [
+                "firmware_defect" in cfg.scenarios
+                and v.model_code == cfg.defect_model
+                and v.firmware_version == cfg.defect_firmware
+                for v in vehicles
+            ],
+            dtype=bool,
+        )
+        if "demo" in cfg.scenarios and worker_id == 0:
             self._start_demo(start_ts)
         self._publish_ground_truth()
 
@@ -173,6 +182,13 @@ class ShardSimulator:
         events = f.take_events(idx)
         sig = f.signals(idx, t)
         latency = self.rng.exponential(self.cfg.network_delay_ms_mean / 1000.0, len(idx))
+        dtcs = f.dtcs(idx, sig)
+        if self.defect.any():
+            hit = self.defect[idx] & (self.rng.random(len(idx)) < self.cfg.defect_rate)
+            for j in np.flatnonzero(hit):
+                if self.cfg.defect_dtc not in dtcs[j]:
+                    dtcs[j].append(self.cfg.defect_dtc)
+            self.counts["defect_dtcs"] += int(hit.sum())
         return Columns(
             vin=self.vins[idx].tolist(),
             seq=f.seq[idx].tolist(),
@@ -193,7 +209,7 @@ class ShardSimulator:
             soh=np.round(sig["soh"], 1).tolist(),
             pack_temp=np.round(sig["pack_temp"], 1).tolist(),
             cell_delta=sig["cell_delta"].astype(np.int64).tolist(),
-            dtcs=f.dtcs(idx, sig),
+            dtcs=dtcs,
             has_engine=f.has_engine[idx].tolist(),
             has_hv=f.has_hv[idx].tolist(),
         )
