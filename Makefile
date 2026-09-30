@@ -80,6 +80,17 @@ pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEH
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures and a firmware defect for the radar
 	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
 
+LAG_GROUPS ?= normalizer detector sink radar
+lag: ## Backlog per consumer group, from the broker (works while a consumer is down); LAG_GROUPS=detector
+	@for g in $(LAG_GROUPS); do \
+	  printf '%-11s ' "$$g"; \
+	  $(COMPOSE) exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:19092 \
+	    --describe --group "$$g" 2>/dev/null | awk 'NR>1 && $$6 ~ /^[0-9]+$$/ {s+=$$6} END {print s+0}'; \
+	done
+
+demo-timeline: ## Live cue sheet for recording the demo: when each scripted failure appears
+	set -a; . ./.env; set +a; uv run python scripts/demo_timeline.py --duration 1320
+
 pipeline-stop: ## Stop the pipeline services gracefully (flush + commit)
 	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar scorer api web
 

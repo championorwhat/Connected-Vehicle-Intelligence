@@ -77,6 +77,12 @@ def mmss(seconds: float) -> str:
     return f"{int(seconds // 60):02d}:{int(seconds % 60):02d}"
 
 
+def line(row: dict[str, Any]) -> str:
+    what = (f"{row['severity']:8} {row['rule']}" if "rule" in row
+            else f"work order {row['status']} ({row['failure_mode']})")  # fmt: skip
+    return f"{row['at']}  {row['vin']}  {what}"
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--duration", type=float, default=1200, help="seconds after simulator start")
@@ -85,8 +91,10 @@ def main() -> int:
     args = p.parse_args()
 
     start, vins = simulator()
+    print(f"simulator started {mmss(time.time() - start)} ago; demo vehicles: {vins}", flush=True)
     alerts: dict[tuple[str, str], dict[str, Any]] = {}
     orders: dict[tuple[str, str], dict[str, Any]] = {}
+    printed: set[str] = set()
     with psycopg.connect(dsn(), autocommit=True) as conn:
         while True:
             for vin, slug, rule, severity, event_ts, detected in conn.execute(
@@ -105,11 +113,15 @@ def main() -> int:
                     "seconds": round(created.timestamp() - start, 1),
                     "scheduled_for": str(scheduled) if scheduled else None,
                 })  # fmt: skip
+            rows = sorted([*alerts.values(), *orders.values()], key=lambda r: r["seconds"])
+            for row in rows:
+                if line(row) not in printed:  # live cue sheet while recording
+                    printed.add(line(row))
+                    print(line(row), flush=True)
             if time.time() - start >= args.duration:
                 break
             time.sleep(args.interval)
 
-    timeline = sorted([*alerts.values(), *orders.values()], key=lambda r: r["seconds"])
     result = {
         "what": "demo rehearsal: when each scripted failure becomes visible",
         "simulator_started_utc": dt.datetime.fromtimestamp(start, dt.UTC).isoformat(),
@@ -118,10 +130,6 @@ def main() -> int:
         "alerts": sorted(alerts.values(), key=lambda r: r["seconds"]),
         "work_orders": sorted(orders.values(), key=lambda r: r["seconds"]),
     }
-    for row in timeline:
-        what = (f"{row['severity']:8} {row['rule']}" if "rule" in row
-                else f"work order {row['status']} ({row['failure_mode']})")  # fmt: skip
-        print(f"{row['at']}  {row['vin']}  {what}")
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(result, indent=2, default=str) + "\n")
