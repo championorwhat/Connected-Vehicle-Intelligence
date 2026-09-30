@@ -62,6 +62,8 @@ KMH_PER_S_ACCEL = 9.0  # ~2.5 m/s^2
 KMH_PER_S_BRAKE = 11.0  # ~3 m/s^2
 KMH_PER_S_HARSH = 20.0  # ~5.5 m/s^2
 DAY_S = 86_400.0
+SEQ_EPOCH = 1_600_000_000.0
+SEQ_PER_SECOND = 20
 
 
 @dataclass(slots=True)
@@ -146,7 +148,11 @@ class Fleet:
             "driving": driving,
             "mode_remaining": rng.exponential(PARK_MEAN_S[pattern]),
             "pending_event": np.zeros(n, dtype=np.int8),
-            "seq": rng.integers(1, 1_000_000, n, dtype=np.int64),
+            # Sequence numbers keep rising across simulator restarts, like a device's
+            # persisted counter: a later start always begins above any earlier run
+            # (20 per elapsed second > the 10/s/vehicle ceiling set by TICK_HZ).
+            "seq": int(max(start_ts - SEQ_EPOCH, 0.0)) * SEQ_PER_SECOND
+            + rng.integers(0, 1_000, n, dtype=np.int64),
             "coolant_base": np.where(driving, 88.0, 32.0),
             "fuel": rng.uniform(20, 95, n),
             "soc": rng.uniform(30, 95, n),
