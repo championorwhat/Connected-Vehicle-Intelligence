@@ -1,0 +1,37 @@
+{
+  "what": "vehicle event -> opened alert received on the dashboard WebSocket",
+  "label": "100K vehicles, 10K events/s",
+  "hardware": "4-vCPU x86_64 Linux container, all services on the same CPUs (not the target Mac)",
+  "started_utc": "2026-09-30T15:43:23.994754+00:00",
+  "duration_s": 240.0,
+  "tenants_subscribed": 20,
+  "target": "< 2 s to the dashboard (brief)",
+  "end_to_end_all": {
+    "n": 539,
+    "p50_s": 0.824,
+    "p95_s": 1.884,
+    "p99_s": 2.684,
+    "max_s": 24.884,
+    "share_under_2s": 0.9666
+  },
+  "end_to_end_critical": {
+    "n": 106,
+    "p50_s": 0.872,
+    "p95_s": 1.861,
+    "p99_s": 2.684,
+    "max_s": 7.978,
+    "share_under_2s": 0.9717
+  },
+  "delivery_detected_to_socket": {
+    "n": 539,
+    "p50_s": 0.23,
+    "p95_s": 1.033,
+    "p99_s": 1.366,
+    "max_s": 1.371,
+    "share_under_2s": 1.0
+  },
+  "by_severity": {
+    "critical": 106,
+    "warning": 433
+  }
+}

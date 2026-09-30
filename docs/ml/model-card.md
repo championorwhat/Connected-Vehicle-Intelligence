@@ -131,6 +131,6 @@ batch on 2 threads. Re-scoring 100K vehicles takes about 0.2 s.
    early detection.
 4. **Money.** Expected cost avoided is **NOT COMPUTED**, because repair and downtime costs
    are still placeholders (M7, ADR-006).
-5. **Not yet serving.** The planner still ranks with the calibrated rules. Live scoring
-   needs the same features computed from ClickHouse, reusing this exact code to keep
-   training and serving identical. That is planned with the API (M9). See ADR-007.
+5. **Shadow only.** Since M9 the model scores the live fleet (v3, same feature code as
+   training, proven by a parity test), but the planner still ranks with the calibrated
+   rules until the model is validated on live outcomes. See ADR-007 and ADR-008.

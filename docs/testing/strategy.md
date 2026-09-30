@@ -42,8 +42,10 @@ breaking the code on purpose:
 - Each `promtool` alert test fires on its synthetic failure.
 
 ## Known gaps
-- **Load and soak** (`tests/load`, `tests/soak`) belong to M14 and are **NOT YET
-  MEASURED** at 50K/100K vehicles through the full stack on the target Mac.
+- **Load and soak** are measured scripts, not CI jobs (`scripts/load_test.py`,
+  `scripts/api_load.py`, `scripts/ws_latency.py`): 10K/50K/100K vehicles, burst and a
+  30-minute soak on a 4-vCPU Linux container ([load tests](../performance/load-tests.md)).
+  On the target Mac they are **NOT YET MEASURED**.
 - Chaos drills are run by hand and recorded, not in CI: stopping services on shared CI
   runners is slow and flaky.
 - The container image scan passes the CRITICAL gate. Base-image OS packages carry fixable
