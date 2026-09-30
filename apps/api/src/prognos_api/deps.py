@@ -87,7 +87,14 @@ def authenticate(st: AppState, token: str) -> Principal:
     return principal_from_claims(claims, st.policy)
 
 
+async def ensure_policy(st: AppState) -> None:
+    """Reload the role policy if it was empty at startup (API started before the seed ran)."""
+    if not st.policy:
+        st.policy = await load_policy(st.pool)
+
+
 async def current_principal(request: Request, st: StateDep) -> Principal:
+    await ensure_policy(st)
     principal = authenticate(st, bearer_token(request))
     request.state.principal = principal
     allowed, retry = await st.limiter.hit(f"user:{principal.user_id}",

@@ -15,6 +15,10 @@ export function FleetMap({ vehicles, onSelect }: { vehicles: Vehicle[]; onSelect
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
       attribution: "&copy; OpenStreetMap contributors",
+      // The page sends no referrer at all (security headers), but OpenStreetMap's tile
+      // usage policy blocks tile requests without one ("Access blocked"). Tiles alone
+      // send the site's origin, never the page path.
+      referrerPolicy: "strict-origin-when-cross-origin",
     }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
     return () => {
