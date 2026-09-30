@@ -124,12 +124,21 @@ class ShardSimulator:
     # ------------------------------------------------------------------ internals
     def _start_demo(self, t: float) -> None:
         """One vehicle per failure mode fails ~10-18 minutes after start."""
+        chosen: set[int] = set()
         for mode in range(len(FAILURE_MODES)):
-            candidates = np.flatnonzero(self.fleet.eligible[:, mode])
-            if len(candidates) == 0:
+            # A distinct vehicle per mode (forcing a second fault on one vehicle would
+            # overwrite the first), kept on a long trip so engine-dependent signals
+            # (misfire roughness, coolant) are observable while the demo runs.
+            candidates = [
+                int(i) for i in np.flatnonzero(self.fleet.eligible[:, mode]) if int(i) not in chosen
+            ]
+            if not candidates:
                 continue
-            index = int(candidates[0])
+            index = candidates[0]
+            chosen.add(index)
             self.fleet.force_fault(index, mode, t, DEMO_SECONDS_TO_FAILURE + 120.0 * mode)
+            self.fleet.driving[index] = True
+            self.fleet.mode_remaining[index] = 3 * 3600.0
             self.demo_vins.append(self.vehicles[index].vin)
             log.info(
                 "demo: %s will fail with %s", self.vehicles[index].vin, FAILURE_MODES[mode].code

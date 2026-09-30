@@ -681,9 +681,13 @@ dependencies = [
     { name = "confluent-kafka" },
     { name = "orjson" },
     { name = "prognos-common" },
-    { name = "prognos-simulator" },
     { name = "prometheus-client" },
     { name = "psycopg", extra = ["binary"] },
+]
+
+[package.optional-dependencies]
+backtest = [
+    { name = "prognos-simulator" },
 ]
 
 [package.metadata]
@@ -691,10 +695,11 @@ requires-dist = [
     { name = "confluent-kafka", specifier = ">=2.6" },
     { name = "orjson", specifier = ">=3.10" },
     { name = "prognos-common", editable = "packages/common" },
-    { name = "prognos-simulator", editable = "apps/simulator" },
+    { name = "prognos-simulator", marker = "extra == 'backtest'", editable = "apps/simulator" },
     { name = "prometheus-client", specifier = ">=0.21" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
 ]
+provides-extras = ["backtest"]
 
 [[package]]
 name = "prometheus-client"
