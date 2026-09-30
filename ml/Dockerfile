@@ -2,7 +2,7 @@
 # Prognos ML (live scorer). Build context: repository root.
 #   docker build -f ml/Dockerfile -t prognos-ml .
 # The versioned model artefacts under ml/models are baked into the image.
-FROM python:3.12-slim AS build
+FROM python:3.14-slim AS build
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/opt/venv
 WORKDIR /src
 COPY pyproject.toml uv.lock ./
@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=extra_ca,required=false \
     pip install --no-cache-dir "uv>=0.8,<0.9" \
     && uv sync --frozen --no-dev --package prognos-ml --no-editable
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 # LightGBM needs the OpenMP runtime (libgomp). apt over HTTPS; the optional `extra_ca`
 # build secret is trusted too, for builds behind a TLS-intercepting proxy.
 RUN --mount=type=secret,id=extra_ca,required=false \
