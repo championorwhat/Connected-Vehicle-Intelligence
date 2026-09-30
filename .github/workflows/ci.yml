@@ -30,6 +30,24 @@ jobs:
           name: coverage-unit
           path: coverage.xml
 
+  web:
+    name: web (typecheck, unit tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
   integration:
     name: integration (Testcontainers)
     runs-on: ubuntu-latest
@@ -140,6 +158,39 @@ jobs:
           curl -fsS -H "$auth" "localhost:8000/v1/work-orders?limit=5" | jq -e '.items | type == "array"'
           test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/v1/vehicles)" = 401
           curl -fsS localhost:8000/openapi.json | jq -e '.paths["/v1/alerts"]'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: dashboard end to end (nginx container + Playwright)
+        run: |
+          set -a; . ./.env; set +a
+          psql() { docker compose exec -T postgres psql -U prognos -d prognos -tAc "$1"; }
+          tenant=$(psql "SELECT slug FROM tenants ORDER BY slug LIMIT 1")
+          tid=$(psql "SELECT tenant_id FROM tenants WHERE slug = '$tenant'")
+          vid=$(psql "SELECT vehicle_id FROM vehicles WHERE tenant_id = '$tid' ORDER BY vehicle_id LIMIT 1")
+          # Deterministic data for this tenant: an open critical alert, a planner proposal
+          # for it, and a degraded health entry (random faults may miss this tenant).
+          psql "INSERT INTO alerts (tenant_id, vehicle_id, fingerprint, rule_code, severity,
+                failure_mode, event_ts) VALUES ('$tid', '$vid', 'ci-e2e', 'COOLANT_OVERHEAT',
+                'critical', 'COOLING_FAILURE', now()) ON CONFLICT DO NOTHING"
+          docker compose --profile pipeline run --rm planner --once > /dev/null
+          docker compose exec -T redis redis-cli ZADD "tenant:$tid:health" 40 "$vid"
+          for role in fleet_manager technician analyst; do
+            echo "ci-password-not-secret" | docker compose --profile pipeline run --rm -T api \
+              create-user --email "$role@demo.prognos.local" --tenant "$tenant" --role $role
+          done
+          docker compose --profile pipeline up -d --build web
+          for i in $(seq 1 30); do curl -fsS localhost:8080/ > /dev/null && break; sleep 2; done
+          cd apps/web
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          DEMO_USER_PASSWORD=ci-password-not-secret SCREENSHOT_DIR=/tmp/shots npx playwright test --reporter=line
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dashboard-screenshots
+          path: /tmp/shots
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
