@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M9 (API with auth, RBAC and tenant isolation; live model scoring in shadow mode) complete. See [milestones](#milestones).
+**Status:** M10 (fleet dashboard) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -272,7 +272,40 @@ quoting any number.
   - A non-IP client address crashed the audit insert.
   - The brute-force limiter counted successful logins.
 
-## 14. Repository structure
+## 14. Dashboard (M10)
+
+`make pipeline-demo users`, then open **http://localhost:8080** and sign in as
+`fleet_manager@demo.prognos.local`. The password is `DEMO_USER_PASSWORD` from `.env`.
+
+| Overview | Work orders |
+|---|---|
+| ![Fleet overview](docs/images/overview.png) | ![Work orders](docs/images/work-orders.png) |
+| **Vehicle detail** | **Alerts (live)** |
+| ![Vehicle detail](docs/images/vehicle.png) | ![Alerts](docs/images/alerts.png) |
+
+- **Screens:**
+  - Fleet summary tiles.
+  - The most-at-risk list, with a **Rules / Model (shadow)** toggle. It says so when the
+    model has no scores yet or is only being shown for comparison.
+  - A map (OpenStreetMap tiles).
+  - Live alerts over the WebSocket, with acknowledge.
+  - Work orders with their lifecycle actions.
+  - Vehicle detail with the model's reasons in plain words.
+  - Radar signals.
+- **Permission-aware.** Buttons appear only if your role allows them (a technician gets
+  no Acknowledge or Schedule button; an analyst sees masked locations). The API still
+  enforces every rule.
+- **Honest labels.** Money shows "not sourced" while repair costs are placeholders.
+- **Built with** React, TypeScript and Vite: 133 KB gzipped. It is served by nginx on
+  the same origin as the API, with a strict CSP.
+- **Tests:**
+  - 7 component tests (Vitest).
+  - 3 Playwright end-to-end tests against the running stack: fleet manager, technician
+    and analyst journeys. CI runs them against the nginx container.
+- Screenshots were taken in a sandbox without internet access, so the map tiles are
+  blank there; they load normally on a connected machine.
+
+## 15. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -300,8 +333,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M7 | Core intelligence: calibrated risk, capacity-aware work orders, emerging-fault radar | ✅ Done ([A8–A10](docs/algorithms/algorithms.md), [ADR-006](docs/architecture/adr/ADR-006.md)) |
 | M8 | ML failure model vs the calibrated-rules baseline (held-out) | ✅ Done ([model card](docs/ml/model-card.md), [ADR-007](docs/architecture/adr/ADR-007.md)) |
 | M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ✅ Done ([API guide](docs/api/README.md), [ADR-008](docs/architecture/adr/ADR-008.md)) |
-| M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ⏭ Next |
-| M11–M19 | See the M0 document | Planned |
+| M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ✅ Done ([screens](#14-dashboard-m10)) |
+| M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ⏭ Next |
+| M12–M19 | See the M0 document | Planned |
 
 ## Declarations
 

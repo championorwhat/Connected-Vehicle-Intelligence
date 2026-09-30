@@ -114,7 +114,11 @@ async def at_risk(
             ranked = await st.redis.zrevrange(f"tenant:{tid}:risk", 0, limit - 1, withscores=True)
         used = f"model:{st.settings.model_version}" if ranked else "rules:health_score"
         if not ranked:
-            ranked = await st.redis.zrange(f"tenant:{tid}:health", 0, limit - 1, withscores=True)
+            # Only vehicles with something wrong (health < 100): a healthy vehicle is never
+            # listed as "at risk" just to fill the page.
+            ranked = await st.redis.zrangebyscore(
+                f"tenant:{tid}:health", "-inf", "(100", start=0, num=limit, withscores=True
+            )
     except RedisError as exc:
         raise ApiError(503, "live risk ranking unavailable", code="live-state-down") from exc
     scores = {(v.decode() if isinstance(v, bytes) else str(v)): float(s) for v, s in ranked}
