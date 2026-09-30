@@ -43,8 +43,11 @@ OTHER_DTCS = [d.code for d in DTCS if d.failure_mode is None]
 # odometer_km and model_year are kept in the table but NOT used: the simulator's fault
 # hazard does not depend on mileage or age, so in this data they only identify vehicles
 # (a memorisation risk). In a real fleet they are candidate features to test.
+# Every input is independent of how often a vehicle reports (DTCs are per-event rates,
+# the raw event count is not an input): live fleets report at different rates than the
+# simulated training fleet, and a count-based model would extrapolate (seen in M9).
 NUMERIC_FEATURES = [
-    "events_long", "ignition_share_long",
+    "ignition_share_long",
     "coolant_mean_long", "coolant_max_long", "coolant_resid_long", "coolant_resid_short",
     "coolant_resid_slope_h",
     "rpm_resid_sd_long", "rpm_resid_sd_max_long", "rpm_resid_sd_short",
@@ -52,12 +55,15 @@ NUMERIC_FEATURES = [
     "tyre_ratio_long", "tyre_ratio_min_long", "tyre_ratio_min_short", "tyre_ratio_slope_h",
     "cell_delta_long", "cell_delta_max_long", "cell_delta_short", "cell_delta_slope_h",
     "pack_temp_max_long", "soh_long",
-    "dtc_events_long", "dtc_events_short",
-    *[f"dtc_{fm.code.lower()}_long" for fm in FAILURE_MODES],
-    *[f"dtc_{fm.code.lower()}_short" for fm in FAILURE_MODES],
-    "dtc_other_long",
+    "dtc_rate_long", "dtc_rate_short",
+    *[f"dtc_{fm.code.lower()}_rate_long" for fm in FAILURE_MODES],
+    *[f"dtc_{fm.code.lower()}_rate_short" for fm in FAILURE_MODES],
+    "dtc_other_rate_long",
 ]  # fmt: skip
 CATEGORICAL_FEATURES = ["model_code", "powertrain"]
+# Bump whenever the feature SQL changes: it keys the feature cache and is stored with
+# every model, so a model is never fed features computed by a different definition.
+FEATURES_VERSION = 3
 FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 
@@ -73,14 +79,23 @@ def _sql_list(codes: list[str]) -> str:
     return "[" + ", ".join(f"'{c}'" for c in codes) + "]"
 
 
+_TYRES = ("tyre_fl_kpa", "tyre_fr_kpa", "tyre_rl_kpa", "tyre_rr_kpa")
+# Tyre min/max ratio only when all four pressures are present (NULL otherwise). Both
+# engines get the same explicit rule, because least()/greatest() treat NULLs differently.
+_TYRES_PRESENT = " AND ".join(f"{t} IS NOT NULL" for t in _TYRES)
+_TYRE_RATIO = (
+    f"CASE WHEN {_TYRES_PRESENT} THEN least({', '.join(_TYRES)})"
+    f" / nullif(greatest({', '.join(_TYRES)}), 0) END"
+)
+
+
 def _bucket_sql(events: str) -> str:
+    """Per-vehicle minute buckets in DuckDB (training). Mirror: bucket_sql_clickhouse()."""
     per_mode = ",\n".join(
         f"count(*) FILTER (list_has_any(dtc_codes, {_sql_list(codes)}))::DOUBLE"
         f" AS dtc_{mode.lower()}"
         for mode, codes in MODE_DTCS.items()
     )
-    tyre_min = "least(tyre_fl_kpa, tyre_fr_kpa, tyre_rl_kpa, tyre_rr_kpa)"
-    tyre_max = "greatest(tyre_fl_kpa, tyre_fr_kpa, tyre_rl_kpa, tyre_rr_kpa)"
     return f"""
     CREATE TABLE buckets AS
     SELECT vehicle_id,
@@ -95,8 +110,8 @@ def _bucket_sql(events: str) -> str:
            avg(lv_battery_v) FILTER (NOT ignition_on) AS lv_rest,
            min(lv_battery_v) AS lv_min,
            avg(lv_battery_v) AS lv_mean,
-           avg({tyre_min} / nullif({tyre_max}, 0)) AS tyre_ratio,
-           min({tyre_min} / nullif({tyre_max}, 0)) AS tyre_ratio_min,
+           avg({_TYRE_RATIO}) AS tyre_ratio,
+           min({_TYRE_RATIO}) AS tyre_ratio_min,
            avg(hv_cell_delta_mv) AS cell_delta,
            max(hv_cell_delta_mv) AS cell_delta_max,
            max(hv_pack_temp_c) AS pack_temp_max,
@@ -108,6 +123,128 @@ def _bucket_sql(events: str) -> str:
     FROM read_parquet('{events}')
     GROUP BY ALL
     """
+
+
+BUCKET_COLUMNS = [
+    "vehicle_id", "m", "n", "n_ign", "coolant_mean", "coolant_max", "coolant_resid",
+    "rpm_resid_sd", "lv_rest", "lv_min", "lv_mean", "tyre_ratio", "tyre_ratio_min",
+    "cell_delta", "cell_delta_max", "pack_temp_max", "soh", "odometer_km", "dtc_events",
+    *[f"dtc_{mode.lower()}" for mode in MODE_DTCS], "dtc_other",
+]  # fmt: skip
+
+
+def bucket_sql_clickhouse(since: float, until: float, shard: int = 0, shards: int = 1) -> str:
+    """The same minute buckets, computed inside ClickHouse from the live `events` table.
+
+    Serving mirror of _bucket_sql(); tests/integration/test_feature_parity.py runs both
+    on identical events and requires equal results. `-OrNull` makes empty aggregates
+    NULL (as in DuckDB) instead of nan/0. FINAL collapses rows re-delivered by Kafka.
+    """
+    ign = "ignition_on = 1"
+    per_mode = ",\n".join(
+        f"toFloat64(countIf(hasAny(dtc_codes, {_sql_list(codes)}))) AS dtc_{mode.lower()}"
+        for mode, codes in MODE_DTCS.items()
+    )
+    return f"""
+    SELECT toString(vehicle_id) AS vehicle_id,
+           toFloat64(toUnixTimestamp(toStartOfMinute(event_ts))) AS m,
+           toFloat64(count()) AS n,
+           toFloat64(countIf({ign})) AS n_ign,
+           avgIfOrNull(coolant_temp_c, {ign}) AS coolant_mean,
+           maxOrNull(coolant_temp_c) AS coolant_max,
+           avgIfOrNull(coolant_temp_c - (88 + 0.03 * speed_kmh), {ign}) AS coolant_resid,
+           stddevPopIfOrNull(engine_rpm - (750 + 28 * speed_kmh), {ign} AND engine_rpm > 0)
+               AS rpm_resid_sd,
+           avgIfOrNull(lv_battery_v, NOT ({ign})) AS lv_rest,
+           minOrNull(lv_battery_v) AS lv_min,
+           avgOrNull(lv_battery_v) AS lv_mean,
+           avgOrNull({_TYRE_RATIO}) AS tyre_ratio,
+           minOrNull({_TYRE_RATIO}) AS tyre_ratio_min,
+           avgOrNull(hv_cell_delta_mv) AS cell_delta,
+           maxOrNull(hv_cell_delta_mv) AS cell_delta_max,
+           maxOrNull(hv_pack_temp_c) AS pack_temp_max,
+           avgOrNull(hv_soh_pct) AS soh,
+           maxOrNull(odometer_km) AS odometer_km,
+           toFloat64(countIf(notEmpty(dtc_codes))) AS dtc_events,
+           {per_mode},
+           toFloat64(countIf(hasAny(dtc_codes, {_sql_list(OTHER_DTCS)}))) AS dtc_other
+    FROM events FINAL
+    WHERE event_ts >= toDateTime64({since}, 3, 'UTC') AND event_ts < toDateTime64({until}, 3, 'UTC')
+      AND cityHash64(vehicle_id) % {shards} = {shard}
+    GROUP BY vehicle_id, m
+    """
+
+
+def window_sql(long_window_s: float, short_window_s: float) -> str:
+    """Window features per (vehicle, t) from tables `snaps(vehicle_id, t)` and `buckets`.
+
+    Shared by training (build) and serving (features_at): one definition, no skew.
+    """
+    L, S = long_window_s, short_window_s
+    short_n = f"nullif(sum(b.n) FILTER (b.m >= s.t - {S}), 0)"
+    per_mode_long = ",\n".join(
+        f"sum(b.dtc_{m.lower()}) / sum(b.n) AS dtc_{m.lower()}_rate_long,"
+        f" coalesce(sum(b.dtc_{m.lower()}) FILTER (b.m >= s.t - {S}) / {short_n}, 0)"
+        f" AS dtc_{m.lower()}_rate_short"
+        for m in MODE_DTCS
+    )
+    return f"""
+        SELECT s.vehicle_id, s.t,
+               sum(b.n) AS events_long,
+               count(DISTINCT b.m) AS minutes_long,
+               sum(b.n_ign) / nullif(sum(b.n), 0) AS ignition_share_long,
+               max(b.odometer_km) AS odometer_km,
+               avg(b.coolant_mean) AS coolant_mean_long,
+               max(b.coolant_max) AS coolant_max_long,
+               avg(b.coolant_resid) AS coolant_resid_long,
+               avg(b.coolant_resid) FILTER (b.m >= s.t - {S}) AS coolant_resid_short,
+               regr_slope(b.coolant_resid, b.m) * 3600 AS coolant_resid_slope_h,
+               avg(b.rpm_resid_sd) AS rpm_resid_sd_long,
+               max(b.rpm_resid_sd) AS rpm_resid_sd_max_long,
+               avg(b.rpm_resid_sd) FILTER (b.m >= s.t - {S}) AS rpm_resid_sd_short,
+               avg(b.lv_rest) AS lv_rest_long,
+               avg(b.lv_rest) FILTER (b.m >= s.t - {S}) AS lv_rest_short,
+               min(b.lv_min) AS lv_min_long,
+               regr_slope(b.lv_mean, b.m) * 3600 AS lv_mean_slope_h,
+               avg(b.tyre_ratio) AS tyre_ratio_long,
+               min(b.tyre_ratio_min) AS tyre_ratio_min_long,
+               min(b.tyre_ratio_min) FILTER (b.m >= s.t - {S}) AS tyre_ratio_min_short,
+               regr_slope(b.tyre_ratio, b.m) * 3600 AS tyre_ratio_slope_h,
+               avg(b.cell_delta) AS cell_delta_long,
+               max(b.cell_delta_max) AS cell_delta_max_long,
+               avg(b.cell_delta) FILTER (b.m >= s.t - {S}) AS cell_delta_short,
+               regr_slope(b.cell_delta, b.m) * 3600 AS cell_delta_slope_h,
+               max(b.pack_temp_max) AS pack_temp_max_long,
+               avg(b.soh) AS soh_long,
+               sum(b.dtc_events) / sum(b.n) AS dtc_rate_long,
+               coalesce(sum(b.dtc_events) FILTER (b.m >= s.t - {S}) / {short_n}, 0)
+                   AS dtc_rate_short,
+               {per_mode_long},
+               sum(b.dtc_other) / sum(b.n) AS dtc_other_rate_long
+        FROM snaps s
+        JOIN buckets b ON b.vehicle_id = s.vehicle_id AND b.m >= s.t - {L} AND b.m < s.t
+        GROUP BY s.vehicle_id, s.t
+    """
+
+
+def features_at(
+    con: duckdb.DuckDBPyConnection, t: float, cfg: FeatureConfig | None = None
+) -> pa.Table:
+    """Serving: features for every vehicle in `vehicles` at snapshot time t (a minute boundary).
+
+    Expects tables `buckets` (see BUCKET_COLUMNS) and `vehicles(vehicle_id, model_code,
+    powertrain)` in `con`. Vehicles without data in the window get no row.
+    """
+    cfg = cfg or FeatureConfig()
+    if t % 60:
+        raise ValueError("snapshot time must be a minute boundary")
+    con.execute(f"CREATE OR REPLACE TABLE snaps AS SELECT vehicle_id, {float(t)}::DOUBLE AS t"
+                " FROM vehicles")  # fmt: skip
+    return con.execute(
+        f"WITH feats AS ({window_sql(cfg.long_window_s, cfg.short_window_s)})"
+        " SELECT f.*, v.model_code, v.powertrain FROM feats f JOIN vehicles v USING (vehicle_id)"
+        " ORDER BY f.vehicle_id"
+    ).to_arrow_table()
 
 
 def build(run_dir: Path, cfg: FeatureConfig | None = None) -> pa.Table:
@@ -146,47 +283,8 @@ def build(run_dir: Path, cfg: FeatureConfig | None = None) -> pa.Table:
         FROM vehicles v,
              (SELECT unnest(range({grid}))::DOUBLE AS t) g
     """)
-    per_mode_long = ",\n".join(
-        f"sum(b.dtc_{m.lower()}) AS dtc_{m.lower()}_long,"
-        f" coalesce(sum(b.dtc_{m.lower()}) FILTER (b.m >= s.t - {S}), 0) AS dtc_{m.lower()}_short"
-        for m in MODE_DTCS
-    )
     sql = f"""
-    WITH feats AS (
-        SELECT s.vehicle_id, s.t,
-               sum(b.n) AS events_long,
-               sum(b.n_ign) / nullif(sum(b.n), 0) AS ignition_share_long,
-               max(b.odometer_km) AS odometer_km,
-               avg(b.coolant_mean) AS coolant_mean_long,
-               max(b.coolant_max) AS coolant_max_long,
-               avg(b.coolant_resid) AS coolant_resid_long,
-               avg(b.coolant_resid) FILTER (b.m >= s.t - {S}) AS coolant_resid_short,
-               regr_slope(b.coolant_resid, b.m) * 3600 AS coolant_resid_slope_h,
-               avg(b.rpm_resid_sd) AS rpm_resid_sd_long,
-               max(b.rpm_resid_sd) AS rpm_resid_sd_max_long,
-               avg(b.rpm_resid_sd) FILTER (b.m >= s.t - {S}) AS rpm_resid_sd_short,
-               avg(b.lv_rest) AS lv_rest_long,
-               avg(b.lv_rest) FILTER (b.m >= s.t - {S}) AS lv_rest_short,
-               min(b.lv_min) AS lv_min_long,
-               regr_slope(b.lv_mean, b.m) * 3600 AS lv_mean_slope_h,
-               avg(b.tyre_ratio) AS tyre_ratio_long,
-               min(b.tyre_ratio_min) AS tyre_ratio_min_long,
-               min(b.tyre_ratio_min) FILTER (b.m >= s.t - {S}) AS tyre_ratio_min_short,
-               regr_slope(b.tyre_ratio, b.m) * 3600 AS tyre_ratio_slope_h,
-               avg(b.cell_delta) AS cell_delta_long,
-               max(b.cell_delta_max) AS cell_delta_max_long,
-               avg(b.cell_delta) FILTER (b.m >= s.t - {S}) AS cell_delta_short,
-               regr_slope(b.cell_delta, b.m) * 3600 AS cell_delta_slope_h,
-               max(b.pack_temp_max) AS pack_temp_max_long,
-               avg(b.soh) AS soh_long,
-               sum(b.dtc_events) AS dtc_events_long,
-               coalesce(sum(b.dtc_events) FILTER (b.m >= s.t - {S}), 0) AS dtc_events_short,
-               {per_mode_long},
-               sum(b.dtc_other) AS dtc_other_long
-        FROM snaps s
-        JOIN buckets b ON b.vehicle_id = s.vehicle_id AND b.m >= s.t - {L} AND b.m < s.t
-        GROUP BY s.vehicle_id, s.t
-    ),
+    WITH feats AS ({window_sql(L, S)}),
     open_alerts AS (
         SELECT o.vehicle_id, o.rule_code, o.ts AS opened,
                (SELECT min(c.ts) FROM alerts c

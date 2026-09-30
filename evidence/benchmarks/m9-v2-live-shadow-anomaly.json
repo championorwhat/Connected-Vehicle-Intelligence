@@ -1,0 +1,13 @@
+{
+  "note": "failure-7d-v2 (count-based DTC features) scored live in shadow on the compose stack after only 20 s of traffic at 0.1 Hz per vehicle; 9% of the fleet above 0.5 is implausible and was traced to reporting-rate-dependent features. Superseded by failure-7d-v3 (rate-invariant features + data-sufficiency gate), see ADR-008. v2 was never merged or served.",
+  "hardware": "x86_64 Linux container, 4 vCPU (not the target Mac)",
+  "summary": {
+    "snapshot_ts": "2026-09-30T08:50:00Z",
+    "model_version": "failure-7d-v2",
+    "vehicles_registered": 100000,
+    "vehicles_scored": 99991,
+    "above_0_5": 9050,
+    "shards": 1,
+    "cycle_seconds": 11.32
+  }
+}

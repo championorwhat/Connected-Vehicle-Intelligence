@@ -56,6 +56,7 @@ class RunConfig:
     fault_rate: float = 0.2
     time_scale: float = 48.0
     seed: int = 42
+    report_interval_s: float = 1.0  # each vehicle reports every N seconds
 
 
 class _EventWriter:
@@ -131,7 +132,7 @@ def generate(cfg: RunConfig, out: Path) -> dict[str, Any]:
     out.mkdir(parents=True, exist_ok=True)
     roster = generate_roster(cfg.vehicles, max(1, min(20, cfg.vehicles // 20)), cfg.seed)
     sim_cfg = SimConfig(
-        vehicle_count=cfg.vehicles, events_per_second=float(cfg.vehicles),
+        vehicle_count=cfg.vehicles, events_per_second=cfg.vehicles / cfg.report_interval_s,
         tenant_count=len(roster.tenants), seed=cfg.seed, tick_hz=1, mode=Mode.FAST,
         publisher=PublisherKind.NULL, metrics_port=0, fault_rate=cfg.fault_rate,
         fault_time_scale=cfg.time_scale, burst_multiplier=1.0,
@@ -172,6 +173,7 @@ def generate(cfg: RunConfig, out: Path) -> dict[str, Any]:
     pq.write_table(
         pa.table({
             "vehicle_id": [str(v.vehicle_id) for v in roster.vehicles],
+            "tenant_id": [str(v.tenant_id) for v in roster.vehicles],
             "model_code": [v.model_code for v in roster.vehicles],
             "powertrain": [MODEL_BY_CODE[v.model_code].powertrain.value for v in roster.vehicles],
             "firmware_version": [v.firmware_version for v in roster.vehicles],

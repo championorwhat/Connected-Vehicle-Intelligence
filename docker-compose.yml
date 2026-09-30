@@ -320,6 +320,7 @@ services:
       REDIS_PORT: 6379
       PLANNER_INTERVAL_SECONDS: ${PLANNER_INTERVAL_SECONDS:-60}
       PLANNER_HORIZON_DAYS: ${PLANNER_HORIZON_DAYS:-7}
+      PLANNER_RISK_SOURCE: ${PLANNER_RISK_SOURCE:-rules}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     deploy:
       resources:
@@ -354,6 +355,81 @@ services:
       resources:
         limits:
           memory: 384m
+
+  # Live 7-day failure risk (LightGBM) for every vehicle -> Redis ranking + ClickHouse history.
+  scorer:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/ml:local
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+      secrets: [extra_ca]
+    depends_on:
+      migrate-postgres:
+        condition: service_completed_successfully
+      migrate-clickhouse:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-prognos}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-telemetry}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCORER_INTERVAL_SECONDS: ${SCORER_INTERVAL_SECONDS:-300}
+      SCORER_SHARDS: ${SCORER_SHARDS:-1}
+      SCORER_LAG_SECONDS: ${SCORER_LAG_SECONDS:-120}
+      SCORER_MIN_EVENTS: ${SCORER_MIN_EVENTS:-30}
+      SCORER_MIN_MINUTES: ${SCORER_MIN_MINUTES:-45}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+
+  # REST + WebSocket API (http://localhost:8000/docs).
+  api:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/api:local
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      secrets: [extra_ca]
+    depends_on:
+      migrate-postgres:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-prognos}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-telemetry}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_PRIVATE_KEY_FILE: ${JWT_PRIVATE_KEY_FILE:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      RISK_SOURCE: ${RISK_SOURCE:-rules}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
   # ---------------------------------------------------------------------------
   # Schema migrations (one-shot, idempotent). dbmate applies plain SQL files and

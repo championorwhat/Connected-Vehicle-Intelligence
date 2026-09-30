@@ -38,6 +38,7 @@ from prognos_stream.planner import (
     Calibration,
     Candidate,
     Costs,
+    ModelRisk,
     OpenAlert,
     Workshop,
     build_candidates,
@@ -47,7 +48,6 @@ from prognos_stream.planner import (
 log = logging.getLogger("prognos_stream")
 
 ACTIVE = ("proposed", "scheduled", "in_progress")
-MODEL_VERSION_PREFIX = "rules-calibrated"
 PROPOSED = Counter("prognos_planner_work_orders_proposed", "Work orders proposed")
 LATE = Counter("prognos_planner_late_proposals", "Proposals booked after the predicted failure")
 UNSCHEDULED = Gauge("prognos_planner_unscheduled", "At-risk vehicles with no free slot")
@@ -121,6 +121,23 @@ def locate(client: redis.Redis | None, vehicle_ids: list[str]) -> dict[str, tupl
     return found
 
 
+def model_scores(client: redis.Redis | None, vehicle_ids: list[str]) -> dict[str, ModelRisk]:
+    """Fresh live-model scores (the scorer's keys expire, so present means recent)."""
+    if client is None or not vehicle_ids:
+        return {}
+    found: dict[str, ModelRisk] = {}
+    try:
+        for start in range(0, len(vehicle_ids), 1000):
+            chunk = vehicle_ids[start : start + 1000]
+            for vid, raw in zip(chunk, client.mget([f"veh:{v}:risk" for v in chunk]), strict=True):
+                if raw is not None:
+                    s = orjson.loads(raw)
+                    found[vid] = ModelRisk(float(s["probability"]), str(s["model_version"]))
+    except (redis.ConnectionError, redis.TimeoutError) as exc:
+        log.warning("redis unavailable, planning with calibrated rules: %s", exc)
+    return found
+
+
 def plan_once(
     conn: psycopg.Connection[Any],
     calibration: Calibration,
@@ -128,6 +145,7 @@ def plan_once(
     *,
     horizon_days: int = 7,
     nearest_k: int = 3,
+    use_model: bool = False,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     with conn.transaction(), conn.cursor() as cur:
@@ -143,7 +161,9 @@ def plan_once(
         booked = {(w, int(d)): int(n) for w, d, n in cur.execute(_BOOKED).fetchall()}
         costs = {(r[0], r[1]): Costs(*r[2:]) for r in cur.execute(_COSTS).fetchall()}
 
-        candidates = build_candidates(alerts, calibration, costs)
+        # Shadow deployment (ADR-008): model scores are used only when enabled.
+        risk = model_scores(live, sorted({a.vehicle_id for a in alerts})) if use_model else {}
+        candidates = build_candidates(alerts, calibration, costs, risk)
         positions = locate(live, sorted({c.vehicle_id for c in candidates}))
         for c in candidates:
             c.location = positions.get(c.vehicle_id) or home.get(c.vehicle_id)
@@ -151,7 +171,6 @@ def plan_once(
             candidates, workshops, booked, horizon_days=horizon_days, nearest_k=nearest_k
         )
 
-        model_version = f"{MODEL_VERSION_PREFIX}-{calibration.version}"
         created: list[tuple[str, Candidate]] = []
         chosen = [c for c in ordered if c.workshop_id is not None and c.day is not None]
         if chosen:
@@ -161,7 +180,7 @@ def plan_once(
                 [
                     (c.tenant_id, c.vehicle_id, c.workshop_id, c.source_alert_id,
                      c.failure_mode, round(c.p_failure, 4), c.expected_cost_avoided,
-                     model_version, today + timedelta(days=c.day or 0))
+                     c.model_version, today + timedelta(days=c.day or 0))
                     for c in chosen
                 ],
                 returning=True,
@@ -192,6 +211,7 @@ def plan_once(
         "proposed_after_predicted_failure": late,
         "unscheduled_no_capacity": len(unscheduled),
         "value_basis": sorted({c.value_basis for c in ordered}),
+        "risk_sources": sorted({c.model_version for c in ordered}),
         "elapsed_ms": round((time.perf_counter() - started) * 1000, 1),
         "top": [explain(c) | {"work_order_id": wid} for wid, c in created[:10]],
     }
@@ -236,6 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     env = os.environ
     interval = float(env.get("PLANNER_INTERVAL_SECONDS", "60"))
     horizon = int(env.get("PLANNER_HORIZON_DAYS", "7"))
+    use_model = env.get("PLANNER_RISK_SOURCE", "rules") == "model"
     calibration = Calibration.load()
     live = None
     if env.get("REDIS_HOST"):
@@ -257,7 +278,9 @@ def main(argv: list[str] | None = None) -> int:
     while not stop:
         try:
             with psycopg.connect(dsn_from_env(), connect_timeout=5) as conn:
-                summary = plan_once(conn, calibration, live, horizon_days=horizon)
+                summary = plan_once(
+                    conn, calibration, live, horizon_days=horizon, use_model=use_model
+                )
             log.info("plan: %s", {k: v for k, v in summary.items() if k != "top"})
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)

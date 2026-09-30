@@ -153,3 +153,16 @@ def test_vehicle_already_past_predicted_failure_gets_today_and_is_flagged() -> N
     (c,) = schedule(cands, shops(), {})
     assert c.day == 0
     assert c.late is True
+
+
+def test_fresh_model_score_replaces_rule_probability_and_is_recorded() -> None:
+    from prognos_stream.planner import ModelRisk
+
+    alerts = [alert(1, "v1", "COOLANT_DRIFT"), alert(2, "v2", "COOLANT_DRIFT")]
+    cands = {c.vehicle_id: c for c in build_candidates(
+        alerts, CAL, {}, {"v1": ModelRisk(0.97, "failure-7d-v2")})}  # fmt: skip
+    assert cands["v1"].p_failure == 0.97
+    assert cands["v1"].model_version == "failure-7d-v2"
+    assert cands["v1"].hours_remaining == pytest.approx(30.0)  # deadline still from the rule
+    assert cands["v2"].p_failure == 0.6
+    assert cands["v2"].model_version == "rules-calibrated-test"
