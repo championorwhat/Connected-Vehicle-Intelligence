@@ -54,7 +54,7 @@ and why, and proposes a workshop booking before the predicted failure.
 
 | What | Result | Target |
 |---|---|---|
-| 100K-vehicle fleet (an event every 10 s) | every pipeline stage keeps up ([evidence](../../evidence/load-tests/m14-100k.json)) | 100K vehicles |
+| 100K vehicles, one event every 10 s each (10K events/s) | every pipeline stage keeps up ([evidence](../../evidence/load-tests/m14-100k.json)) | 100K vehicles at ~1 event/s each |
 | Critical alert latency, 100K vehicles | p95 **1.78 s** ([evidence](../../evidence/load-tests/m14-100k.json)) | < 5 s |
 | Event → dashboard, 100K vehicles | p95 **1.88 s** ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)) | < 2 s |
 | API with 40 users during the 100K run | p95 63–82 ms, **0 errors** ([evidence](../../evidence/load-tests/m14-api-40-users-during-100k.json)) | p95 < 200 ms |
@@ -214,8 +214,8 @@ The screenshots were taken without internet access, so the map tiles are blank.
 Every feature is traceable to code, a test and evidence in
 [`docs/feature-traceability.csv`](../feature-traceability.csv), which has the full
 columns. The table below is generated from that file (`scripts/sync_solution_document.py`);
-a unit test fails if they differ. The video column is filled in when the demo is recorded
-(M18).
+a unit test fails if they differ. Video times marked "(script)" come from the
+[demo script](../demo/demo-script.md); they are confirmed once the video is recorded.
 
 <!-- features:start -->
 | ID | Feature | User story | Priority | Status | Code path | Video |
@@ -233,36 +233,36 @@ a unit test fails if they differ. The video column is filled in when the demo is
 | F-09 | Multi-OEM normalisation to a canonical event | As a platform engineer I want every OEM format mapped to one schema so that downstream logic is written once | Must | Done | `apps/stream-processor/src/prognos_stream/adapters.py` | – |
 | F-10 | Validation with dead-letter queue | As a platform engineer I want invalid payloads quarantined with a reason so that bad data never reaches analytics and can be replayed | Must | Done | `apps/stream-processor/src/prognos_stream/processor.py`<br>`apps/stream-processor/src/prognos_stream/service.py` | – |
 | F-11 | Exact duplicate suppression with out-of-order tolerance | As a fleet manager I want each event counted once so that alerts and costs are not double counted | Must | Done | `apps/stream-processor/src/prognos_stream/dedup.py` | – |
-| F-12 | Critical real-time alerts (< 5 s) | As a fleet manager I want to know within seconds when a vehicle overheats or breaks down so that I can act before damage spreads | Must | Done | `apps/stream-processor/src/prognos_stream/detector.py` | – |
-| F-13 | Early-warning trend detection | As a fleet manager I want warnings days before a breakdown so that repairs can be planned | Must | Done | `apps/stream-processor/src/prognos_stream/features.py`<br>`apps/stream-processor/src/prognos_stream/detector.py` | – |
+| F-12 | Critical real-time alerts (< 5 s) | As a fleet manager I want to know within seconds when a vehicle overheats or breaks down so that I can act before damage spreads | Must | Done | `apps/stream-processor/src/prognos_stream/detector.py` | 01:15 (script) |
+| F-13 | Early-warning trend detection | As a fleet manager I want warnings days before a breakdown so that repairs can be planned | Must | Done | `apps/stream-processor/src/prognos_stream/features.py`<br>`apps/stream-processor/src/prognos_stream/detector.py` | 01:40 (script) |
 | F-14 | Tyre leak rate and time-to-critical estimate | As a fleet manager I want to know how long a leaking tyre can keep running so that I can schedule the fix | Should | Done | `apps/stream-processor/src/prognos_stream/detector.py` | – |
-| F-15 | Detection back-test harness | As a data scientist I want to score detection against ground truth so that every change to rules or models is measured | Must | Done | `apps/stream-processor/src/prognos_stream/evaluate.py` | – |
+| F-15 | Detection back-test harness | As a data scientist I want to score detection against ground truth so that every change to rules or models is measured | Must | Done | `apps/stream-processor/src/prognos_stream/evaluate.py` | 04:15 (script) |
 | F-16 | Telemetry history in ClickHouse via Kafka engine | As an analyst I want every event stored for trend analysis so that history is complete | Must | Done | `database/telemetry/migrations/20260930000002_kafka_ingestion.sql` | – |
 | F-17 | Idempotent alert persistence | As a fleet manager I want each alert recorded once with its lifecycle so that I can act on and audit it | Must | Done | `apps/stream-processor/src/prognos_stream/sinks.py` | – |
 | F-18 | Live vehicle state and at-risk ranking in Redis | As a fleet manager I want a live view ranked by risk so that I see the worst vehicles first | Must | Done | `apps/stream-processor/src/prognos_stream/sinks.py` | – |
 | F-19 | End-to-end no-data-loss reconciliation | As a platform engineer I want proof that nothing is lost between Kafka and the stores so that the brief's no-loss requirement is evidenced | Must | Done | `scripts/reconcile.py` | – |
 | F-20 | Calibrated failure risk per rule | As a fleet manager I want each warning to say how likely and how soon a failure is so that I can compare vehicles | Must | Done | `apps/stream-processor/src/prognos_stream/evaluate.py`<br>`scripts/build_calibration.py`<br>`apps/stream-processor/src/prognos_stream/calibration/rules-v1.json` | – |
-| F-21 | Cost-aware prioritisation (no fabricated money) | As a finance owner I want vehicles ranked by expected cost avoided only when the costs are real so that no decision rests on invented figures | Must | Done | `apps/stream-processor/src/prognos_stream/planner.py` | – |
-| F-22 | Capacity-aware work-order proposals with audit trail | As a workshop planner I want proposed bookings that respect daily capacity and the failure deadline so that the most valuable repairs happen first | Must | Done | `apps/stream-processor/src/prognos_stream/planner.py`<br>`apps/stream-processor/src/prognos_stream/planner_main.py` | – |
-| F-23 | Emerging-fault radar (firmware / model cohorts) | As an OEM quality engineer I want to know when one firmware or model shows a DTC far more often than its peers so that a systematic defect is caught before it spreads | Should | Done | `apps/stream-processor/src/prognos_stream/radar.py`<br>`apps/stream-processor/src/prognos_stream/radar_main.py`<br>`apps/simulator/src/prognos_sim/engine.py (firmware_defect)` | – |
+| F-21 | Cost-aware prioritisation (no fabricated money) | As a finance owner I want vehicles ranked by expected cost avoided only when the costs are real so that no decision rests on invented figures | Must | Done | `apps/stream-processor/src/prognos_stream/planner.py` | 02:05 (script) |
+| F-22 | Capacity-aware work-order proposals with audit trail | As a workshop planner I want proposed bookings that respect daily capacity and the failure deadline so that the most valuable repairs happen first | Must | Done | `apps/stream-processor/src/prognos_stream/planner.py`<br>`apps/stream-processor/src/prognos_stream/planner_main.py` | 02:05 (script) |
+| F-23 | Emerging-fault radar (firmware / model cohorts) | As an OEM quality engineer I want to know when one firmware or model shows a DTC far more often than its peers so that a systematic defect is caught before it spreads | Should | Done | `apps/stream-processor/src/prognos_stream/radar.py`<br>`apps/stream-processor/src/prognos_stream/radar_main.py`<br>`apps/simulator/src/prognos_sim/engine.py (firmware_defect)` | 02:35 (script) |
 | F-24 | Backfill training dataset from the production pipeline | As a data scientist I want training data produced by the same normalizer and detector as the live system so that the model learns what it will see in production | Must | Done | `ml/src/prognos_ml/dataset.py` | – |
 | F-25 | Leak-free window features (DuckDB over Parquet) | As a data scientist I want features that only use the past so that offline results hold in production | Must | Done | `ml/src/prognos_ml/features.py` | – |
-| F-26 | 7-day failure model vs rule baseline on held-out data | As a fleet manager I want a better at-risk list than the rules so that workshop slots go to vehicles that will really fail | Must | Done | `ml/src/prognos_ml/model.py`<br>`ml/src/prognos_ml/pipeline.py` | – |
+| F-26 | 7-day failure model vs rule baseline on held-out data | As a fleet manager I want a better at-risk list than the rules so that workshop slots go to vehicles that will really fail | Must | Done | `ml/src/prognos_ml/model.py`<br>`ml/src/prognos_ml/pipeline.py` | 04:15 (script) |
 | F-27 | Per-prediction explanations and versioned model artefact | As a fleet manager I want to see why a vehicle is flagged so that I trust and can challenge the list | Must | Done | `ml/src/prognos_ml/model.py`<br>`ml/models/failure-7d-v1/` | – |
 | F-28 | Secure login and tokens (RS256 JWT + JWKS; argon2id; brute-force guard) | As a fleet manager I want a secure login so that only my staff see my fleet | Must | Done | `apps/api/src/prognos_api/security.py`<br>`apps/api/src/prognos_api/routers/auth.py` | – |
 | F-29 | Role-based access and tenant isolation with audit of denials | As a data owner I want each role to see only what it needs and no tenant to see another so that data is protected | Must | Done | `apps/api/src/prognos_api/deps.py`<br>`apps/api/src/prognos_api/routers/` | – |
 | F-30 | Fleet REST API (vehicles; alerts; work-order lifecycle) with keyset pagination | As a dashboard developer I want stable paginated endpoints so that the UI stays fast at 100K vehicles | Must | Done | `apps/api/src/prognos_api/routers/` | – |
-| F-31 | Live alert feed over WebSocket | As a fleet manager I want new alerts pushed to my screen so that I react within seconds | Must | Done | `apps/api/src/prognos_api/routers/live.py` | – |
+| F-31 | Live alert feed over WebSocket | As a fleet manager I want new alerts pushed to my screen so that I react within seconds | Must | Done | `apps/api/src/prognos_api/routers/live.py` | 01:15 (script) |
 | F-32 | Live model scoring with training/serving parity and a data gate | As a data scientist I want production scores computed exactly like training features so that offline results carry over | Must | Done | `ml/src/prognos_ml/scorer.py`<br>`ml/src/prognos_ml/features.py` | – |
-| F-33 | Shadow deployment of the model (rules stay in charge until validated) | As a fleet manager I want the model introduced safely so that an unvalidated model never drives bookings | Must | Done | `apps/stream-processor/src/prognos_stream/planner_main.py`<br>`apps/api/src/prognos_api/routers/vehicles.py` | – |
-| F-34 | Fleet dashboard: summary; at-risk list with rules/model toggle; map | As a fleet manager I want one screen that shows which vehicles need attention and where so that I can act in seconds | Must | Done | `apps/web/src/pages/Overview.tsx`<br>`apps/web/src/components/FleetMap.tsx` | – |
-| F-35 | Live alerts view with acknowledge | As a fleet manager I want new alerts to appear without refreshing so that nothing is missed | Must | Done | `apps/web/src/pages/Alerts.tsx` | – |
-| F-36 | Work-order board with role-aware lifecycle actions | As a workshop planner I want to schedule, start and complete work orders so that repairs are tracked to an outcome | Must | Done | `apps/web/src/pages/WorkOrders.tsx` | – |
-| F-37 | Vehicle detail with plain-language model reasons | As a fleet manager I want to know why a vehicle is flagged so that I can trust or challenge it | Should | Done | `apps/web/src/pages/VehicleDetail.tsx`<br>`apps/web/src/format.ts` | – |
+| F-33 | Shadow deployment of the model (rules stay in charge until validated) | As a fleet manager I want the model introduced safely so that an unvalidated model never drives bookings | Must | Done | `apps/stream-processor/src/prognos_stream/planner_main.py`<br>`apps/api/src/prognos_api/routers/vehicles.py` | 01:00 (script) |
+| F-34 | Fleet dashboard: summary; at-risk list with rules/model toggle; map | As a fleet manager I want one screen that shows which vehicles need attention and where so that I can act in seconds | Must | Done | `apps/web/src/pages/Overview.tsx`<br>`apps/web/src/components/FleetMap.tsx` | 01:00 (script) |
+| F-35 | Live alerts view with acknowledge | As a fleet manager I want new alerts to appear without refreshing so that nothing is missed | Must | Done | `apps/web/src/pages/Alerts.tsx` | 01:15 (script) |
+| F-36 | Work-order board with role-aware lifecycle actions | As a workshop planner I want to schedule, start and complete work orders so that repairs are tracked to an outcome | Must | Done | `apps/web/src/pages/WorkOrders.tsx` | 02:05 (script) |
+| F-37 | Vehicle detail with plain-language model reasons | As a fleet manager I want to know why a vehicle is flagged so that I can trust or challenge it | Should | Done | `apps/web/src/pages/VehicleDetail.tsx`<br>`apps/web/src/format.ts` | 01:40 (script) |
 | F-38 | SLOs with multi-window burn-rate alerts and runbooks | As an operator I want to be paged only when users are affected so that alerts are trusted | Must | Done | `infra/monitoring/prometheus/rules/prognos.rules.yml`<br>`docs/observability/runbooks.md` | – |
-| F-39 | Service-health dashboard generated from code | As an operator I want one screen that shows which pipeline stage is failing so that I can act fast | Must | Done | `scripts/gen_dashboards.py`<br>`infra/monitoring/grafana/dashboards/prognos-overview.json` | – |
+| F-39 | Service-health dashboard generated from code | As an operator I want one screen that shows which pipeline stage is failing so that I can act fast | Must | Done | `scripts/gen_dashboards.py`<br>`infra/monitoring/grafana/dashboards/prognos-overview.json` | 03:00 (script) |
 | F-40 | Structured JSON logs with request ids | As an operator I want to follow one request through the logs and audit log so that I can explain a failure | Should | Done | `packages/common/src/prognos_common/logs.py`<br>`apps/api/src/prognos_api/main.py` | – |
-| F-41 | Failure drill: detect a lost service and recover from the backlog | As an operator I want proof that outages are detected so that I can rely on the monitoring | Should | Done | `infra/monitoring/prometheus/rules/prognos.rules.yml` | – |
+| F-41 | Failure drill: detect a lost service and recover from the backlog | As an operator I want proof that outages are detected so that I can rely on the monitoring | Should | Done | `infra/monitoring/prometheus/rules/prognos.rules.yml` | 03:25 (script) |
 | F-42 | PostgreSQL row-level security as a second tenant barrier | As a fleet customer I want my data isolated even if the application has a bug so that competitors never see it | Must | Done | `database/postgres/migrations/20261002000004_row_level_security.sql`<br>`apps/api/src/prognos_api/deps.py` | – |
 | F-43 | Right-to-erasure workflow (DPO request + worker across PostgreSQL / ClickHouse / Redis) | As a data protection officer I want to erase a driver's or vehicle's personal data and prove it so that the fleet meets privacy law | Must | Done | `apps/api/src/prognos_api/routers/privacy.py`<br>`apps/api/src/prognos_api/erasure.py` | – |
 | F-44 | STRIDE threat model with controls mapped to tests | As a security reviewer I want every threat tied to a control and a test so that claims can be checked | Must | Done | `docs/security/threat-model.md` | – |
@@ -271,13 +271,13 @@ a unit test fails if they differ. The video column is filled in when the demo is
 | F-47 | Measured SQL optimisation of the three slowest queries | As a fleet manager I want the dashboard to load instantly even with years of alert history so that I can act without waiting | Must | Done | `apps/api/src/prognos_api/routers/live.py`<br>`apps/api/src/prognos_api/routers/work_orders.py`<br>`database/postgres/migrations/20261003000005_alerts_active_index.sql` | – |
 | F-48 | Combined coverage gate (unit + integration >= 80 %) | As a maintainer I want untested code to fail the build so that quality does not erode | Must | Done | `.github/workflows/ci.yml`<br>`pyproject.toml`<br>`Makefile` | – |
 | F-49 | BDD acceptance scenarios for the core user journeys | As a product owner I want the main journeys written as executable scenarios so that behaviour is checked in plain language | Should | Done | `tests/integration/features/fleet_manager.feature` | – |
-| F-50 | Chaos drill: database outage without data loss | As an operator I want proof that a database outage loses nothing so that I can trust recovery | Should | Done | `apps/stream-processor/src/prognos_stream/sink_main.py` | – |
+| F-50 | Chaos drill: database outage without data loss | As an operator I want proof that a database outage loses nothing so that I can trust recovery | Should | Done | `apps/stream-processor/src/prognos_stream/sink_main.py` | 03:25 (script) |
 | F-51 | Container image vulnerability gate | As a security reviewer I want shipped images scanned so that known critical flaws never deploy | Should | Done | `.github/workflows/ci.yml`<br>`.github/dependabot.yml` | – |
-| F-52 | Load tests at 10K/50K/100K vehicles with capacity ramp and burst | As an operator I want to know how many vehicles the platform handles and how it degrades so that I can size it | Must | Done | `scripts/load_test.py`<br>`scripts/api_load.py` | – |
+| F-52 | Load tests at 10K/50K/100K vehicles with capacity ramp and burst | As an operator I want to know how many vehicles the platform handles and how it degrades so that I can size it | Must | Done | `scripts/load_test.py`<br>`scripts/api_load.py` | 03:25 (script) |
 | F-53 | Detector memory sized for 100K vehicles (crash-loop fix) | As an operator I want the detector to fit its memory limit at full fleet size so that alerts are not delayed by restarts | Must | Done | `apps/stream-processor/src/prognos_stream/detector.py` | – |
 | F-54 | Login bursts do not stall the API | As a fleet manager I want the dashboard to stay fast when everyone signs in at shift start so that I can work immediately | Must | Done | `apps/api/src/prognos_api/routers/auth.py`<br>`apps/api/src/prognos_api/deps.py` | – |
 | F-55 | Crash-loop alert (ServiceRestarting) | As an operator I want to be paged when a service keeps restarting so that silent degradation is caught | Should | Done | `infra/monitoring/prometheus/rules/prognos.rules.yml` | – |
-| F-56 | Dashboard freshness measured (event to WebSocket < 2 s) | As a fleet manager I want a critical alert on my screen within 2 seconds so that I can act while the vehicle is still on the road | Must | Done | `scripts/ws_latency.py`<br>`apps/api/src/prognos_api/routers/live.py` | – |
+| F-56 | Dashboard freshness measured (event to WebSocket < 2 s) | As a fleet manager I want a critical alert on my screen within 2 seconds so that I can act while the vehicle is still on the road | Must | Done | `scripts/ws_latency.py`<br>`apps/api/src/prognos_api/routers/live.py` | 01:15 (script) |
 | F-57 | Open-source declaration from image SBOMs | As a reviewer I want every shipped component and its licence listed so that the submission's licence obligations are clear | Must | Done | `scripts/gen_licences.py`<br>`evidence/sbom/` | – |
 | F-58 | Solution Document with evidence links checked in CI | As a judge I want every claim in the Solution Document to link to working evidence so that I can verify it | Must | Done | `docs/solution-document/solution-document.md`<br>`scripts/sync_solution_document.py` | – |
 
@@ -753,8 +753,8 @@ insert all bookings in one transaction; ON CONFLICT DO NOTHING; audit each
 
 | NFR | Target (case study) | Achieved | How measured |
 |---|---|---|---|
-| **Ingest throughput** | 100K+ events/s | **Not met end to end.** Per stage: the simulator into Kafka held **100K events/s** ([evidence](../../evidence/benchmarks/m3-simulator-kafka-live-100k.json)); the normalizer does 25.8K msg/s per process, **62.9K with 3** ([benchmarks](../performance/benchmarks.md)). The whole pipeline on 4 shared vCPUs sustains **about 15K events/s** and saturates at 20K ([evidence](../../evidence/load-tests/m14-capacity-20000.json)). The brief's 100K vehicles reporting every 10 s (10K events/s) is sustained. | `scripts/load_test.py` sampling Prometheus |
-| **End-to-end latency** | < 2 s dashboard; < 5 s critical alert | **Met at 100K vehicles:** dashboard p95 1.88 s (96.7 % under 2 s); critical alert p95 1.78 s, p99 2.84 s | WebSocket client ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)); detector histogram ([evidence](../../evidence/load-tests/m14-100k.json)) |
+| **Ingest throughput** | 100K+ events/s | **Not met end to end.** Per stage: the simulator into Kafka held **100K events/s** ([evidence](../../evidence/benchmarks/m3-simulator-kafka-live-100k.json)); the normalizer does 25.8K msg/s per process, **62.9K with 3** ([benchmarks](../performance/benchmarks.md)). The whole pipeline on 4 shared vCPUs sustains **about 15K events/s** and saturates at 20K ([evidence](../../evidence/load-tests/m14-capacity-20000.json)). 100K vehicles reporting every 10 s (10K events/s) is sustained; the brief's rate of about one event per vehicle per second is not. | `scripts/load_test.py` sampling Prometheus |
+| **End-to-end latency** | < 2 s dashboard; < 5 s critical alert | **Met at 100K vehicles, 10K events/s:** dashboard p95 1.88 s (96.7 % under 2 s); critical alert p95 1.78 s, p99 2.84 s | WebSocket client ([evidence](../../evidence/load-tests/m17-dashboard-freshness-100k.json)); detector histogram ([evidence](../../evidence/load-tests/m14-100k.json)) |
 | **API latency** | p95 < 200 ms; p99 < 500 ms | **Met:** p95 63–82 ms, p99 127–221 ms per route, 40 users during the 100K run, 0 errors | `scripts/api_load.py`, client-side ([evidence](../../evidence/load-tests/m14-api-40-users-during-100k.json)) |
 | **Resilience** | Recovers after broker / pod failure | **Met in drills:** detector stopped 13.5 min, then resumed from its committed offsets and drained a 7.4M-message backlog in 7 min 40 s (loss not separately reconciled in this drill; [evidence](../../evidence/chaos/m11-detector-outage-drill.json)); PostgreSQL stopped 90 s mid-ingestion, 0 loss over 3.77M events ([evidence](../../evidence/chaos/m13-postgres-outage-reconciliation.json)); one of 3 Kafka brokers killed: 1,000 of 1,000 `acks=all` writes succeeded, and replication healed after restart ([evidence](../../evidence/chaos/m1-kafka-ha-smoke.md)) | Drills with reconciliation |
 | **Availability** | 99.9 %, no single point of failure | **Not met.** Kafka can run 3 brokers (overlay), but PostgreSQL, ClickHouse and Redis are single instances locally. Availability over time is **NOT YET MEASURED**. The cloud design (M16) uses managed, replicated stores. | – |
@@ -860,7 +860,7 @@ apply. The ML model is guarded instead:
 | Acceptance (BDD) | pytest-bdd (Gherkin) | 5 scenarios | 5 / 5 pass: alert → scheduled repair, idempotent planning, tenant isolation, role limits, location masking | Yes |
 | Web | Vitest; Playwright against the nginx container | 7 + 4 | all pass; includes security headers | Yes |
 | Monitoring rules | promtool | 11 rule tests | each alert fires on a synthetic failure and stays quiet on normal traffic | Yes |
-| Performance / load / soak | `load_test.py`, `api_load.py`, `ws_latency.py` | 10K / 50K / 100K, 15K and 20K events/s, burst, 30-min soak, 40-user API run, 2 freshness runs | 100K vehicles sustained; alerts p95 1.78 s; API p95 < 82 ms; dashboard p95 1.88 s | No (recorded evidence) |
+| Performance / load / soak | `load_test.py`, `api_load.py`, `ws_latency.py` | 10K / 50K / 100K, 15K and 20K events/s, burst, 30-min soak, 40-user API run, 2 freshness runs | 100K vehicles at 10K events/s sustained; alerts p95 1.78 s; API p95 < 82 ms; dashboard p95 1.88 s | No (recorded evidence) |
 | Security (SAST, dependency, image, secrets) | Semgrep, Trivy (fs + image), gitleaks | 4 scanners | 0 HIGH/CRITICAL dependency findings; 0 fixable CRITICAL in images; 0 secrets. **No DAST** (not run) | Yes |
 | Compliance & chaos | pytest (RLS, erasure, audit); manual drills | 3 drills (Kafka broker, detector, PostgreSQL) | Kafka: 1,000/1,000 writes with a broker down; PostgreSQL: 0 loss over 3.77M events by reconciliation; detector: recovered from committed offsets | Tests yes; drills recorded |
 
@@ -1042,8 +1042,10 @@ same rows ([model card](../ml/model-card.md),
 | 3:00 – 4:15 | Under the hood | Architecture; the 100K-vehicle load test and Grafana; one failure-recovery moment (a stopped service and its backlog draining) |
 | 4:15 – 5:00 | Impact & next steps | Measured results, what is not yet proven, next steps, the team |
 
-**Script:** written in M18 (`docs/demo/`). **Video link:** **[to be recorded by the
-author]**.
+**Script:** [docs/demo/demo-script.md](../demo/demo-script.md), timed from a real rehearsal
+([timeline](../../evidence/demo/m18-rehearsal-timeline.json),
+[recovery moment](../../evidence/demo/m18-recovery-rehearsal.md)). **Video link:**
+**[to be recorded by the author]**.
 
 ## 14. Repository Checklist
 
@@ -1056,7 +1058,7 @@ author]**.
 | No secrets committed | Done: gitleaks on every push, 0 findings | [evidence](../../evidence/security/gitleaks.txt) |
 | `.env.example` provided | Done | [.env.example](../../.env.example) |
 | Commits from all members | Solo project: all commits by the author, assisted by Claude Code (§16) | git history |
-| Final tag `v1.0-submission` | Pending (M19) | – |
+| Final tag `v1.0-submission` | Done at submission | git tags |
 
 ## 15. Conclusion
 
@@ -1132,6 +1134,8 @@ independent academic project with no affiliation to Motorq.
 | Security and privacy | [threat-model.md](../security/threat-model.md), [privacy.md](../security/privacy.md) |
 | Testing | [strategy.md](../testing/strategy.md) |
 | Feature traceability | [feature-traceability.csv](../feature-traceability.csv) |
+| Final audit: every requirement → code → test → evidence → demo | [final-audit.md](../audit/final-audit.md) |
+| Demo script | [demo-script.md](../demo/demo-script.md) |
 | Open-source components | [open-source.md](../open-source.md) |
 
 **Evidence index.**

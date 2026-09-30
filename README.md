@@ -5,10 +5,13 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M0–M15 and M17 complete; M16 (cloud), M18 (demo) and M19 (audit) remain. See [milestones](#milestones).
+**Status:** M0–M15 and M17–M19 complete; the demo video is recorded by the author; M16 (cloud) is planned, not built. See [milestones](#milestones).
 
 **Solution Document:** [docs/solution-document/solution-document.md](docs/solution-document/solution-document.md)
-(all 17 template sections, every measured claim linked to its evidence).
+(all 17 template sections, every measured claim linked to its evidence;
+[PDF](docs/solution-document/solution-document.pdf), regenerated with `make pdf`).
+**Final audit:** [docs/audit/final-audit.md](docs/audit/final-audit.md): every requirement of the
+brief traced to code, test, evidence and demo time, including what is **not** met.
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -57,6 +60,24 @@ make topics     # shows the Kafka topics and partitions
 make up-obs     # optional: + Prometheus (localhost:9090) and Grafana (localhost:3000)
 make down       # stop (keeps data); `make clean` also deletes data
 ```
+
+Run the whole product (simulator, pipeline, API, dashboard) with the scripted demo failures:
+
+```zsh
+make env && make bootstrap   # then set DEMO_USER_PASSWORD in .env
+make up-obs                  # data stores + Prometheus and Grafana
+make seed                    # 10,000 vehicles
+make pipeline-demo           # builds the images on first run (several minutes), then starts everything
+make users                   # demo logins, in the tenant where the scripted failures happen
+make demo-timeline           # prints each scripted alert and work order as it appears
+```
+
+Open http://localhost:8080 and sign in as `fleet_manager@demo.prognos.local` with
+`DEMO_USER_PASSWORD`. The first scripted warning appears about 3 minutes after
+`make pipeline-demo`, and the first critical alert after about 8
+([demo script](docs/demo/demo-script.md)). Grafana is at http://localhost:3000. The stack
+used about 2.7 GB of memory in the rehearsal. `make lag` shows each consumer's backlog;
+`make pipeline-stop` and `make down` stop everything.
 
 Run the same checks CI runs:
 
@@ -444,7 +465,7 @@ ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured 
 |---|---|---|---|
 | 10K vehicles | 0.52 / 1.23 / 1.85 s | 0.9 | sustained |
 | 50K vehicles | 0.55 / 1.57 / 1.92 s | 1.9 | sustained |
-| **100K vehicles** (the brief) | **0.62 / 1.78 / 2.84 s** | 2.9 | sustained, 3.1 GiB |
+| **100K vehicles**, one event every 10 s each | **0.62 / 1.78 / 2.84 s** | 2.9 | sustained, 3.1 GiB |
 | 100K at 1.5× rate (15K events/s) | 0.70 / 1.79 / 2.57 s | 3.5 | at the limit of this machine |
 | 100K at 2× rate (20K events/s) | 18 / 29 / 30 s | 3.8 | not sustained (CPU saturated) |
 
@@ -517,9 +538,10 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M13 | Testing: coverage, contract, BDD, chaos | ✅ Done ([strategy](docs/testing/strategy.md), [drills](docs/observability/drills.md)) |
 | M14 | Performance: 10K / 50K / 100K / burst / soak | ✅ Done ([load tests](docs/performance/load-tests.md)); on a 4-vCPU Linux container, not the Mac |
 | M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
-| M16 | Cloud deployment (Helm + Terraform) | Planned (after M18/M19, by choice) |
+| M16 | Cloud deployment (Helm + Terraform) | Planned, **not built** (did not fit before the deadline) |
 | M17 | Solution Document, open-source declaration (SBOM), link checks | ✅ Done ([document](docs/solution-document/solution-document.md), [open source](docs/open-source.md)) |
-| M18–M19 | Demo script and recording, final audit, `v1.0-submission` tag | ⏭ Next |
+| M18 | Demo script timed from a real rehearsal; demo fixes (`make users` tenant, `make lag`, `make demo-timeline`) | ✅ Script done ([script](docs/demo/demo-script.md)); the video is recorded by the author |
+| M19 | Final audit, PDF export, `v1.0-submission` tag | ✅ Done ([audit](docs/audit/final-audit.md), [PDF](docs/solution-document/solution-document.pdf)) |
 
 ## Declarations
 

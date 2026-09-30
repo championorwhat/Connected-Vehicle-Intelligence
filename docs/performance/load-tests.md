@@ -24,17 +24,18 @@ backlog that is not growing.
 |---|---|---|---|---|---|---|---|
 | 10K vehicles | 1,021 | 990 | 0.3 s | 0.52 / 1.23 / 1.85 s | 0.9 | 1.5 GiB | sustained |
 | 50K vehicles | 5,015 | 4,951 | 0.2 s | 0.55 / 1.57 / 1.92 s | 1.9 | 2.4 GiB | sustained |
-| **100K vehicles** (the brief) | 10,050 | 9,907 | 0.1 s | **0.62 / 1.78 / 2.84 s** | 2.9 | 3.1 GiB | **sustained** |
+| **100K vehicles**, one event every 10 s each | 10,050 | 9,907 | 0.1 s | **0.62 / 1.78 / 2.84 s** | 2.9 | 3.1 GiB | **sustained** |
 | 100K + 40 dashboard users | 10,005 | 9,899 | 0.1 s | 0.58 / 1.79 / 5.9 s | 2.9 | 3.0 GiB | sustained |
 | 100K at 15K events/s | 15,320 | 14,877 | 0.2 s | 0.70 / 1.79 / 2.57 s | 3.5 | 2.6 GiB | at the limit: kept up for 4 min, detector at 97 % of input |
 | 100K at 20K events/s | 20,322 | 17,558 | 35.6 s and growing | 18 / 29 / 30 s | 3.8 | 3.5 GiB | **not sustained**: the machine is saturated |
 | 3× burst on 100K | ~22K peak | ~16K during, ~23K after | 0.1 s (43 s max) | during the burst window: p95 56 s | 3.3 | 3.0 GiB | recovers: see chart |
 | **30-minute soak, 100K** | 10,106 | 9,898 | 0.1 s (0.7 s max) | 0.59 / 1.83 / 5.04 s | 2.9 | 3.0 GiB | **sustained; memory flat** |
 
-- **Target met on this machine.** The brief's 100K vehicles, each reporting every 10 s,
-  runs with every stage current. 95 % of critical alerts are raised within 1.8 s, against
-  a 5 s target.
-- **Capacity here is about 15K events/s** (1.5× the target). Above that, the detector is
+- **Fleet size met; event rate not.** 100K vehicles, each reporting every 10 s (10K
+  events/s), run with every stage current, and 95 % of critical alerts are raised within
+  1.8 s against a 5 s target. The brief assumes about one event per vehicle per second
+  (100K events/s), which is **not reached** end to end on this machine.
+- **Capacity here is about 15K events/s** (1.5× the rate tested). Above that, the detector is
   the first stage to fall behind, because the machine runs out of CPU. It scales out by
   partition (`DETECTOR_REPLICAS`), but only when there are cores to scale into.
 - **The Mac will differ.** An M2 core is faster than a vCPU here. However, all

@@ -80,6 +80,20 @@ pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEH
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures and a firmware defect for the radar
 	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
 
+pdf: ## Export the Solution Document to PDF (needs Node for mermaid-cli, and Chrome/Chromium)
+	uv run --with markdown-it-py python scripts/export_solution_pdf.py
+
+LAG_GROUPS ?= normalizer detector sink radar
+lag: ## Backlog per consumer group, from the broker (works while a consumer is down); LAG_GROUPS=detector
+	@for g in $(LAG_GROUPS); do \
+	  printf '%-11s ' "$$g"; \
+	  $(COMPOSE) exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:19092 \
+	    --describe --group "$$g" 2>/dev/null | awk 'NR>1 && $$6 ~ /^[0-9]+$$/ {s+=$$6} END {print s+0}'; \
+	done
+
+demo-timeline: ## Live cue sheet for recording the demo: when each scripted failure appears
+	set -a; . ./.env; set +a; uv run python scripts/demo_timeline.py --duration 1320
+
 pipeline-stop: ## Stop the pipeline services gracefully (flush + commit)
 	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar scorer api web
 
@@ -91,11 +105,13 @@ signals-tail: ## Follow emerging-fault signals from the radar
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
 	  --topic fleet.signals --from-beginning | cut -c1-400
 
-users: ## Create demo users for every role in the first tenant (password: DEMO_USER_PASSWORD)
+# The largest tenant is the roster's first, which holds the vehicles `SIM_SCENARIO=demo`
+# makes fail, so the demo users can see them (found in the M18 rehearsal).
+users: ## Create demo users for every role in the largest tenant (password: DEMO_USER_PASSWORD)
 	set -a; . ./.env; set +a; \
 	test -n "$$DEMO_USER_PASSWORD" || { echo "set DEMO_USER_PASSWORD in .env (see .env.example)"; exit 1; }; \
 	tenant=$$($(COMPOSE) exec -T postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \
-	  "SELECT slug FROM tenants ORDER BY slug LIMIT 1"); \
+	  "SELECT t.slug FROM tenants t JOIN vehicles v USING (tenant_id) GROUP BY t.slug ORDER BY count(*) DESC, t.slug LIMIT 1"); \
 	for role in fleet_manager technician analyst dpo; do \
 	  echo "$$DEMO_USER_PASSWORD" | $(COMPOSE) --profile pipeline run --rm -T api create-user \
 	    --email "$$role@demo.prognos.local" --tenant "$$tenant" --role $$role > /dev/null \
