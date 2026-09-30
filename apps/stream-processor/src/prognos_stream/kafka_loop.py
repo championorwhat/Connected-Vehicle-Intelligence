@@ -43,7 +43,7 @@ Record = tuple[str, bytes | None, bytes, list[tuple[str, str | bytes | None]] | 
 class LoopConfig:
     bootstrap_servers: str = "localhost:9092"
     group_id: str = "service"
-    input_topic: str = "telemetry.raw"
+    input_topic: str = "telemetry.raw"  # comma-separated for several topics
     batch_size: int = 2_000
     poll_timeout_s: float = 0.1  # caps batching delay at low rates
     exit_when_idle_s: float = 0.0  # >0: stop after this long idle while holding partitions
@@ -99,6 +99,13 @@ class BatchService:
     def on_idle(self) -> None:
         """Called when a poll returns nothing (housekeeping)."""
 
+    def before_commit(self) -> None:
+        """Called after outputs are flushed and before offsets are committed.
+
+        Sinks write their buffered batch here; raising prevents the commit, so the
+        batch is re-consumed (at-least-once).
+        """
+
     def after_batch(self, consumed: int, elapsed: float) -> None:
         """Called after each committed batch (metrics)."""
 
@@ -130,9 +137,8 @@ class BatchService:
 
     def run(self) -> dict[str, float]:
         cfg = self.loop_cfg
-        self.consumer.subscribe(
-            [cfg.input_topic], on_assign=self._on_assign, on_revoke=self._on_revoke
-        )
+        topics = [t.strip() for t in cfg.input_topic.split(",") if t.strip()]
+        self.consumer.subscribe(topics, on_assign=self._on_assign, on_revoke=self._on_revoke)
         started = time.monotonic()
         last_message = last_lag = started
         try:
@@ -194,6 +200,7 @@ class BatchService:
             raise DeliveryError(
                 f"{remaining} undelivered, {self.delivery_errors} failed: not committing batch"
             )
+        self.before_commit()
         self.consumer.commit(asynchronous=False)
         elapsed = time.monotonic() - t0
         BATCH_SECONDS.labels(self.service_name).observe(elapsed)

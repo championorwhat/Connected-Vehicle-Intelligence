@@ -140,3 +140,18 @@ def test_partition_revocation_forgets_windows(normalizer: Normalizer) -> None:
     assert normalizer.process(record[2], headers, 3, START + 60).kind == DUPLICATE
     normalizer.forget_partition(3)
     assert normalizer.process(record[2], headers, 3, START + 60).kind == CANONICAL
+
+
+def test_normalizer_waits_for_a_seeded_registry() -> None:
+    from prognos_stream.main import wait_for_registry
+
+    attempts = iter([VehicleRegistry({}), VehicleRegistry({}), VehicleRegistry.from_roster(ROSTER)])
+    registry = wait_for_registry(lambda: next(attempts), timeout_s=5, poll_s=0.01)
+    assert len(registry) == 600
+
+
+def test_normalizer_refuses_to_start_with_empty_registry() -> None:
+    from prognos_stream.main import wait_for_registry
+
+    with pytest.raises(RuntimeError):
+        wait_for_registry(lambda: VehicleRegistry({}), timeout_s=0.05, poll_s=0.01)

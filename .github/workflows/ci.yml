@@ -23,7 +23,7 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts/reconcile.py
       - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
@@ -76,13 +76,13 @@ jobs:
           ./scripts/seed.sh --vehicles 100000 --evidence seed-100k.json
           docker compose exec -T postgres psql -U prognos -d prognos -tAc \
             "SELECT count(*) FROM vehicles" | grep -qx 100000
-      - name: pipeline (simulator -> normalizer -> detector) on the 100K seed
+      - name: pipeline (simulator -> normalizer -> detector -> sinks) on the 100K seed
         env:
           VEHICLE_COUNT: "100000"      # must match the seed above
           EVENTS_PER_SECOND: "10000"
         run: |
           docker compose --profile pipeline build
-          docker compose --profile pipeline up -d normalizer detector
+          docker compose --profile pipeline up -d normalizer detector sink
           docker compose --profile pipeline run --rm -e DURATION_SECONDS=20 -e METRICS_PORT=0 \
             simulator --summary /tmp/sim.json
           group_lag() { docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh \
@@ -101,6 +101,15 @@ jobs:
           echo "alerts=$alerts vehicle.state=$states"
           [ "$lag" = "0" ] && [ "$dlag" = "0" ] && [ "$canonical" -gt 150000 ] && [ "$dlq" -gt 0 ] \
             && [ "$alerts" -gt 0 ] && [ "$states" -gt 0 ]
+      - name: reconcile Kafka vs ClickHouse vs PostgreSQL (no data loss)
+        run: |
+          set -a; . ./.env; set +a
+          uv run python scripts/reconcile.py --wait-seconds 240 --output reconciliation.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reconciliation
+          path: reconciliation.json
       - uses: actions/upload-artifact@v4
         with:
           name: seed-100k-ci

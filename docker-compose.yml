@@ -262,6 +262,40 @@ services:
         limits:
           memory: 512m
 
+  # Persistence: alerts -> PostgreSQL (+ Redis pub/sub); vehicle.state -> Redis.
+  # (Telemetry reaches ClickHouse through its own Kafka engine, see database/telemetry.)
+  sink:
+    <<: *restart
+    profiles: ["pipeline"]
+    image: prognos/stream:local
+    build:
+      context: .
+      dockerfile: apps/stream-processor/Dockerfile
+      secrets: [extra_ca]
+    entrypoint: ["prognos-sink"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      migrate-postgres:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:19092}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-prognos}
+      POSTGRES_USER: ${POSTGRES_USER:-prognos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SINK_RETRY_BUDGET_SECONDS: ${SINK_RETRY_BUDGET_SECONDS:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
   # ---------------------------------------------------------------------------
   # Schema migrations (one-shot, idempotent). dbmate applies plain SQL files and
   # records them in schema_migrations; re-running is a no-op.
@@ -292,6 +326,7 @@ services:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-telemetry}
       MIGRATIONS_DIR: /db/migrations
+      KAFKA_BROKERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:19092}
     volumes:
       - ./database/telemetry:/db:ro
     restart: "no"
