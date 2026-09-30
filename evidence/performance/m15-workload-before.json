@@ -1,0 +1,137 @@
+{
+  "measured_at": "2026-09-30T12:05:05+00:00",
+  "workload": {
+    "tenants": 20,
+    "rounds": 5,
+    "api_requests": 3055,
+    "api_seconds": 195.6,
+    "planner_runs": 3
+  },
+  "table_rows": {
+    "vehicles": 100000,
+    "alerts": 1999994,
+    "work_orders": 156987
+  },
+  "top_by_total_time": [
+    {
+      "queryid": "6794589382167475866",
+      "calls": 100,
+      "total_ms": 166323.6,
+      "mean_ms": 1663.24,
+      "max_ms": 5201.9,
+      "rows": 100,
+      "blocks": 10961327,
+      "query": "SELECT (SELECT count(*) FROM vehicles WHERE tenant_id = $1) AS vehicles, (SELECT count(*) FROM vehicles WHERE tenant_id = $1 AND status = $2) AS vehicles_in_workshop, (SELECT count(*) FROM alerts WHERE tenant_id = $1 AND status = $3 AND severity = $4) AS open_critical_alerts, (SELECT count(*) FROM alerts WHERE tenant_id = $1 AND status = $5 AND severity = $6) AS open_warning_alerts, (SELECT count(*) FROM alerts WHERE tenant_id = $1 AND status = $7) AS acknowledged_alerts, (SELECT count(*) FROM work_orders WHERE tenant_id = $1 AND status = $8) AS work_orders_proposed, (SELECT count(*) FROM work_orders WHERE tenant_id = $1 AND status = $9) AS work_orders_scheduled, (SELECT count(*) FROM work_orders WHERE tenant_id = $1 AND status = $10) AS work_orders_in_progress"
+    },
+    {
+      "queryid": "3536828238113222254",
+      "calls": 55,
+      "total_ms": 3198.2,
+      "mean_ms": 58.15,
+      "max_ms": 145.21,
+      "rows": 1660,
+      "blocks": 171917,
+      "query": "SELECT work_order_id::text AS work_order_id, vehicle_id::text AS vehicle_id, workshop_id::text AS workshop_id, source_alert_id, failure_mode, status, failure_probability::float8 AS failure_probability, expected_cost_avoided::float8 AS expected_cost_avoided, model_version, scheduled_for, created_by::text AS created_by, created_at, completed_at, outcome FROM work_orders WHERE tenant_id = $1 AND status = $2 AND (created_at, work_order_id) < ($3::timestamptz, $4::uuid) ORDER BY created_at DESC, work_order_id DESC LIMIT $5"
+    },
+    {
+      "queryid": "3403526893380257457",
+      "calls": 6987,
+      "total_ms": 2411.8,
+      "mean_ms": 0.35,
+      "max_ms": 22.4,
+      "rows": 6987,
+      "blocks": 315331,
+      "query": "INSERT INTO work_orders (tenant_id, vehicle_id, workshop_id, source_alert_id, failure_mode, status, failure_probability, expected_cost_avoided, model_version, scheduled_for) VALUES ($1, $2, $3, $4, $5, $10, $6, $7, $8, $9) ON CONFLICT (vehicle_id, failure_mode) WHERE status IN ($11, $12, $13) DO NOTHING RETURNING work_order_id::text"
+    },
+    {
+      "queryid": "3411836936179221827",
+      "calls": 3,
+      "total_ms": 927.4,
+      "mean_ms": 309.15,
+      "max_ms": 326.45,
+      "rows": 74786,
+      "blocks": 178182,
+      "query": "SELECT a.alert_id, a.tenant_id::text, a.vehicle_id::text, a.failure_mode, a.rule_code, a.severity, extract($1 FROM now() - a.event_ts) / $2, (a.details ->> $3)::float8, hw.latitude::float8, hw.longitude::float8 FROM alerts a JOIN vehicles v ON v.vehicle_id = a.vehicle_id LEFT JOIN workshops hw ON hw.workshop_id = v.home_workshop_id WHERE a.status IN ($4, $5) AND a.failure_mode IS NOT NULL AND v.status = $6 AND NOT EXISTS ( SELECT $7 FROM work_orders w WHERE w.vehicle_id = a.vehicle_id AND w.failure_mode = a.failure_mode AND w.status IN ($8, $9, $10))"
+    },
+    {
+      "queryid": "1704169582637052662",
+      "calls": 300,
+      "total_ms": 843.0,
+      "mean_ms": 2.81,
+      "max_ms": 26.45,
+      "rows": 15300,
+      "blocks": 36030,
+      "query": "SELECT v.vehicle_id::text AS vehicle_id, v.vin::text AS vin, v.model_code::text AS model_code, m.display_name AS model_name, m.oem_code AS oem, m.powertrain, v.model_year, v.firmware_version, v.status, v.fleet_id::text AS fleet_id, v.home_workshop_id::text AS home_workshop_id FROM vehicles v JOIN vehicle_models m USING (model_code) WHERE v.tenant_id = $1 AND v.vehicle_id > $2 ORDER BY v.vehicle_id LIMIT $3"
+    },
+    {
+      "queryid": "-4980061067943950347",
+      "calls": 100,
+      "total_ms": 422.2,
+      "mean_ms": 4.22,
+      "max_ms": 33.37,
+      "rows": 5100,
+      "blocks": 11850,
+      "query": "SELECT v.vehicle_id::text AS vehicle_id, v.vin::text AS vin, v.model_code::text AS model_code, m.display_name AS model_name, m.oem_code AS oem, m.powertrain, v.model_year, v.firmware_version, v.status, v.fleet_id::text AS fleet_id, v.home_workshop_id::text AS home_workshop_id FROM vehicles v JOIN vehicle_models m USING (model_code) WHERE v.tenant_id = $1 ORDER BY v.vehicle_id LIMIT $2"
+    },
+    {
+      "queryid": "-6719109478453863655",
+      "calls": 200,
+      "total_ms": 346.3,
+      "mean_ms": 1.73,
+      "max_ms": 4.12,
+      "rows": 10200,
+      "blocks": 11010,
+      "query": "SELECT work_order_id::text AS work_order_id, vehicle_id::text AS vehicle_id, workshop_id::text AS workshop_id, source_alert_id, failure_mode, status, failure_probability::float8 AS failure_probability, expected_cost_avoided::float8 AS expected_cost_avoided, model_version, scheduled_for, created_by::text AS created_by, created_at, completed_at, outcome FROM work_orders WHERE tenant_id = $1 AND (created_at, work_order_id) < ($2::timestamptz, $3::uuid) ORDER BY created_at DESC, work_order_id DESC LIMIT $4"
+    },
+    {
+      "queryid": "4628325376801693578",
+      "calls": 500,
+      "total_ms": 224.4,
+      "mean_ms": 0.45,
+      "max_ms": 1.28,
+      "rows": 500,
+      "blocks": 13935,
+      "query": "SELECT v.vehicle_id::text AS vehicle_id, v.vin::text AS vin, v.model_code::text AS model_code, m.display_name AS model_name, m.oem_code AS oem, m.powertrain, v.model_year, v.firmware_version, v.status, v.fleet_id::text AS fleet_id, v.home_workshop_id::text AS home_workshop_id , (SELECT count(*) FROM alerts a WHERE a.vehicle_id = v.vehicle_id AND a.status IN ($3, $4)) AS open_alerts FROM vehicles v JOIN vehicle_models m USING (model_code) WHERE v.vehicle_id = $1 AND v.tenant_id = $2"
+    },
+    {
+      "queryid": "-5502974936725618490",
+      "calls": 400,
+      "total_ms": 181.4,
+      "mean_ms": 0.45,
+      "max_ms": 2.23,
+      "rows": 20400,
+      "blocks": 21755,
+      "query": "SELECT alert_id, vehicle_id::text AS vehicle_id, rule_code, severity, failure_mode, status, event_ts, detected_at, acknowledged_at, acknowledged_by::text AS acknowledged_by, resolved_at, details FROM alerts WHERE tenant_id = $1 AND (detected_at, alert_id) < ($2::timestamptz, $3) ORDER BY detected_at DESC, alert_id DESC LIMIT $4"
+    },
+    {
+      "queryid": "5056556780356465043",
+      "calls": 200,
+      "total_ms": 173.6,
+      "mean_ms": 0.87,
+      "max_ms": 3.2,
+      "rows": 10200,
+      "blocks": 35510,
+      "query": "SELECT alert_id, vehicle_id::text AS vehicle_id, rule_code, severity, failure_mode, status, event_ts, detected_at, acknowledged_at, acknowledged_by::text AS acknowledged_by, resolved_at, details FROM alerts WHERE tenant_id = $1 AND status = $2 AND (detected_at, alert_id) < ($3::timestamptz, $4) ORDER BY detected_at DESC, alert_id DESC LIMIT $5"
+    },
+    {
+      "queryid": "-2378079649773426402",
+      "calls": 100,
+      "total_ms": 172.5,
+      "mean_ms": 1.73,
+      "max_ms": 4.07,
+      "rows": 5100,
+      "blocks": 44005,
+      "query": "SELECT alert_id, vehicle_id::text AS vehicle_id, rule_code, severity, failure_mode, status, event_ts, detected_at, acknowledged_at, acknowledged_by::text AS acknowledged_by, resolved_at, details FROM alerts WHERE tenant_id = $1 AND status = $2 AND severity = $3 AND (detected_at, alert_id) < ($4::timestamptz, $5) ORDER BY detected_at DESC, alert_id DESC LIMIT $6"
+    },
+    {
+      "queryid": "-1434094496189984229",
+      "calls": 100,
+      "total_ms": 109.0,
+      "mean_ms": 1.09,
+      "max_ms": 2.18,
+      "rows": 4370,
+      "blocks": 12745,
+      "query": "SELECT work_order_id::text AS work_order_id, vehicle_id::text AS vehicle_id, workshop_id::text AS workshop_id, source_alert_id, failure_mode, status, failure_probability::float8 AS failure_probability, expected_cost_avoided::float8 AS expected_cost_avoided, model_version, scheduled_for, created_by::text AS created_by, created_at, completed_at, outcome FROM work_orders WHERE tenant_id = $1 AND status = $2 ORDER BY created_at DESC, work_order_id DESC LIMIT $3"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "label": "after",
+  "sql": "after",
+  "table_rows": {
+    "vehicles": 100000,
+    "alerts": 2015875,
+    "work_orders": 156987
+  },
+  "indexes": [
+    "alerts_acknowledged_by_idx",
+    "alerts_active_idx",
+    "alerts_alert_id_tenant_id_key",
+    "alerts_failure_mode_idx",
+    "alerts_pkey",
+    "alerts_tenant_detected_idx",
+    "alerts_tenant_id_fingerprint_key",
+    "alerts_vehicle_idx",
+    "vehicles_fleet_idx",
+    "vehicles_home_workshop_idx",
+    "vehicles_model_idx",
+    "vehicles_pkey",
+    "vehicles_tenant_status_idx",
+    "vehicles_vehicle_id_tenant_id_key",
+    "vehicles_vin_key",
+    "work_orders_created_by_idx",
+    "work_orders_failure_mode_idx",
+    "work_orders_one_active_per_vehicle_mode",
+    "work_orders_pkey",
+    "work_orders_source_alert_idx",
+    "work_orders_tenant_created_idx",
+    "work_orders_tenant_status_created_idx",
+    "work_orders_vehicle_idx",
+    "work_orders_workshop_idx"
+  ],
+  "hardware": "x86_64 Linux container, 4 vCPU, PostgreSQL 17 in Docker; not the target Mac",
+  "results": {
+    "q1_fleet_summary": {
+      "runs": 20,
+      "custom": {
+        "median_ms": 1.45,
+        "max_ms": 7.06,
+        "median_first_run_ms": 1.54
+      },
+      "generic": {
+        "median_ms": 1.41,
+        "max_ms": 6.83,
+        "median_first_run_ms": 1.53
+      }
+    },
+    "q2_planner_open_alerts": {
+      "runs": 5,
+      "custom": {
+        "median_ms": 187.32,
+        "max_ms": 201.15,
+        "median_first_run_ms": 207.55
+      },
+      "generic": {
+        "median_ms": 206.42,
+        "max_ms": 212.72,
+        "median_first_run_ms": 203.52
+      }
+    },
+    "q3_work_orders_by_status_last_page": {
+      "runs": 20,
+      "custom": {
+        "median_ms": 0.11,
+        "max_ms": 0.16,
+        "median_first_run_ms": 0.12
+      },
+      "generic": {
+        "median_ms": 0.1,
+        "max_ms": 0.16,
+        "median_first_run_ms": 0.12
+      }
+    }
+  }
+}
