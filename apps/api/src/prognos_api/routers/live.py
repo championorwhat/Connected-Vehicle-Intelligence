@@ -11,7 +11,7 @@ import clickhouse_connect
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from redis.exceptions import RedisError
 
-from prognos_api.deps import StateDep, TenantDbDep, authenticate, require, state
+from prognos_api.deps import StateDep, TenantDbDep, authenticate, ensure_policy, require, state
 from prognos_api.errors import ApiError
 from prognos_api.security import Principal
 
@@ -31,6 +31,7 @@ async def alerts_feed(websocket: WebSocket) -> None:
     await websocket.accept()
     try:
         first = await asyncio.wait_for(websocket.receive_json(), timeout=10)
+        await ensure_policy(st)
         principal = authenticate(st, str(first.get("token", "")))
     except (TimeoutError, ApiError, ValueError, WebSocketDisconnect):
         await websocket.close(code=4401, reason="authentication required")
