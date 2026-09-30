@@ -72,19 +72,22 @@ chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
 # --- Pipeline ----------------------------------------------------------------
-.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail backtest sim-bench
+.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail reconcile backtest sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
-	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector
+	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink
 
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures 10-18 minutes after start
-	SIM_SCENARIO=demo $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector
+	SIM_SCENARIO=demo $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink
 
 pipeline-stop: ## Stop simulator, normalizer and detector gracefully (flush + commit)
-	$(COMPOSE) --profile pipeline stop simulator normalizer detector
+	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink
 
 alerts-tail: ## Follow alerts as they are raised
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
 	  --topic alerts | cut -c1-300
+
+reconcile: ## Prove no data loss: Kafka vs ClickHouse vs PostgreSQL (after `make pipeline`)
+	set -a; . ./.env; set +a; uv run python scripts/reconcile.py --output evidence/benchmarks/m6-reconciliation.json
 
 backtest: ## Detection back-test against simulator ground truth (~10 min)
 	uv run python -m prognos_stream.evaluate --vehicles 300 --hours 8 --fault-rate 0.2 \
@@ -109,7 +112,7 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts/reconcile.py
 
 test: ## Unit tests (fast, no Docker)
 	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=term

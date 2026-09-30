@@ -111,6 +111,8 @@ def run_ch_migrations(container: DockerContainer) -> str:
             "CLICKHOUSE_PASSWORD": CH_PASSWORD,
             "CLICKHOUSE_DB": "telemetry",
             "MIGRATIONS_DIR": "/db/migrations",
+            # Kafka-engine tables connect lazily; schema tests only need them to exist.
+            "KAFKA_BROKERS": "localhost:9",
         },
     )
     output: str = result.output.decode()
@@ -185,6 +187,22 @@ def fresh_topics(kafka_bootstrap: str):  # type: ignore[no-untyped-def]
         return mapping
 
     return _make
+
+
+@pytest.fixture(scope="session")
+def redis_url() -> Iterator[tuple[str, int]]:
+    container = DockerContainer("redis:7.4-alpine").with_exposed_ports(6379)
+    with container:
+        import redis as redis_lib
+
+        host, port = container.get_container_host_ip(), int(container.get_exposed_port(6379))
+        for _ in range(60):
+            try:
+                redis_lib.Redis(host=host, port=port).ping()
+                break
+            except Exception:  # still starting
+                time.sleep(0.5)
+        yield host, port
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
