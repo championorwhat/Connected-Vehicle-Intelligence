@@ -40,12 +40,17 @@ import pyarrow.compute as pc
 import redis
 from prometheus_client import Gauge, Histogram, start_http_server
 
+from prognos_common.logs import configure
 from prognos_ml import model as m
 from prognos_ml.features import FeatureConfig, bucket_sql_clickhouse, features_at
 
 log = logging.getLogger("prognos_ml")
 
 SCORED = Gauge("prognos_scorer_vehicles_scored", "Vehicles scored in the last cycle")
+INSUFFICIENT = Gauge("prognos_scorer_vehicles_insufficient_data",
+                     "Vehicles skipped by the data gate in the last cycle")  # fmt: skip
+LAST_SUCCESS = Gauge("prognos_scorer_last_success_timestamp_seconds",
+                     "Unix time of the last completed scoring cycle")  # fmt: skip
 CYCLE = Histogram("prognos_scorer_cycle_seconds", "Duration of one scoring cycle",
                   buckets=(0.5, 1, 2.5, 5, 10, 30, 60, 120, 300))  # fmt: skip
 EXPLAIN_ABOVE = 0.2  # TreeSHAP only for rows worth explaining (it is the costly part)
@@ -134,7 +139,9 @@ def score_once(
         )  # fmt: skip
     elapsed = time.perf_counter() - started
     SCORED.set(len(results))
+    INSUFFICIENT.set(insufficient)
     CYCLE.observe(elapsed)
+    LAST_SUCCESS.set_to_current_time()
     probs_all = [r["probability"] for r in results]
     return {
         "snapshot_ts": scored_at,
@@ -180,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
-    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(message)s")
+    configure("scorer")
     e = os.environ
     model_dir = Path(e.get("MODEL_DIR", "ml/models/failure-7d-v3"))
     trained = m.load(model_dir)

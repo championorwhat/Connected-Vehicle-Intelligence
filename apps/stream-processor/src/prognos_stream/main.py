@@ -23,6 +23,7 @@ from pathlib import Path
 
 from prometheus_client import start_http_server
 
+from prognos_common.logs import configure
 from prognos_stream.processor import Normalizer
 from prognos_stream.registry import VehicleRegistry
 from prognos_stream.service import NormalizerService, ServiceConfig
@@ -73,9 +74,7 @@ def wait_for_registry[R: Sized](
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
-    )
+    configure("normalizer")
     parser = argparse.ArgumentParser(description="Prognos telemetry normalizer")
     parser.add_argument("--summary", type=Path, help="write a run summary JSON here on exit")
     args = parser.parse_args(argv)

@@ -1,31 +1,39 @@
-# Scrape targets are added as services gain /metrics endpoints (M4+).
+# Prognos metrics. Every pipeline service is found by Docker DNS, so all replicas of a
+# service (e.g. NORMALIZER_REPLICAS=3) are scraped automatically.
 global:
   scrape_interval: 5s
   evaluation_interval: 15s
+  external_labels:
+    deployment: local
+
+rule_files:
+  - /etc/prometheus/rules/*.rules.yml
 
 scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]
 
-  # Pipeline services (profile "pipeline"). DNS discovery finds every replica.
+  # --- pipeline (profile "pipeline") -------------------------------------------
   - job_name: simulator
-    dns_sd_configs:
-      - names: ["simulator"]
-        type: A
-        port: 9101
+    dns_sd_configs: [{ names: [simulator], type: A, port: 9101 }]
   - job_name: normalizer
-    dns_sd_configs:
-      - names: ["normalizer"]
-        type: A
-        port: 9102
+    dns_sd_configs: [{ names: [normalizer], type: A, port: 9102 }]
   - job_name: detector
-    dns_sd_configs:
-      - names: ["detector"]
-        type: A
-        port: 9103
+    dns_sd_configs: [{ names: [detector], type: A, port: 9103 }]
   - job_name: sink
-    dns_sd_configs:
-      - names: ["sink"]
-        type: A
-        port: 9104
+    dns_sd_configs: [{ names: [sink], type: A, port: 9104 }]
+  - job_name: planner
+    dns_sd_configs: [{ names: [planner], type: A, port: 9104 }]
+  - job_name: radar
+    dns_sd_configs: [{ names: [radar], type: A, port: 9105 }]
+  - job_name: scorer
+    dns_sd_configs: [{ names: [scorer], type: A, port: 9106 }]
+  - job_name: api
+    metrics_path: /metrics
+    dns_sd_configs: [{ names: [api], type: A, port: 8000 }]
+
+  # --- data stores -------------------------------------------------------------
+  - job_name: clickhouse
+    static_configs:
+      - targets: ["clickhouse:9363"]
