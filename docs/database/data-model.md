@@ -76,15 +76,27 @@ measurement. Adding them now would leave nothing honest to optimise.
   - The rollup uses `uniqExact(seq)` and min/max so it stays correct under duplicates.
   - All of this is verified in `tests/integration/test_clickhouse_schema.py`.
 
-## 6. Capacity estimate (arithmetic only; storage figures are NOT YET MEASURED)
+## 6. Capacity estimate
+
+Per-event sizes are **measured** on simulated data; the daily and yearly volumes are
+arithmetic from them. Real sensor values compress differently.
 
 | Quantity | Value | Basis |
 |---|---|---|
-| Events/day at 100K ev/s | 8.64 × 10⁹ | 100,000 × 86,400 |
-| Raw JSON volume/day | ~8.6 TB | brief's ~1 KB/event |
+| Raw OEM JSON per event | 535 B (before lz4) | measured, simulator average ([evidence](../../evidence/benchmarks/m3-simulator-benchmark.json)) |
+| ClickHouse `events`, on disk per event | **47.6 B** (4.0× compression) | measured from `system.parts` over 50.7M events ([evidence](../../evidence/benchmarks/m17-clickhouse-storage.json)) |
+| ClickHouse `vehicle_minute`, on disk per row | **41 B** | same |
+| Events/day: 100K vehicles, one event every 10 s (the rate load-tested in M14) | 8.64 × 10⁸ | 10,000 × 86,400 |
+| Events/day at the brief's 100K events/s | 8.64 × 10⁹ | 100,000 × 86,400 |
+| ClickHouse raw tier, 30 days | 1.2 TB at 10K ev/s; 12.3 TB at 100K ev/s | events/day × 47.6 B × 30 |
 | Rollup rows/day | 1.44 × 10⁸ | 100K vehicles × 1,440 minutes |
-| ClickHouse compressed bytes/event | **NOT YET MEASURED** | measured in M6 from `system.parts` on simulator data |
-| Kafka bytes/day after lz4 | **NOT YET MEASURED** | measured in M4 from broker log size |
+| ClickHouse rollup tier, 400 days | 2.4 TB | 1.44 × 10⁸ × 41 B × 400 |
+| Kafka `telemetry.raw` per day of retention | 462 GB at 10K ev/s before lz4 | 8.64 × 10⁸ × 535 B; the lz4 ratio is **NOT YET MEASURED** |
+
+**Partition keys:** Kafka telemetry topics are keyed by vehicle (per-vehicle order);
+ClickHouse partitions by day and sorts by `(tenant_id, vehicle_id, event_ts, seq)`.
+**Tiers:** hot = raw events, 30 days; warm = minute rollups, 400 days; cold = Parquet
+at `OBJECT_STORE_URL`.
 
 PostgreSQL at 100K vehicles (measured in the evidence below): `vehicles` 32 MB,
 `drivers` 23 MB, `driver_assignments` 26 MB.

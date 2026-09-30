@@ -40,7 +40,7 @@ The boundaries that matter are:
 | Threat | Control | Code | Test |
 |---|---|---|---|
 | Forged or altered access token (alg=none, HS256 with the public key, edited claims, other audience or issuer, expired) | RS256 only, `algorithms=["RS256"]`, required claims, `aud`/`iss` checked, 15-minute lifetime | `apps/api/src/prognos_api/security.py` | `tests/security/test_token_attacks.py` (14 cases) |
-| Password guessing | argon2id; 5 failed attempts per minute per account *and* per address; unknown and wrong-password look identical (same text, same timing via a dummy hash) | `security.py`, `routers/auth.py` | `tests/integration/test_api.py` (rate limit, identical errors) |
+| Password guessing | argon2id; at most 10 failed attempts per minute for each address and account pair (successful logins never count); unknown and wrong-password look identical (same text, same timing via a dummy hash) | `security.py`, `routers/auth.py` | `tests/integration/test_api.py` (rate limit, identical errors) |
 | Token stolen from a URL or log | WebSocket token sent as the first message, never in the URL; tokens never logged | `routers/live.py` | `test_api.py` (WebSocket) |
 | Fake telemetry from a device | Payload schema validation and a registered-VIN check (unknown vehicles go to the DLQ) | `apps/stream-processor/.../canonical.py`, `normalizer` | normalizer tests. **Residual R1:** no per-device identity |
 

@@ -59,7 +59,7 @@ Run the same checks CI runs:
 
 ```zsh
 make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
-make test-integration  # 53 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
+make test-integration  # 80 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
 ```
 
 ## 4. Environment variables
@@ -374,7 +374,6 @@ http://localhost:9090.
   - Redis and Kafka authentication and TLS (cloud, M16).
   - Token revocation before expiry.
   - Automated 2-year purge.
-  - Container image CVE scan (M13).
 
 ## 17. SQL optimisation (M15)
 
@@ -406,8 +405,8 @@ The slowest queries were **measured**, not guessed.
 [Testing strategy](docs/testing/strategy.md): every layer runs in CI on every push.
 
 - **Test counts:**
-  - 231 unit, contract and security tests.
-  - 78 integration tests against real PostgreSQL, ClickHouse, Kafka and Redis.
+  - 233 unit, contract and security tests.
+  - 80 integration tests against real PostgreSQL, ClickHouse, Kafka and Redis.
   - 5 **BDD** scenarios in Gherkin
     ([feature](tests/integration/features/fleet_manager.feature)): a critical alert
     becomes a scheduled repair, planning twice books once, tenant isolation, role limits
@@ -447,6 +446,9 @@ ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured 
 
 - **Soak:** 30 minutes at 100K vehicles with every stage current, flat detector memory
   (295–305 MB) and bounded disk use.
+- **Dashboard freshness** (M17): at 100K vehicles, 95 % of alerts reach the dashboard's
+  WebSocket within 1.88 s of the vehicle event (target < 2 s)
+  ([evidence](evidence/load-tests/m17-dashboard-freshness-100k.json)).
 - **API under load:** 40 users during the 100K run; p95 of 63–82 ms on every route;
   0 errors.
 - **Burst:** the backlog peaked at 587K messages (43 s behind, inside the 60 s SLO) and
