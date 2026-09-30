@@ -87,3 +87,24 @@ def test_cursor_round_trip_and_tampering() -> None:
     for bad in ("%%%", pagination.encode([1, 2])):
         with pytest.raises(ApiError):
             pagination.decode(bad, 1)
+
+
+def test_empty_role_policy_is_reloaded_not_cached(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An API started before the RBAC seed must not deny every permission until restarted."""
+    import asyncio
+    from types import SimpleNamespace
+
+    from prognos_api import deps
+
+    calls: list[object] = []
+
+    async def fake_load(pool: object) -> dict[str, frozenset[str]]:
+        calls.append(pool)
+        return {"analyst": frozenset({"vehicle:read"})}
+
+    monkeypatch.setattr(deps, "load_policy", fake_load)
+    st = SimpleNamespace(pool="pool", policy={})
+    asyncio.run(deps.ensure_policy(st))  # type: ignore[arg-type]
+    assert st.policy == {"analyst": frozenset({"vehicle:read"})}
+    asyncio.run(deps.ensure_policy(st))  # type: ignore[arg-type]
+    assert calls == ["pool"]  # a loaded policy is not re-queried per request
