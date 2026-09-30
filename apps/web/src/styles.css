@@ -55,7 +55,7 @@ code { font-size: 0.8rem; }
 .topbar nav { display: flex; gap: 1rem; flex-wrap: wrap; }
 .topbar nav a { text-decoration: none; color: var(--muted); padding: 0.25rem 0; }
 .topbar nav a.active { color: var(--text); border-bottom: 2px solid var(--accent); }
-.who { margin-left: auto; color: var(--muted); text-transform: capitalize; display: flex; gap: 0.75rem; }
+.who { margin-left: auto; color: var(--muted); display: flex; gap: 0.75rem; align-items: center; font-size: 0.9rem; }
 main { padding: 0 1.25rem 1.5rem; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1; }
 .footer { color: var(--muted); font-size: 0.8rem; text-align: center; padding: 1rem; }
 
@@ -96,7 +96,9 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .filters { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .filters label { display: flex; gap: 0.4rem; align-items: center; color: var(--muted); }
 select, input { font: inherit; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); }
-.actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.actions { display: flex; gap: 0.35rem; flex-wrap: nowrap; }
+td.actions { display: table-cell; }
+td.actions button + button { margin-left: 0.35rem; }
 .pager { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
 .note { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.5rem 0.75rem; font-size: 0.85rem; }
 
@@ -124,3 +126,31 @@ select, input { font: inherit; padding: 0.35rem 0.5rem; border: 1px solid var(--
 .login h1 { margin: 0; }
 .login label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); }
 .login button[type="submit"] { background: var(--accent); color: #fff; border: 0; padding: 0.6rem; }
+
+/* --- first-time-user guidance ------------------------------------------------ */
+.small { font-size: 0.85rem; }
+.tagline { font-weight: 400; font-size: 0.8rem; color: var(--muted); margin-left: 0.35rem; }
+.intro { margin: -0.25rem 0 1rem; }
+.intro .lead { margin: 0 0 0.4rem; font-size: 1rem; max-width: 70ch; }
+.howto { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.5rem 0.9rem; max-width: 90ch; }
+.howto summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+.howto ol, .howto ul { margin: 0.5rem 0 0.25rem; padding-left: 1.25rem; font-size: 0.9rem; line-height: 1.5; }
+.tile-hint { color: var(--muted); font-size: 0.75rem; margin-top: 0.15rem; }
+.band-word { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.chips li { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0.1rem 0.4rem; font-size: 0.8rem; }
+.chips li.plain { border: 0; background: none; padding: 0; }
+.code { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; color: var(--muted); }
+.advice { font-size: 0.95rem; margin-top: -0.25rem; }
+.pulse { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--low); margin-right: 0.25rem;
+         animation: pulse 1.6s ease-in-out infinite; vertical-align: middle; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+.login-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 1.5rem; width: min(860px, 100%); align-items: start; }
+@media (max-width: 760px) { .login-panel { grid-template-columns: 1fr; } }
+.login-about h2 { margin-top: 0.5rem; font-size: 1.4rem; }
+.login-about p { line-height: 1.5; }
+.login .roles { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.login .roles button.link { padding: 0; font-weight: 600; }
+.login form { width: 100%; }

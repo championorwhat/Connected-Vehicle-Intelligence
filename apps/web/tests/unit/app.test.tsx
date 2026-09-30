@@ -3,11 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { signIn, signOut, type AtRisk, type WorkOrder } from "../../src/api/client";
-import { ago, featureLabel, pct } from "../../src/format";
+import { signIn, signOut, type Alert, type AtRisk, type WorkOrder } from "../../src/api/client";
+import { ago, alertLabel, alertShort, failureLabel, featureLabel, healthWord, pct } from "../../src/format";
 import { Login } from "../../src/pages/Login";
 import { Overview, SourceNote } from "../../src/pages/Overview";
-import { actionsFor } from "../../src/pages/WorkOrders";
+import { advice } from "../../src/pages/VehicleDetail";
+import { actionsFor, basisLabel } from "../../src/pages/WorkOrders";
 
 vi.mock("../../src/components/FleetMap", () => ({
   FleetMap: () => <div data-testid="map" />,
@@ -52,6 +53,33 @@ describe("format", () => {
     expect(ago(new Date(Date.now() - 90_000).toISOString())).toBe("1m ago");
     expect(featureLabel("lv_min_long")).toBe("lowest 12 V battery voltage");
     expect(featureLabel("some_new_feature")).toBe("Some new feature");
+  });
+
+  it("puts alert codes, failure types and health scores into plain words", () => {
+    expect(alertLabel("COOLANT_OVERHEAT")).toBe("Engine overheating");
+    expect(alertLabel("DTC_P0301")).toBe("Fault code P0301: Misfire in cylinder 1");
+    expect(alertLabel("DTC_B9999")).toBe("Fault code B9999");
+    expect(alertLabel("SOMETHING_NEW")).toBe("Something new");
+    expect(alertShort("DTC_P0301")).toBe("Misfire in cylinder 1");
+    expect(alertShort("TYRE_SLOW_LEAK")).toBe("Tyre slowly losing pressure");
+    expect(failureLabel("HV_BATTERY_THERMAL")).toBe("EV battery problem");
+    expect(failureLabel(null)).toBe("–");
+    expect(healthWord(30)).toBe("Needs attention");
+    expect(healthWord(85)).toBe("Keep an eye on");
+    expect(healthWord(100)).toBe("Healthy");
+    expect(healthWord(undefined)).toBe("No data yet");
+    expect(basisLabel("rules-calibrated-v1")).toBe("Alert rules");
+    expect(basisLabel(null)).toBe("Created by hand");
+  });
+
+  it("tells the user what to do about a vehicle", () => {
+    const alert = (rule_code: string, severity: Alert["severity"], status = "open") =>
+      ({ rule_code, severity, status }) as Alert;
+    expect(advice([])).toBe("No open problems.");
+    expect(advice([alert("DTC_P0118", "warning")])).toMatch(/^Early warning/);
+    expect(advice([alert("COOLANT_OVERHEAT", "critical")])).toMatch(/^Critical problem/);
+    expect(advice([alert("VEHICLE_BREAKDOWN", "critical")])).toMatch(/broken down/);
+    expect(advice([alert("COOLANT_OVERHEAT", "critical", "resolved")])).toBe("No open problems.");
   });
 });
 
@@ -113,6 +141,7 @@ describe("overview", () => {
     render(<MemoryRouter><Overview /></MemoryRouter>);
     expect(await screen.findByText("5,000")).toBeTruthy();
     await waitFor(() => expect(screen.getByText("PG1CT1A59RC000001")).toBeTruthy());
-    expect(screen.getByText("COOLANT_OVERHEAT")).toBeTruthy();
+    expect(screen.getByText("Engine overheating")).toBeTruthy();
+    expect(screen.getByText("Needs attention")).toBeTruthy();
   });
 });

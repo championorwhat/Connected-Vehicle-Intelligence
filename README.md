@@ -336,6 +336,12 @@ quoting any number.
   no Acknowledge or Schedule button; an analyst sees masked locations). The API still
   enforces every rule.
 - **Honest labels.** Money shows "not sourced" while repair costs are placeholders.
+- **Made for first-time users.** Every page opens with one line on what it is for and a
+  "How to use this page" guide. Alert and fault codes are shown in plain words (for
+  example "Engine overheating", "Misfire in cylinder 1") with the code underneath, and
+  health scores come with a word ("Needs attention"). Work orders show the vehicle,
+  model and workshop, and the vehicle page says what to do next. On a local machine the
+  sign-in page lists the demo accounts.
 - **Built with** React, TypeScript and Vite: 133 KB gzipped. It is served by nginx on
   the same origin as the API, with a strict CSP.
 - **Tests:**

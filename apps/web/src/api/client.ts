@@ -193,6 +193,11 @@ export interface WorkOrder {
   scheduled_for: string | null;
   created_at: string;
   outcome: string | null;
+  /** Added by the list endpoint so people can read it (absent on transition responses). */
+  vin?: string | null;
+  model_name?: string | null;
+  workshop_name?: string | null;
+  workshop_city?: string | null;
 }
 
 export interface Signal {
