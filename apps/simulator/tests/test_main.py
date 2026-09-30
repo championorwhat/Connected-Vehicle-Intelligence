@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 
 import orjson
+import pytest
 
+from prognos_common.roster import generate_roster
 from prognos_sim.config import Mode, PublisherKind, SimConfig
 from prognos_sim.main import aggregate, main, run
 
@@ -40,6 +42,22 @@ def test_demo_scenario_reports_vins() -> None:
     summary = run(_config(scenario="demo", sim_workers=1))
     assert len(summary["demo_vins"]) == 5  # one vehicle per failure mode
     assert len(set(summary["demo_vins"])) == 5  # distinct vehicles (regression)
+
+
+@pytest.mark.parametrize("vehicles", [10_000, 100_000])
+def test_demo_vehicles_belong_to_the_largest_tenant(vehicles: int) -> None:
+    """`make users` signs the demo users in to the largest tenant, so the scripted
+    failures must happen there, or the presenter cannot see them (M18 rehearsal)."""
+    summary = run(_config(scenario="demo", vehicle_count=vehicles, tenant_count=20,
+                          events_per_second=float(vehicles), duration_seconds=1.0))  # fmt: skip
+    roster = generate_roster(vehicles, 20)
+    sizes = {t.tenant_id: 0 for t in roster.tenants}
+    for v in roster.vehicles:
+        sizes[v.tenant_id] += 1
+    largest = max(sizes, key=lambda t: sizes[t])
+    tenant_of = {v.vin: v.tenant_id for v in roster.vehicles}
+    assert len(summary["demo_vins"]) == 5
+    assert {tenant_of[vin] for vin in summary["demo_vins"]} == {largest}
 
 
 def test_file_publisher_writes_jsonl(tmp_path: Path) -> None:
