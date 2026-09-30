@@ -1,0 +1,32 @@
+{
+  "measured_at": "2026-09-30T10:20:00Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, full Docker Compose stack (pipeline + observability profiles); not the target Mac",
+  "setup": "100,000 seeded vehicles; simulator at ~10,000 events/s; Prometheus v3.5.0 scraping every service; rules infra/monitoring/prometheus/rules/prognos.rules.yml",
+  "fault": "docker compose stop detector (the only detector replica)",
+  "timeline_utc": {
+    "detector_stopped": "09:51:06",
+    "targetdown_alert": "never fired: Docker DNS discovery removes a stopped container from the target list, so there is no up == 0 series to alert on",
+    "fix_applied": "ServiceDown alert per job: absent(up{job=\"X\"} == 1) for 2m; rules reloaded ~10:02",
+    "servicedown_detector_pending": "10:02:27",
+    "servicedown_detector_firing": "10:04:37",
+    "detector_restarted": "10:04:41",
+    "servicedown_detector_resolved": "10:05:37 (last firing sample)",
+    "backlog_peak_messages": 7420793,
+    "backlog_peak_at": "10:05:49",
+    "backlog_drained_at": "10:12:21 (lag 994 messages, the steady-state in-flight level)",
+    "alert_latency_slo_burn_firing": "10:10:52 to 10:17:07"
+  },
+  "outage_seconds": 815,
+  "drain_seconds_after_restart": 460,
+  "drain_throughput_msgs_per_s": { "peak_15s": 33491, "sustained": "28,000-29,500" },
+  "steady_state_throughput_msgs_per_s": "9,880-9,930",
+  "pipeline_falling_behind": "not fired: detector was above 60 s behind from ~10:06:04 to ~10:10:40 (about 4.6 min), below the for: 5m clause; it was recovering the whole time",
+  "data_loss": "none expected: the detector resumed from its committed Kafka offsets (Kafka retention 7 days); not separately reconciled in this drill",
+  "findings": [
+    "TargetDown (up == 0) cannot detect a stopped service under DNS service discovery. Added ServiceDown (absent-based) alerts and a promtool test for them.",
+    "Seconds-behind right after a restart is overstated (peak 5,723 s) because the 5-minute consume rate still includes the down period. It converged within ~1 minute.",
+    "AlertLatencySLOBurn fired after the drain, because alerts raised from backlog events were minutes late relative to device time. The SLO saw the user-visible impact of the outage, as intended.",
+    "Found while screenshotting: the API availability stat showed 'No data' because the 5xx numerator has no series when there are no errors. Fixed with `or vector(0)` and a promtool test."
+  ],
+  "screenshot": "docs/images/grafana-overview.png (taken ~10:19 UTC, last 50 minutes)"
+}

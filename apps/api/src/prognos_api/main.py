@@ -33,6 +33,8 @@ from prognos_api.deps import AppState, load_policy
 from prognos_api.ratelimit import RateLimiter
 from prognos_api.routers import alerts, auth, live, vehicles, work_orders
 from prognos_api.security import TokenService, hash_password
+from prognos_common import logs
+from prognos_common.logs import configure
 
 log = logging.getLogger("prognos_api")
 
@@ -97,12 +99,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> Response:
         rid = request.headers.get("x-request-id") or str(uuid.uuid4())
         request.state.request_id = rid[:64]
+        token = logs.request_id.set(request.state.request_id)  # every log line carries it
         started = time.perf_counter()
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        finally:
+            logs.request_id.reset(token)
+        elapsed = time.perf_counter() - started
         route = request.scope.get("route")
         path = getattr(route, "path", "unmatched")  # template, not raw path: bounded labels
-        LATENCY.labels(request.method, path).observe(time.perf_counter() - started)
+        LATENCY.labels(request.method, path).observe(elapsed)
         REQUESTS.labels(request.method, path, str(response.status_code)).inc()
+        if response.status_code >= 500 or elapsed > 1.0:  # only what someone must look at
+            log.warning("request", extra={
+                "request_id": request.state.request_id, "method": request.method,
+                "route": path, "status": response.status_code,
+                "duration_ms": round(elapsed * 1000, 1),
+            })  # fmt: skip
         response.headers["X-Request-ID"] = request.state.request_id
         for name, value in SECURITY_HEADERS.items():
             response.headers.setdefault(name, value)
@@ -143,8 +156,7 @@ async def create_user(dsn: str, email: str, tenant_slug: str | None, roles: list
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"),
-                        format="%(asctime)s %(levelname)s %(name)s %(message)s")  # fmt: skip
+    configure("api")
     parser = argparse.ArgumentParser(prog="prognos-api")
     sub = parser.add_subparsers(dest="cmd", required=True)
     serve = sub.add_parser("serve")

@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M10 (fleet dashboard) complete. See [milestones](#milestones).
+**Status:** M11 (observability) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -305,7 +305,38 @@ quoting any number.
 - Screenshots were taken in a sandbox without internet access, so the map tiles are
   blank there; they load normally on a connected machine.
 
-## 15. Repository structure
+## 15. Observability (M11)
+
+`make up-obs pipeline-demo`, then open Grafana at **http://localhost:3000** (user and
+password `GRAFANA_ADMIN_*` in `.env`) → *Prognos · service health*. Prometheus is at
+http://localhost:9090.
+
+![Grafana service-health dashboard during the failure drill](docs/images/grafana-overview.png)
+
+- **SLOs first.** Critical alerts within 5 s (95 %), API availability (99.5 %), data
+  freshness and data quality. Each is a Prometheus recording rule
+  ([SLO definitions](docs/observability/slo.md)).
+- **Alerts:**
+  - Multi-window burn-rate SLO alerts (page or ticket), plus pipeline alerts (falling
+    behind, stalled, DLQ rate, stale scorer or planner) and `ServiceDown`.
+  - Every alert links to a [runbook](docs/observability/runbooks.md) section.
+  - `make obs-check` runs the `promtool` unit tests that make each alert fire on a
+    synthetic failure and stay quiet on normal traffic. CI runs them too.
+- **Dashboards are code** (`make dashboards`). A unit test fails if any panel or rule
+  uses a metric that no service exports.
+- **Logs** are JSON, one object per line, with a request id shared by the API log and
+  the audit log. Tracing is deferred with a reason ([ADR-009](docs/architecture/adr/ADR-009.md)).
+- **Failure drill** ([write-up](docs/observability/drills.md),
+  [evidence](evidence/chaos/m11-detector-outage-drill.json)):
+  - The detector was stopped for 13.5 minutes. The drill found that `up == 0` alerts
+    cannot see a service that disappears from DNS discovery; this was fixed with an
+    `absent()`-based `ServiceDown` alert.
+  - After the restart, the 7.4M-message backlog drained in 7 min 40 s at about 28K
+    msg/s. The alert-latency SLO paged because alerts arrived late, which is the
+    user-visible impact of the outage.
+  - Measured on a 4-vCPU Linux container, not the target Mac.
+
+## 16. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -334,8 +365,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M8 | ML failure model vs the calibrated-rules baseline (held-out) | ✅ Done ([model card](docs/ml/model-card.md), [ADR-007](docs/architecture/adr/ADR-007.md)) |
 | M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ✅ Done ([API guide](docs/api/README.md), [ADR-008](docs/architecture/adr/ADR-008.md)) |
 | M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ✅ Done ([screens](#14-dashboard-m10)) |
-| M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ⏭ Next |
-| M12–M19 | See the M0 document | Planned |
+| M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ✅ Done ([SLOs](docs/observability/slo.md), [drill](docs/observability/drills.md), [ADR-009](docs/architecture/adr/ADR-009.md)) |
+| M12 | Security hardening | ⏭ Next |
+| M13–M19 | See the M0 document | Planned |
 
 ## Declarations
 

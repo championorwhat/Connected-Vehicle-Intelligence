@@ -72,6 +72,12 @@ jobs:
       - run: cp .env.example .env
       - run: docker compose config --quiet
       - run: docker compose -f docker-compose.yml -f infra/docker/compose.kafka-ha.yml config --quiet
+      - name: Prometheus config, alert rules and rule unit tests (promtool)
+        run: |
+          promtool() { docker run --rm --entrypoint promtool -v "$PWD/infra/monitoring/prometheus:/etc/prometheus:ro" -w /etc/prometheus prom/prometheus:v3.5.0 "$@"; }
+          promtool check config prometheus.yml
+          promtool check rules rules/prognos.rules.yml
+          promtool test rules tests/prognos.test.yml
       - name: start core stack (topics + migrations)
         run: ./scripts/up.sh
       - name: topics created
