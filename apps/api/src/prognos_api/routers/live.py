@@ -102,32 +102,36 @@ async def signals(
                       for row in result.result_rows]}  # fmt: skip
 
 
+# One pass per table, and only over rows that can count: active alerts and work orders are
+# a few percent of the history, and partial indexes hold exactly those (M15, measured in
+# docs/performance/sql-optimisation.md).
+SUMMARY_SQL = """
+SELECT v.vehicles, v.vehicles_in_workshop, a.open_critical_alerts, a.open_warning_alerts,
+       a.acknowledged_alerts, w.work_orders_proposed, w.work_orders_scheduled,
+       w.work_orders_in_progress
+FROM (SELECT count(*) AS vehicles,
+             count(*) FILTER (WHERE status = 'in_workshop') AS vehicles_in_workshop
+      FROM vehicles WHERE tenant_id = %(t)s) AS v,
+     (SELECT count(*) FILTER (WHERE status = 'open' AND severity = 'critical')
+                 AS open_critical_alerts,
+             count(*) FILTER (WHERE status = 'open' AND severity = 'warning')
+                 AS open_warning_alerts,
+             count(*) FILTER (WHERE status = 'acknowledged') AS acknowledged_alerts
+      FROM alerts WHERE tenant_id = %(t)s AND status IN ('open', 'acknowledged')) AS a,
+     (SELECT count(*) FILTER (WHERE status = 'proposed') AS work_orders_proposed,
+             count(*) FILTER (WHERE status = 'scheduled') AS work_orders_scheduled,
+             count(*) FILTER (WHERE status = 'in_progress') AS work_orders_in_progress
+      FROM work_orders
+      WHERE tenant_id = %(t)s AND status IN ('proposed', 'scheduled', 'in_progress')) AS w
+"""
+
+
 @router.get("/v1/fleet/summary", tags=["fleet"])
 async def fleet_summary(
     conn: TenantDbDep, principal: Annotated[Principal, Depends(require("fleet:read"))]
 ) -> dict[str, Any]:
     """Headline counts for the dashboard (one round trip, tenant-scoped)."""
-    row = await (await conn.execute(
-        """
-        SELECT
-          (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s) AS vehicles,
-          (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s AND status = 'in_workshop')
-              AS vehicles_in_workshop,
-          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
-              AND severity = 'critical') AS open_critical_alerts,
-          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
-              AND severity = 'warning') AS open_warning_alerts,
-          (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'acknowledged')
-              AS acknowledged_alerts,
-          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'proposed')
-              AS work_orders_proposed,
-          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'scheduled')
-              AS work_orders_scheduled,
-          (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'in_progress')
-              AS work_orders_in_progress
-        """,
-        {"t": principal.tenant_id},
-    )).fetchone()  # fmt: skip
+    row = await (await conn.execute(SUMMARY_SQL, {"t": principal.tenant_id})).fetchone()
     assert row is not None
     return row
 

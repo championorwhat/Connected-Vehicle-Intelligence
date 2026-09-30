@@ -1003,6 +1003,13 @@ CREATE INDEX alerts_acknowledged_by_idx ON public.alerts USING btree (acknowledg
 
 
 --
+-- Name: alerts_active_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX alerts_active_idx ON public.alerts USING btree (tenant_id, status, severity) INCLUDE (vehicle_id, failure_mode) WHERE (status = ANY (ARRAY['open'::text, 'acknowledged'::text]));
+
+
+--
 -- Name: alerts_failure_mode_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1094,6 +1101,13 @@ CREATE INDEX vehicles_model_idx ON public.vehicles USING btree (model_code);
 
 
 --
+-- Name: vehicles_tenant_status_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX vehicles_tenant_status_idx ON public.vehicles USING btree (tenant_id, status);
+
+
+--
 -- Name: work_orders_created_by_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1126,6 +1140,13 @@ CREATE INDEX work_orders_source_alert_idx ON public.work_orders USING btree (sou
 --
 
 CREATE INDEX work_orders_tenant_created_idx ON public.work_orders USING btree (tenant_id, created_at DESC, work_order_id DESC);
+
+
+--
+-- Name: work_orders_tenant_status_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX work_orders_tenant_status_created_idx ON public.work_orders USING btree (tenant_id, status, created_at DESC, work_order_id DESC);
 
 
 --

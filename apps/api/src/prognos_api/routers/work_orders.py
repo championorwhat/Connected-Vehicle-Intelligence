@@ -37,6 +37,10 @@ _COLUMNS = """
     created_by::text AS created_by, created_at, completed_at, outcome
 """
 
+# Qualified on purpose: the SELECT list aliases `work_order_id::text AS work_order_id`, and an
+# unqualified ORDER BY name binds to that text alias, which no index can supply (M15).
+LIST_ORDER = "work_orders.created_at DESC, work_orders.work_order_id DESC"
+
 # action -> (allowed from, to, permission)
 TRANSITIONS: dict[str, tuple[frozenset[str], str, str]] = {
     "schedule": (frozenset({"proposed", "scheduled"}), "scheduled", "work_order:write"),
@@ -84,7 +88,7 @@ async def list_work_orders(
     if after:
         sql += " AND (created_at, work_order_id) < (%(a_ts)s::timestamptz, %(a_id)s::uuid)"
         params["a_ts"], params["a_id"] = after
-    sql += " ORDER BY created_at DESC, work_order_id DESC LIMIT %(limit)s"
+    sql += f" ORDER BY {LIST_ORDER} LIMIT %(limit)s"
     rows = await (await conn.execute(sql, params)).fetchall()
     return pagination.page(rows, limit, ["created_at", "work_order_id"])
 

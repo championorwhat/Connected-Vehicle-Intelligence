@@ -24,17 +24,24 @@ CH_USER, CH_PASSWORD = "prognos", "test-only"
 
 
 def migration_sections(path: Path) -> tuple[str, str]:
-    """Split a dbmate file into its (up, down) SQL."""
+    """Split a dbmate file into its (up, down) SQL (options such as transaction:false dropped)."""
     text = path.read_text()
     up, down = text.split("-- migrate:down", 1)
-    return up.split("-- migrate:up", 1)[1], down
+    return up.split("-- migrate:up", 1)[1].split("\n", 1)[1], down.split("\n", 1)[1]
 
 
 def apply_pg(conn: psycopg.Connection, direction: str = "up") -> None:
     files = sorted(PG_MIGRATIONS.glob("*.sql"), reverse=direction == "down")
     for file in files:
         up, down = migration_sections(file)
-        conn.execute(up if direction == "up" else down)  # type: ignore[arg-type,unused-ignore]
+        if "transaction:false" in file.read_text().split("\n", 1)[0]:
+            # dbmate runs these outside a transaction (e.g. CREATE INDEX CONCURRENTLY)
+            conn.commit()
+            conn.autocommit = True
+            conn.execute(up if direction == "up" else down)  # type: ignore[arg-type,unused-ignore]
+            conn.autocommit = False
+        else:
+            conn.execute(up if direction == "up" else down)  # type: ignore[arg-type,unused-ignore]
     conn.commit()
 
 
