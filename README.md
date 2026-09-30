@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M2 (data model) complete. See [milestones](#milestones).
+**Status:** M3 (vehicle simulator) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -98,7 +98,29 @@ Idle figures were measured in a Linux container, not yet on the target Mac.
   vehicles load in ~18 s ([evidence](evidence/benchmarks/m2-seed-100k.json), measured on a
   4-vCPU Linux container, not yet on the Mac).
 
-## 7. Repository structure
+## 7. Vehicle simulator (M3)
+
+`apps/simulator` generates the whole fleet's telemetry. It is vectorised with numpy and sharded
+across processes (`SIM_WORKERS`).
+
+- **Three OEM formats:**
+  - ORION: flat, metric units.
+  - VEGA: nested, imperial units, IST timestamps, DTCs as a single string.
+  - LYRA: list of named signals; bar, volts and epoch-millisecond timestamps.
+- **Five failure modes with ground truth** (`sim.truth` topic): cooling, misfire, 12 V
+  battery, tyre slow leak, and HV battery thermal.
+- **Injected anomalies:** network latency, duplicates, out-of-order delivery, missing
+  fields and 7 kinds of malformed payload, each counted for reconciliation.
+
+Measured on a 4-vCPU Linux container (not yet on the Mac):
+- **100K vehicles at 100K ev/s on one core.** 321K ev/s with 4 workers when not publishing.
+- **Live run into Kafka:** 6.06 M messages at the target rate, with every message accounted
+  for.
+- **3× burst:** not sustained on 4 shared cores (173K ev/s), but with zero loss.
+
+Details: [algorithms.md](docs/algorithms/algorithms.md).
+
+## 8. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -119,7 +141,8 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M0 | Problem selection, MVP, architecture | ✅ Done |
 | M1 | Repo bootstrap, Docker Compose, CI, lint/format | ✅ Done |
 | M2 | PostgreSQL 3NF + ClickHouse schema, migrations, 100K-vehicle seed | ✅ Done ([data model](docs/database/data-model.md), [ER diagram](docs/database/er-diagram.md)) |
-| M3 | Vehicle simulator + standalone benchmark | ⏭ Next |
+| M3 | Vehicle simulator + standalone benchmark | ✅ Done ([results](docs/algorithms/algorithms.md#measured-results-simulator)) |
+| M4 | Kafka ingestion, validation, DLQ | ⏭ Next |
 | M4–M19 | See the M0 document | Planned |
 
 ## Declarations

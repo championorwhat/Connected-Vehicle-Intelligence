@@ -1,0 +1,67 @@
+{
+  "benchmark": "simulator standalone (null publisher, JSON serialisation included)",
+  "measured_at": "2026-09-30T03:00:08Z",
+  "environment": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "cpu_count": 4,
+    "python": "3.12.3"
+  },
+  "note": "events_per_second is measured over worker wall time, which includes roster generation and fleet initialisation (~2 s per worker)",
+  "runs": [
+    {
+      "workers": 1,
+      "vehicles": 100000,
+      "simulated_seconds": 20.0,
+      "events_generated": 2000000,
+      "wall_seconds_including_startup": 19.99,
+      "events_per_second": 100139.7,
+      "events_per_second_per_worker": 100139.7,
+      "real_time_factor": 1.0,
+      "avg_message_bytes": 535.0,
+      "max_worker_rss_mb": 329.6,
+      "anomalies": {
+        "duplicates": 19889,
+        "out_of_order": 39978,
+        "malformed": 9943,
+        "missing_field": 19946
+      }
+    },
+    {
+      "workers": 2,
+      "vehicles": 100000,
+      "simulated_seconds": 20.0,
+      "events_generated": 2000000,
+      "wall_seconds_including_startup": 10.37,
+      "events_per_second": 192924.2,
+      "events_per_second_per_worker": 96462.1,
+      "real_time_factor": 1.93,
+      "avg_message_bytes": 535.1,
+      "max_worker_rss_mb": 221.6,
+      "anomalies": {
+        "duplicates": 20055,
+        "out_of_order": 39510,
+        "malformed": 9961,
+        "missing_field": 19579
+      }
+    },
+    {
+      "workers": 4,
+      "vehicles": 100000,
+      "simulated_seconds": 20.0,
+      "events_generated": 2000000,
+      "wall_seconds_including_startup": 6.22,
+      "events_per_second": 321526.9,
+      "events_per_second_per_worker": 80381.7,
+      "real_time_factor": 3.22,
+      "avg_message_bytes": 535.1,
+      "max_worker_rss_mb": 168.7,
+      "anomalies": {
+        "duplicates": 19803,
+        "out_of_order": 39683,
+        "malformed": 9852,
+        "missing_field": 19845
+      }
+    }
+  ]
+}
