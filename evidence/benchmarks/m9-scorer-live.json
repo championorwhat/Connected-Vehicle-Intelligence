@@ -1,0 +1,52 @@
+{
+  "measured_at": "2026-09-30T09:01:46Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, full Docker Compose stack; scorer run on the host against it (not the target Mac)",
+  "setup": "100,000 seeded vehicles; simulator at 10,000 ev/s (each vehicle reports every 10 s) for ~6 minutes; model failure-7d-v3",
+  "cycle_100k_vehicles": {
+    "shards_1": {
+      "snapshot_ts": "2026-09-30T08:59:00Z",
+      "model_version": "failure-7d-v3",
+      "vehicles_registered": 100000,
+      "vehicles_scored": 100000,
+      "vehicles_insufficient_data": 0,
+      "min_events_in_window": 30,
+      "above_0_5": 8314,
+      "shards": 1,
+      "cycle_seconds": 16.932
+    },
+    "shards_4": {
+      "snapshot_ts": "2026-09-30T09:00:00Z",
+      "model_version": "failure-7d-v3",
+      "vehicles_registered": 100000,
+      "vehicles_scored": 100000,
+      "vehicles_insufficient_data": 0,
+      "min_events_in_window": 30,
+      "above_0_5": 8132,
+      "shards": 4,
+      "cycle_seconds": 17.33
+    }
+  },
+  "finding": "Without a coverage gate, 8.1-8.3% of vehicles scored above 0.5 after ~6 minutes of data. The top explanation for such vehicles was a trend slope (e.g. cell_delta_slope_h +3.3 log-odds): slopes fitted to a few noisy minute buckets. The model was trained on full 60-minute windows.",
+  "with_gate": {
+    "snapshot_ts": "2026-09-30T09:01:00Z",
+    "model_version": "failure-7d-v3",
+    "vehicles_registered": 100000,
+    "vehicles_scored": 0,
+    "vehicles_insufficient_data": 100000,
+    "gate": {
+      "min_events": 30,
+      "min_minutes_with_data": 45
+    },
+    "above_0_5": 0,
+    "shards": 4,
+    "cycle_seconds": 7.752
+  },
+  "offline_full_window_low_rate_run": {
+    "source": "ml/data/m8/test_lowrate (vehicles report every 10 s, full windows)",
+    "negatives_above_0_5_share": 0.0353,
+    "negatives_p50": 0.0473,
+    "negatives_p95": 0.2843,
+    "positives_above_0_5_share": 0.5188
+  },
+  "not_yet_measured": "Live score distribution over full 60-minute windows, and the effect of real-time (uncompressed) degradation. This is what shadow mode (ADR-008) is for."
+}

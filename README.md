@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M8 (7-day failure model, LightGBM vs the calibrated rules on held-out data) complete. See [milestones](#milestones).
+**Status:** M9 (API with auth, RBAC and tenant isolation; live model scoring in shadow mode) complete. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -59,7 +59,7 @@ Run the same checks CI runs:
 
 ```zsh
 make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
-make test-integration  # 33 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
+make test-integration  # 53 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
 ```
 
 ## 4. Environment variables
@@ -237,7 +237,42 @@ to the model once live scoring exists (M9). Read the
 [model card](docs/ml/model-card.md) and [ADR-007](docs/architecture/adr/ADR-007.md) before
 quoting any number.
 
-## 13. Repository structure
+## 13. API and live scoring (M9)
+
+- **`prognos-api` (FastAPI).**
+  - **Login:** RS256 JWTs published as JWKS, argon2id password hashes, and a
+    brute-force guard.
+  - **Access control:** RBAC from the schema's role policy, with strict tenant isolation
+    (another tenant's data is `404`). Location is masked for analysts.
+  - **Endpoints:** keyset-paginated vehicles, alerts and work orders; a work-order state
+    machine; a live alert WebSocket; radar signals.
+  - **Operations:** RFC 9457 errors, rate limiting, security headers, Prometheus
+    metrics, and an audit trail for every change and every denial.
+  - **Tests:** 18 integration tests against real PostgreSQL and Redis.
+  - Guide: [docs/api](docs/api/README.md). Contract:
+    [openapi.json](docs/api/openapi.json), checked by a test.
+- **`prognos-scorer`.**
+  - **Pipeline:** ClickHouse computes minute buckets, the training feature SQL runs in
+    DuckDB, then LightGBM scores and explains the riskier vehicles.
+  - **Outputs:** a Redis ranking and ClickHouse history.
+  - **Parity:** a test proves ClickHouse and the training pipeline give identical
+    features and predictions.
+  - **Speed:** 100,000 vehicles per cycle in about 17 s on 4 vCPU
+    ([evidence](evidence/benchmarks/m9-scorer-live.json)).
+- **Shadow mode, and why.**
+  - The first live run put 8% of the fleet above 0.5. The causes were a
+    reporting-rate-dependent feature and slopes fitted to a few minutes of data.
+  - Fixes: v3 uses rate-invariant features (verified on a held-out run where vehicles
+    report every 10 s: PR-AUC 0.679 vs 0.478), and a data-coverage gate only scores
+    vehicles with enough data.
+  - The planner and the default ranking stay on the calibrated rules until the model is
+    validated on live outcomes ([ADR-008](docs/architecture/adr/ADR-008.md)).
+- **Bugs found by tests on the way:**
+  - A `DateTime64` insert stored scores as 1970, and the TTL silently deleted them.
+  - A non-IP client address crashed the audit insert.
+  - The brute-force limiter counted successful logins.
+
+## 14. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -264,8 +299,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M6 | Persistence: ClickHouse Kafka ingestion, PostgreSQL alerts, Redis live state, reconciliation | ✅ Done ([ADR-002..004](docs/architecture/adr/)) |
 | M7 | Core intelligence: calibrated risk, capacity-aware work orders, emerging-fault radar | ✅ Done ([A8–A10](docs/algorithms/algorithms.md), [ADR-006](docs/architecture/adr/ADR-006.md)) |
 | M8 | ML failure model vs the calibrated-rules baseline (held-out) | ✅ Done ([model card](docs/ml/model-card.md), [ADR-007](docs/architecture/adr/ADR-007.md)) |
-| M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ⏭ Next |
-| M10–M19 | See the M0 document | Planned |
+| M9 | API (FastAPI, auth, RBAC, WebSocket) + live model scoring | ✅ Done ([API guide](docs/api/README.md), [ADR-008](docs/architecture/adr/ADR-008.md)) |
+| M10 | Dashboard (React): fleet map, at-risk list, alerts, work orders, live feed | ⏭ Next |
+| M11–M19 | See the M0 document | Planned |
 
 ## Declarations
 

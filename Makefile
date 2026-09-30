@@ -72,16 +72,16 @@ chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
 # --- Pipeline ----------------------------------------------------------------
-.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail signals-tail plan reconcile backtest \
+.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail signals-tail users score plan reconcile backtest \
 	calibrate radar-backtest ml-data ml-train sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
-	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar
+	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api
 
 pipeline-demo: env ## As `pipeline`, plus 5 scripted failures and a firmware defect for the radar
-	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar
+	SIM_SCENARIO=demo,firmware_defect RADAR_WINDOW_SECONDS=300 $(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api
 
 pipeline-stop: ## Stop the pipeline services gracefully (flush + commit)
-	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar
+	$(COMPOSE) --profile pipeline stop simulator normalizer detector sink planner radar scorer api
 
 alerts-tail: ## Follow alerts as they are raised
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
@@ -90,6 +90,19 @@ alerts-tail: ## Follow alerts as they are raised
 signals-tail: ## Follow emerging-fault signals from the radar
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
 	  --topic fleet.signals --from-beginning | cut -c1-400
+
+users: ## Create demo users for every role in the first tenant (password: DEMO_USER_PASSWORD)
+	set -a; . ./.env; set +a; \
+	tenant=$$($(COMPOSE) exec -T postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \
+	  "SELECT slug FROM tenants ORDER BY slug LIMIT 1"); \
+	for role in fleet_manager technician analyst dpo; do \
+	  echo "$$DEMO_USER_PASSWORD" | $(COMPOSE) --profile pipeline run --rm -T api create-user \
+	    --email "$$role@demo.prognos.local" --tenant "$$tenant" --role $$role > /dev/null \
+	    && echo "$$role@demo.prognos.local ($$tenant)"; \
+	done
+
+score: ## Run one live scoring cycle now
+	$(COMPOSE) --profile pipeline run --rm -e SCORER_LAG_SECONDS=0 scorer --once --output /dev/stdout
 
 plan: ## Run one planner cycle now and print the proposals
 	$(COMPOSE) --profile pipeline run --rm planner --once --output /dev/stdout
@@ -121,9 +134,10 @@ ml-data: ## M8 datasets: 2 training runs + held-out and shifted test runs (~25 m
 	    --fault-rate $$4 > /dev/null & \
 	done; wait
 
-ml-train: ## M8: train LightGBM, compare with the calibrated rules on held-out runs, save the model
+ml-train: MODEL_VERSION ?= failure-7d-v3
+ml-train: ## M8: train LightGBM (new version dir; never overwrites), compare with the calibrated rules on held-out runs, save the model
 	uv run prognos-ml run --train train_a,train_b --test test_heldout,test_slow,test_rare \
-	  --model-dir ml/models/failure-7d-v1 --output evidence/benchmarks/m8-model-vs-baseline.json
+	  --model-dir ml/models/$(MODEL_VERSION) --output evidence/benchmarks/$(MODEL_VERSION)-vs-baseline.json
 
 dlq-peek: ## Show the 5 most recent DLQ records with their reasons
 	$(COMPOSE) exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 \
@@ -144,10 +158,10 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
 
 test: ## Unit tests (fast, no Docker)
-	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests --cov --cov-report=term
+	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=term
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration

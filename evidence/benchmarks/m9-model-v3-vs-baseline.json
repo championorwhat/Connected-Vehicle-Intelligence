@@ -1,0 +1,340 @@
+{
+  "measured_at": "2026-09-30T08:52:41Z",
+  "environment": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "cpu_count": 4,
+    "note": "not the target Mac"
+  },
+  "label": "ground-truth FAILURE of any mode within 168 h real time after the snapshot",
+  "feature_config": {
+    "snapshot_s": 300.0,
+    "long_window_s": 3600.0,
+    "short_window_s": 600.0,
+    "horizon_hours_real": 168.0
+  },
+  "train": {
+    "runs": [
+      "train_a",
+      "train_b"
+    ],
+    "rows": 23663,
+    "positive_rate": 0.1667,
+    "best_iteration": 70,
+    "baseline_no_alert_rate": 0.0935
+  },
+  "test": {
+    "test_heldout": {
+      "run": {
+        "name": "test_heldout",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 48,
+        "seed": 7
+      },
+      "model": {
+        "rows": 11825,
+        "positive_rate": 0.1483,
+        "average_precision": 0.7385,
+        "roc_auc": 0.8273,
+        "brier": 0.0608,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.9966,
+        "failures": 95,
+        "failures_listed_before_breakdown": 67,
+        "recall_at_48h": 0.3474,
+        "median_lead_hours_real": 44.6
+      },
+      "baseline_rules": {
+        "rows": 11825,
+        "positive_rate": 0.1483,
+        "average_precision": 0.5083,
+        "roc_auc": 0.749,
+        "brier": 0.0828,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.7245,
+        "failures": 95,
+        "failures_listed_before_breakdown": 59,
+        "recall_at_48h": 0.2316,
+        "median_lead_hours_real": 38.1
+      },
+      "ap_difference_model_minus_baseline": {
+        "mean": 0.2266,
+        "ci95_low": 0.1729,
+        "ci95_high": 0.2961,
+        "resamples": 200
+      }
+    },
+    "test_slow": {
+      "run": {
+        "name": "test_slow",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 32,
+        "seed": 11
+      },
+      "model": {
+        "rows": 5912,
+        "positive_rate": 0.2287,
+        "average_precision": 0.7874,
+        "roc_auc": 0.8339,
+        "brier": 0.085,
+        "capacity_share": 0.05,
+        "snapshots": 21,
+        "mean_precision_at_capacity": 1.0,
+        "failures": 85,
+        "failures_listed_before_breakdown": 42,
+        "recall_at_48h": 0.2588,
+        "median_lead_hours_real": 50.7
+      },
+      "baseline_rules": {
+        "rows": 5912,
+        "positive_rate": 0.2287,
+        "average_precision": 0.6451,
+        "roc_auc": 0.7774,
+        "brier": 0.0954,
+        "capacity_share": 0.05,
+        "snapshots": 21,
+        "mean_precision_at_capacity": 1.0,
+        "failures": 85,
+        "failures_listed_before_breakdown": 30,
+        "recall_at_48h": 0.1529,
+        "median_lead_hours_real": 45.0
+      },
+      "ap_difference_model_minus_baseline": {
+        "mean": 0.1415,
+        "ci95_low": 0.1057,
+        "ci95_high": 0.1829,
+        "resamples": 200
+      }
+    },
+    "test_rare": {
+      "run": {
+        "name": "test_rare",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.05,
+        "time_scale": 48,
+        "seed": 13
+      },
+      "model": {
+        "rows": 12374,
+        "positive_rate": 0.0367,
+        "average_precision": 0.7173,
+        "roc_auc": 0.8795,
+        "brier": 0.018,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.5,
+        "failures": 24,
+        "failures_listed_before_breakdown": 24,
+        "recall_at_48h": 0.6667,
+        "median_lead_hours_real": 68.8
+      },
+      "baseline_rules": {
+        "rows": 12374,
+        "positive_rate": 0.0367,
+        "average_precision": 0.5497,
+        "roc_auc": 0.8165,
+        "brier": 0.0242,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.4603,
+        "failures": 24,
+        "failures_listed_before_breakdown": 21,
+        "recall_at_48h": 0.5,
+        "median_lead_hours_real": 52.6
+      },
+      "ap_difference_model_minus_baseline": {
+        "mean": 0.1644,
+        "ci95_low": 0.0669,
+        "ci95_high": 0.2567,
+        "resamples": 200
+      }
+    },
+    "test_lowrate": {
+      "run": {
+        "name": "test_lowrate",
+        "vehicles": 300,
+        "hours": 8.0,
+        "fault_rate": 0.2,
+        "time_scale": 48.0,
+        "seed": 17,
+        "report_interval_s": 10.0
+      },
+      "model": {
+        "rows": 11819,
+        "positive_rate": 0.1913,
+        "average_precision": 0.6785,
+        "roc_auc": 0.8027,
+        "brier": 0.1045,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.9949,
+        "failures": 114,
+        "failures_listed_before_breakdown": 75,
+        "recall_at_48h": 0.2982,
+        "median_lead_hours_real": 43.6
+      },
+      "baseline_rules": {
+        "rows": 11819,
+        "positive_rate": 0.1913,
+        "average_precision": 0.4775,
+        "roc_auc": 0.713,
+        "brier": 0.1134,
+        "capacity_share": 0.05,
+        "snapshots": 42,
+        "mean_precision_at_capacity": 0.7058,
+        "failures": 114,
+        "failures_listed_before_breakdown": 52,
+        "recall_at_48h": 0.1404,
+        "median_lead_hours_real": 32.3
+      },
+      "ap_difference_model_minus_baseline": {
+        "mean": 0.199,
+        "ci95_low": 0.1524,
+        "ci95_high": 0.247,
+        "resamples": 200
+      }
+    }
+  },
+  "feature_importance_gain_share": {
+    "dtc_rate_short": 0.3567,
+    "lv_min_long": 0.0968,
+    "tyre_ratio_long": 0.0754,
+    "coolant_max_long": 0.0627,
+    "tyre_ratio_min_long": 0.0542,
+    "lv_rest_long": 0.0341,
+    "dtc_rate_long": 0.0338,
+    "tyre_ratio_min_short": 0.0336,
+    "soh_long": 0.0255,
+    "cell_delta_slope_h": 0.0241,
+    "tyre_ratio_slope_h": 0.0237,
+    "rpm_resid_sd_max_long": 0.0204,
+    "coolant_resid_short": 0.0203,
+    "ignition_share_long": 0.0148,
+    "lv_mean_slope_h": 0.0137
+  },
+  "explanations_top5_heldout": [
+    {
+      "vehicle_id": "5153a4e3-2511-4412-99de-db490e46ccb3",
+      "p_failure_7d": 0.969,
+      "label": 1,
+      "next_failure_mode": "COOLING_FAILURE",
+      "top_contributions": [
+        [
+          "dtc_rate_short",
+          2.599
+        ],
+        [
+          "coolant_max_long",
+          1.459
+        ],
+        [
+          "coolant_resid_short",
+          1.214
+        ]
+      ]
+    },
+    {
+      "vehicle_id": "0c5166f0-b464-4035-b80c-8fb058c6aeea",
+      "p_failure_7d": 0.968,
+      "label": 1,
+      "next_failure_mode": "HV_BATTERY_THERMAL",
+      "top_contributions": [
+        [
+          "dtc_rate_short",
+          3.49
+        ],
+        [
+          "cell_delta_slope_h",
+          1.669
+        ],
+        [
+          "dtc_rate_long",
+          0.411
+        ]
+      ]
+    },
+    {
+      "vehicle_id": "d19e2a95-780e-4104-ba54-c2e39ce070a2",
+      "p_failure_7d": 0.968,
+      "label": 1,
+      "next_failure_mode": "IGNITION_MISFIRE",
+      "top_contributions": [
+        [
+          "dtc_rate_short",
+          3.815
+        ],
+        [
+          "dtc_ignition_misfire_rate_short",
+          0.83
+        ],
+        [
+          "dtc_rate_long",
+          0.393
+        ]
+      ]
+    },
+    {
+      "vehicle_id": "f5866403-9823-4599-8f72-65191ed14e6a",
+      "p_failure_7d": 0.968,
+      "label": 1,
+      "next_failure_mode": "IGNITION_MISFIRE",
+      "top_contributions": [
+        [
+          "dtc_rate_short",
+          3.983
+        ],
+        [
+          "dtc_ignition_misfire_rate_short",
+          0.855
+        ],
+        [
+          "dtc_rate_long",
+          0.455
+        ]
+      ]
+    },
+    {
+      "vehicle_id": "f435a573-6e8c-494e-b223-c68aa5529b05",
+      "p_failure_7d": 0.968,
+      "label": 1,
+      "next_failure_mode": "IGNITION_MISFIRE",
+      "top_contributions": [
+        [
+          "dtc_rate_short",
+          3.533
+        ],
+        [
+          "dtc_ignition_misfire_rate_short",
+          0.833
+        ],
+        [
+          "dtc_rate_long",
+          0.421
+        ]
+      ]
+    }
+  ],
+  "inference_latency": {
+    "single_row_ms_p50": 0.025,
+    "single_row_ms_p99": 0.136,
+    "batch_100k_rows_seconds": 0.123,
+    "batch_rows_per_second": 812109,
+    "threads": 2
+  },
+  "wall_seconds": 15.8,
+  "artefact": {
+    "name": "failure-7d",
+    "version": "failure-7d-v3",
+    "best_iteration": 70,
+    "model_sha256": "4e001982362afd9b8bc9415db73584e47fb664c5c00056ebf0c4b0c99fd1a830",
+    "model_bytes": 247771,
+    "path": "ml/models/failure-7d-v3"
+  }
+}
