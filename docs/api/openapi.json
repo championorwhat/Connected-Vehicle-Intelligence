@@ -93,6 +93,35 @@
         "title": "CreateWorkOrder",
         "type": "object"
       },
+      "ErasureRequest": {
+        "properties": {
+          "reason": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Reason",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_type": {
+            "enum": [
+              "driver",
+              "vehicle"
+            ],
+            "title": "Subject Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_type",
+          "subject_id"
+        ],
+        "title": "ErasureRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -554,6 +583,116 @@
         "summary": "Fleet Summary",
         "tags": [
           "fleet"
+        ]
+      }
+    },
+    "/v1/privacy/erasure-requests": {
+      "get": {
+        "operationId": "list_erasure_requests_v1_privacy_erasure_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Erasure Requests V1 Privacy Erasure Requests Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Erasure Requests",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "post": {
+        "description": "File a request. It is carried out asynchronously; poll it by id.\n\nFiling again for a subject with an unfinished request returns that request (200).",
+        "operationId": "create_erasure_request_v1_privacy_erasure_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErasureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Erasure Request V1 Privacy Erasure Requests Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Erasure Request",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/v1/privacy/erasure-requests/{request_id}": {
+      "get": {
+        "operationId": "get_erasure_request_v1_privacy_erasure_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Erasure Request V1 Privacy Erasure Requests  Request Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Erasure Request",
+        "tags": [
+          "privacy"
         ]
       }
     },

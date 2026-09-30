@@ -1,0 +1,19 @@
+M12 finding: the dashboard's nginx served NO security headers on its pages.
+
+Cause: nginx inherits add_header from the server block only if the location defines no
+add_header of its own. The "/" (app shell) and "/assets/" locations each set
+Cache-Control, which silently dropped CSP, X-Frame-Options, nosniff and Referrer-Policy.
+
+Reproduced 2026-09-30 with nginxinc/nginx-unprivileged:1.29-alpine serving apps/web/dist.
+Count of the four headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+per response:
+
+  path            before (M11 config)   after (M12 config)
+  /               0                     4
+  /vehicles/abc   0                     4
+  /assets/        0                     4
+
+Fix: headers moved to apps/web/security-headers.inc, included at server level and in every
+location that sets its own header; Permissions-Policy and Cross-Origin-Opener-Policy added;
+CSP gains base-uri 'none', form-action 'self', object-src 'none'.
+Regression test: apps/web/tests/e2e/dashboard.spec.ts ("security headers on every page").

@@ -42,7 +42,9 @@ stream.
    replicas help, one per partition of `telemetry.raw` and `telemetry.canonical`.
 3. Check CPU and memory limits (`docker stats`). A container at its memory limit is
    restarted repeatedly.
-4. Kafka keeps 7 days of telemetry, so a group that catches up loses nothing.
+4. Kafka keeps telemetry for `KAFKA_TELEMETRY_RETENTION_MS` (1 day by default locally), so a
+   group that catches up within that window loses nothing. A longer outage loses the oldest
+   data: raise the retention before a planned long stop.
 
 ## Stalled
 

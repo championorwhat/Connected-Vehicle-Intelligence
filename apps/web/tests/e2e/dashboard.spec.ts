@@ -54,3 +54,14 @@ test("analyst sees masked locations", async ({ page }) => {
   await page.locator("tbody tr a").first().click();
   await expect(page.getByText("masked to ~1 km for your role")).toBeVisible();
 });
+
+test("security headers on every page, not just some", async ({ request }) => {
+  // nginx drops inherited add_header in a location that sets its own (found in M12).
+  for (const path of ["/", "/vehicles/00000000-0000-0000-0000-000000000000", "/v1/auth/me"]) {
+    const headers = (await request.get(path)).headers();
+    expect(headers["content-security-policy"], path).toContain("frame-ancestors 'none'");
+    expect(headers["x-frame-options"], path).toContain("DENY");
+    expect(headers["x-content-type-options"], path).toContain("nosniff");
+    expect(headers["referrer-policy"], path).toContain("no-referrer");
+  }
+});
