@@ -58,3 +58,42 @@ observability profiles running.
 committed and Kafka keeps telemetry for 1 day by default (an outage of 13.5 minutes is far
 inside that), so no loss is expected. The M4 and M6
 reconciliations cover the no-loss property.
+
+## Drill 2: PostgreSQL goes away mid-ingestion (M13, 2026-09-30)
+
+Evidence: [m13-postgres-outage.json](../../evidence/chaos/m13-postgres-outage.json),
+[reconciliation](../../evidence/chaos/m13-postgres-outage-reconciliation.json).
+Measured on a 4-vCPU Linux container, not the target Mac.
+
+**Setup.** Fresh volumes and 10,000 vehicles. The simulator, 2 normalizers, the detector
+and the sink were running.
+
+**Fault.** `docker compose stop postgres` for 90 s. That is longer than the sink's 60 s
+retry budget (`SINK_RETRY_BUDGET_SECONDS`), so the failure path really runs.
+
+### What happened
+
+| Time (UTC) | Event |
+|---|---|
+| 12:42:48 | PostgreSQL stopped |
+| 12:43:04 → | Sink retries with exponential backoff and jitter (`postgres unavailable (attempt n)`) |
+| ~12:44:06 | Retry budget spent. The sink gives up its partitions and exits **without committing** |
+| 12:44:19 | PostgreSQL back. Docker restarts the sink (restart count 1) |
+| 12:47:54 | Simulator stopped; reconciliation run |
+
+- Normalizers kept going on their cached vehicle registry, and the detector was
+  unaffected.
+- 4 alerts were raised during the outage. All 4 are in PostgreSQL afterwards.
+- **Reconciliation passed.** Kafka, ClickHouse and PostgreSQL agree exactly over
+  3,767,309 raw events: 91 alerts opened on Kafka, and 91 rows.
+
+### Findings
+1. **No loss, by design.** Offsets are committed only after the stores accept a batch.
+   So after the restart, Kafka redelivered the failed batch, and the idempotent upsert
+   (unique `tenant_id, fingerprint`) wrote each alert exactly once.
+2. **Unclear exit.** The sink died with a raw traceback, so an operator could not tell a
+   planned give-up from a crash. It now logs
+   `store unavailable for 60s, exiting for a restart (offsets not committed)` and exits
+   with code 1 (unit-tested).
+   - This was not re-run in a container: Docker Hub rate limits blocked the image rebuild
+     here. The CI compose job builds fresh images.
