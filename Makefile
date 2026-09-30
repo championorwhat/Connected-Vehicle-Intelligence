@@ -40,8 +40,8 @@ up-ha: env ## Start core with a 3-broker Kafka cluster (needs more memory)
 down: ## Stop the stack (keeps data volumes)
 	$(COMPOSE) --profile observability --profile pipeline down --remove-orphans
 
-clean: ## Stop the stack AND delete all data volumes
-	$(COMPOSE_HA) --profile observability down -v --remove-orphans
+clean: ## Stop the stack AND delete all data volumes (all profiles, incl. pipeline)
+	$(COMPOSE_HA) --profile observability --profile pipeline down -v --remove-orphans
 
 ps: ## Show service status
 	$(COMPOSE) --profile observability ps

@@ -32,7 +32,7 @@ import orjson
 from prognos_common.catalog import FAILURE_MODES
 from prognos_common.roster import Vehicle
 from prognos_sim.config import SimConfig
-from prognos_sim.fleet import EVENT_TYPES, Fleet, GroundTruth
+from prognos_sim.fleet import EVENT_TYPES, LV_BATTERY, Fleet, GroundTruth
 from prognos_sim.formats import (
     ENCODERS,
     MALFORMED_KINDS,
@@ -127,8 +127,9 @@ class ShardSimulator:
         chosen: set[int] = set()
         for mode in range(len(FAILURE_MODES)):
             # A distinct vehicle per mode (forcing a second fault on one vehicle would
-            # overwrite the first), kept on a long trip so engine-dependent signals
-            # (misfire roughness, coolant) are observable while the demo runs.
+            # overwrite the first). Engine faults stay on a long trip so misfire and
+            # coolant signals are observable; the 12 V battery vehicle stays parked,
+            # because a weak battery only shows at rest (the alternator masks it).
             candidates = [
                 int(i) for i in np.flatnonzero(self.fleet.eligible[:, mode]) if int(i) not in chosen
             ]
@@ -137,7 +138,7 @@ class ShardSimulator:
             index = candidates[0]
             chosen.add(index)
             self.fleet.force_fault(index, mode, t, DEMO_SECONDS_TO_FAILURE + 120.0 * mode)
-            self.fleet.driving[index] = True
+            self.fleet.driving[index] = mode != LV_BATTERY
             self.fleet.mode_remaining[index] = 3 * 3600.0
             self.demo_vins.append(self.vehicles[index].vin)
             log.info(

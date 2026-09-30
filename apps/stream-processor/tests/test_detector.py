@@ -134,3 +134,36 @@ def test_backtest_harness_scores_against_ground_truth() -> None:
     assert result["recall"] is not None
     assert result["precision"] is not None
     assert result["run"]["raw_messages"] > 60_000
+
+
+def test_demo_scenario_alerts_every_failure_mode_before_breakdown() -> None:
+    """The 5-minute demo relies on this: each scripted vehicle is warned before it fails."""
+    from prognos_common.roster import generate_roster
+    from prognos_sim.config import Mode, PublisherKind, SimConfig
+    from prognos_sim.engine import ShardSimulator
+    from prognos_stream.evaluate import PipelinePublisher, _ts
+    from prognos_stream.processor import Normalizer
+    from prognos_stream.registry import VehicleRegistry
+
+    roster = generate_roster(120, 3, 42)
+    cfg = SimConfig(
+        vehicle_count=120, events_per_second=120.0, tenant_count=3, mode=Mode.FAST, tick_hz=1,
+        burst_multiplier=1.0, publisher=PublisherKind.NULL, metrics_port=0, fault_rate=0.0,
+        scenario="demo",
+    )  # fmt: skip
+    clock = [T0]
+    pipe = PipelinePublisher(Normalizer(VehicleRegistry.from_roster(roster)), Detector(), clock)
+    sim = ShardSimulator(cfg, 0, roster.vehicles, pipe, T0)  # type: ignore[arg-type]
+    for tick in range(1_150):  # the last demo failure is scheduled at +1080 s
+        clock[0] = T0 + tick
+        sim.tick(clock[0], 1.0)
+    demo = [t for t in pipe.truth if t["type"] == "FAULT_ONSET" and t["scenario"]]
+    assert len({t["vin"] for t in demo}) == 5
+    for fault in demo:
+        warned = [
+            a for a in pipe.alerts
+            if a["status"] == "open" and a["vin"] == fault["vin"]
+            and a["failure_mode"] == fault["failure_mode"]
+            and _ts(a["event_ts"]) < _ts(fault["failure_ts"])
+        ]  # fmt: skip
+        assert warned, f"no alert before {fault['failure_mode']} failure of {fault['vin']}"
