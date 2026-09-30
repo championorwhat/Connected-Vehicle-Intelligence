@@ -1,0 +1,30 @@
+[project]
+name = "prognos-ml"
+version = "0.1.0"
+description = "Prognos 7-day failure model: dataset builder (Parquet + DuckDB), LightGBM vs calibrated-rules baseline"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "prognos-common",
+    "prognos-simulator",
+    "prognos-stream",
+    "duckdb>=1.3",
+    "pyarrow>=19",
+    "lightgbm>=4.5",
+    "numpy>=2.0",
+    "scikit-learn>=1.6",
+]
+
+[project.scripts]
+prognos-ml = "prognos_ml.pipeline:main"
+
+[tool.uv.sources]
+prognos-common = { workspace = true }
+prognos-simulator = { workspace = true }
+prognos-stream = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prognos_ml"]
