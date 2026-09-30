@@ -44,7 +44,7 @@ jobs:
           docker run --rm -v "$PWD":/src aquasec/trivy:0.67.2 fs \
             --scanners vuln,misconfig,secret --severity CRITICAL,HIGH \
             --ignorefile /src/.trivyignore --exit-code 1 --format table /src | tee trivy-fs.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: trivy-fs-report

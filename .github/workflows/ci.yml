@@ -25,7 +25,7 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts ml/src ml/tests apps/api
       - run: uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=xml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-unit
           path: coverage.xml
@@ -58,7 +58,7 @@ jobs:
           python-version: "3.12"
       - run: uv sync --group dev
       - run: uv run pytest tests/integration --junitxml=integration.xml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integration-results
@@ -191,18 +191,18 @@ jobs:
           npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
           DEMO_USER_PASSWORD=ci-password-not-secret SCREENSHOT_DIR=/tmp/shots npx playwright test --reporter=line
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dashboard-screenshots
           path: /tmp/shots
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reconciliation
           path: reconciliation.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: seed-100k-ci
           path: seed-100k.json
