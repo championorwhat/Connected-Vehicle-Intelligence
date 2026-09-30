@@ -163,7 +163,7 @@ web-e2e: ## Playwright end-to-end against :8080 (needs `make pipeline-demo users
 	cd apps/web && npx playwright test
 
 # --- Quality -----------------------------------------------------------------
-.PHONY: lint fmt typecheck test test-integration check
+.PHONY: lint fmt typecheck test test-integration coverage check
 lint: ## Lint Python code
 	uv run ruff check .
 	uv run ruff format --check .
@@ -177,6 +177,13 @@ typecheck: ## Static type check
 
 test: ## Unit tests (fast, no Docker)
 	uv run pytest tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=term
+
+coverage: ## Unit + integration coverage combined, as CI gates it (>= 80 %; needs Docker)
+	rm -f .coverage .coverage.*
+	COVERAGE_FILE=.coverage.unit uv run pytest -q tests/unit tests/security tests/contract packages apps/simulator/tests apps/stream-processor/tests ml/tests apps/api/tests --cov --cov-report=
+	COVERAGE_FILE=.coverage.integration uv run pytest -q tests/integration --cov --cov-report=
+	uv run coverage combine .coverage.unit .coverage.integration
+	uv run coverage report --skip-covered --fail-under=80
 
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration

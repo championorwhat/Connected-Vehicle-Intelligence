@@ -1,0 +1,32 @@
+{
+  "measured_at": "2026-09-30T12:48:08Z",
+  "consumer_lag": {
+    "clickhouse": 0,
+    "sink": 0
+  },
+  "kafka": {
+    "telemetry.raw": 3767309,
+    "telemetry.canonical": 3693007,
+    "telemetry.dlq": 37394,
+    "duplicates_dropped_by_normalizer": 36908
+  },
+  "clickhouse": {
+    "rows": 3693007,
+    "unique_event_ids": 3693007,
+    "rows_pending_replacing_merge": 0,
+    "ingestion_errors": 0
+  },
+  "postgres": {
+    "alert_rows": 91,
+    "unique_opened_fingerprints": 91
+  },
+  "checks": {
+    "pipeline_carried_events": true,
+    "consumers_caught_up": true,
+    "kafka_balances": true,
+    "clickhouse_has_every_canonical_event": true,
+    "clickhouse_no_ingestion_errors": true,
+    "postgres_has_every_opened_alert": true
+  },
+  "passed": true
+}

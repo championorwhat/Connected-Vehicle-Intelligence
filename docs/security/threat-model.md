@@ -97,7 +97,7 @@ The boundaries that matter are:
 | R5 | The rate limiter fails open if Redis is down | Low | It protects capacity; authorisation does not depend on it | Also rate-limit at the load balancer (M16) |
 | R6 | After an erasure, raw payloads remain in Kafka (1 day), the DLQ (7 days) and the compacted `vehicle.state` topic (until the vehicle's next snapshot) | Medium | Retention removes them; the request records this window | Kafka tombstone for `vehicle.state` from the worker; shorter DLQ retention |
 | R7 | No TLS locally | Low | Loopback only | TLS at the cloud load balancer (M16) |
-| R8 | Container images (OS packages) are not scanned, only manifests and Dockerfiles | Medium | Base images are pinned to maintained tags | `trivy image` on built images in CI (M13) |
+| R8 | Built images carry fixable HIGH OS-package CVEs from upstream base images (OpenSSL in Debian 13.7; curl, OpenSSL, c-ares in Alpine 3.23.4) | Medium | Since M13, CI scans every built image and fails on fixable CRITICAL (0 today); HIGH is reported ([evidence](../../evidence/security/m13-image-scan.txt)) | Rebuild on refreshed base images (Dependabot patch group), or an OS upgrade layer once rebuilds can be verified |
 
 ## How to check
 ```bash
