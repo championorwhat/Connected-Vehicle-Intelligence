@@ -199,3 +199,19 @@ tests:
               summary: "No healthy clickhouse instance for 2 minutes"
               runbook: docs/observability/runbooks.md#service-down
 
+  # Crash loop: a new process start every 2 minutes (the M14 detector at its memory limit).
+  # A process that started once and stays up must not alert.
+  - interval: 1m
+    input_series:
+      - series: 'process_start_time_seconds{job="detector",instance="10.0.0.5:9103"}'
+        values: '0 0 120 120 240 240 360 360 480 480 600'
+      - series: 'process_start_time_seconds{job="sink",instance="10.0.0.7:9104"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ServiceRestarting
+        exp_alerts:
+          - exp_labels: { severity: page, job: detector, instance: "10.0.0.5:9103" }
+            exp_annotations:
+              summary: "detector (10.0.0.5:9103) restarted 5 times in 15 minutes"
+              runbook: docs/observability/runbooks.md#restarting

@@ -20,6 +20,7 @@ Signals and why they lead failures (see prognos_sim.fleet for the physics):
 
 from __future__ import annotations
 
+import sys
 import time
 from collections import deque
 from collections.abc import Callable
@@ -37,6 +38,12 @@ WARM_ENGINE_S = 900.0  # coolant expectation only valid after 15 min with igniti
 DTC_WINDOW_S = 600.0
 DTC_WARNING_COUNT = 3  # warning DTCs must repeat within the window (noise filter)
 STATE_INTERVAL_S = 15.0
+# The only fields of the latest event the health snapshot reports. Keeping these instead
+# of the whole event (plus a lazy DTC window and interned tenant ids) cut detector state
+# from 4,966 to 2,299 bytes per vehicle (scripts/bench_detector_memory.py). In M14 the full
+# event made a 100K-vehicle detector exceed its 512 MB limit and crash-loop.
+SNAPSHOT_FIELDS = ("latitude", "longitude", "speed_kmh", "ignition_on", "fuel_level_pct",
+                   "hv_soc_pct")  # fmt: skip
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,10 +117,12 @@ class VehicleState:
     cell_delta: Ewma = field(default_factory=lambda: Ewma(alpha=0.05))
     tyre_deficit: list[Ewma] = field(default_factory=lambda: [Ewma(0.05) for _ in range(4)])
     tyre_trend: list[EwTrend] = field(default_factory=lambda: [EwTrend(3600.0) for _ in range(4)])
-    dtc_events: deque[tuple[float, str]] = field(default_factory=deque)
+    # Created on the first DTC and dropped when it empties: most vehicles report none,
+    # and an empty deque costs ~760 bytes each.
+    dtc_events: deque[tuple[float, str]] | None = None
     open_rules: dict[str, Episode] = field(default_factory=dict)
     last_state_ts: float = 0.0
-    last_event: dict[str, Any] = field(default_factory=dict)
+    last_values: tuple[Any, ...] = (None,) * len(SNAPSHOT_FIELDS)
 
 
 @dataclass(slots=True)
@@ -145,7 +154,8 @@ class Detector:
         vid = event["vehicle_id"]
         state = vehicles.get(vid)
         if state is None:
-            state = vehicles[vid] = VehicleState(event["tenant_id"], event["vin"])
+            # ~20 tenants: intern so 100K vehicles share their tenant-id strings
+            state = vehicles[vid] = VehicleState(sys.intern(event["tenant_id"]), event["vin"])
         ts = _epoch(event["event_ts"])
         in_order = ts >= state.last_ts
         signals = self._signals(state, event, ts, in_order)
@@ -155,7 +165,7 @@ class Detector:
         outputs.extend(self._dtc_rules(state, vid, event, ts, now))
         if in_order:
             state.last_ts = ts
-            state.last_event = event
+            state.last_values = tuple(event.get(k) for k in SNAPSHOT_FIELDS)
             if ts - state.last_state_ts >= self.state_interval_s:
                 state.last_state_ts = ts
                 outputs.append(self._snapshot(state, vid, ts, signals))
@@ -247,11 +257,18 @@ class Detector:
         self, s: VehicleState, vid: str, e: dict[str, Any], ts: float, now: float
     ) -> list[Output]:
         outputs: list[Output] = []
+        codes = e.get("dtc_codes") or ()
+        if s.dtc_events is None:
+            if not codes:
+                return outputs
+            s.dtc_events = deque()
         window = s.dtc_events
-        for code in e.get("dtc_codes") or ():
+        for code in codes:
             window.append((ts, code))
         while window and window[0][0] < ts - DTC_WINDOW_S:
             window.popleft()
+        if not window:
+            s.dtc_events = None
         counts: dict[str, int] = {}
         for _, code in window:
             counts[code] = counts.get(code, 0) + 1
@@ -335,7 +352,7 @@ class Detector:
         return Output("alerts", vid.encode(), orjson.dumps(body))
 
     def _snapshot(self, s: VehicleState, vid: str, ts: float, signals: dict[str, float]) -> Output:
-        e = s.last_event
+        e = dict(zip(SNAPSHOT_FIELDS, s.last_values, strict=True))
         penalties = {"critical": 40, "warning": 15}
         health = 100
         for code in s.open_rules:

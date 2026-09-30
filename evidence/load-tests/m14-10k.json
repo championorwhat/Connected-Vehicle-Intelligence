@@ -1,0 +1,3943 @@
+{
+ "measured_at": "2026-09-30T13:09:39+00:00",
+ "hardware": "x86_64 Linux container, 4 vCPU shared by every service (simulator, Kafka, consumers, databases, Prometheus); not the target Mac",
+ "scenario": {
+  "name": "10k",
+  "vehicles": 10000,
+  "rate_ev_s": 1000.0,
+  "duration_s": 300.0,
+  "warmup_s": 60,
+  "normalizers": 2,
+  "burst": null
+ },
+ "summary": {
+  "mean_target_ev_s": 1000.0,
+  "mean_delivered_ev_s": 1021.2,
+  "stages": {
+   "normalizer": {
+    "mean_msg_s": 1010.2,
+    "max_seconds_behind": 3.7,
+    "final_lag": 254.0,
+    "backlog_growing": false,
+    "sustained": true
+   },
+   "detector": {
+    "mean_msg_s": 990.4,
+    "max_seconds_behind": 7.2,
+    "final_lag": 235.0,
+    "backlog_growing": false,
+    "sustained": true
+   },
+   "sink": {
+    "mean_msg_s": 493.1,
+    "max_seconds_behind": 42.2,
+    "final_lag": 533.0,
+    "backlog_growing": false,
+    "sustained": true
+   },
+   "radar": {
+    "mean_msg_s": 990.0,
+    "max_seconds_behind": 7.6,
+    "final_lag": 255.0,
+    "backlog_growing": false,
+    "sustained": true
+   }
+  },
+  "all_sustained": true,
+  "alert_latency_s": {
+   "p50": 0.518,
+   "p95": 1.225,
+   "p99": 1.845
+  },
+  "containers": {
+   "simulator-1": {
+    "mean_cpu_pct": 8.9,
+    "max_mem_mib": 111.4
+   },
+   "sink-1": {
+    "mean_cpu_pct": 3.0,
+    "max_mem_mib": 48.3
+   },
+   "detector-1": {
+    "mean_cpu_pct": 6.3,
+    "max_mem_mib": 77.7
+   },
+   "radar-1": {
+    "mean_cpu_pct": 1.4,
+    "max_mem_mib": 43.5
+   },
+   "normalizer-1": {
+    "mean_cpu_pct": 4.4,
+    "max_mem_mib": 40.0
+   },
+   "normalizer-2": {
+    "mean_cpu_pct": 4.2,
+    "max_mem_mib": 40.2
+   },
+   "prometheus-1": {
+    "mean_cpu_pct": 0.6,
+    "max_mem_mib": 46.0
+   },
+   "redis-1": {
+    "mean_cpu_pct": 1.8,
+    "max_mem_mib": 12.6
+   },
+   "postgres-1": {
+    "mean_cpu_pct": 0.6,
+    "max_mem_mib": 58.8
+   },
+   "kafka-1": {
+    "mean_cpu_pct": 46.6,
+    "max_mem_mib": 724.4
+   },
+   "clickhouse-1": {
+    "mean_cpu_pct": 11.6,
+    "max_mem_mib": 333.5
+   }
+  },
+  "total_cpu_pct_mean": 89.4,
+  "total_mem_mib_max": 1536.4
+ },
+ "samples": [
+  {
+   "t": 0.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 46.06,
+     "mem_mib": 108.7
+    },
+    "sink-1": {
+     "cpu_pct": 0.13,
+     "mem_mib": 35.0
+    },
+    "detector-1": {
+     "cpu_pct": 0.13,
+     "mem_mib": 24.0
+    },
+    "radar-1": {
+     "cpu_pct": 0.15,
+     "mem_mib": 39.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 0.18,
+     "mem_mib": 33.3
+    },
+    "normalizer-2": {
+     "cpu_pct": 0.16,
+     "mem_mib": 33.1
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 41.9
+    },
+    "redis-1": {
+     "cpu_pct": 2.49,
+     "mem_mib": 3.6
+    },
+    "postgres-1": {
+     "cpu_pct": 0.68,
+     "mem_mib": 54.9
+    },
+    "kafka-1": {
+     "cpu_pct": 42.39,
+     "mem_mib": 411.6
+    },
+    "clickhouse-1": {
+     "cpu_pct": 6.71,
+     "mem_mib": 207.8
+    }
+   }
+  },
+  {
+   "t": 5.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.45,
+     "mem_mib": 109.6
+    },
+    "sink-1": {
+     "cpu_pct": 20.11,
+     "mem_mib": 47.4
+    },
+    "detector-1": {
+     "cpu_pct": 24.4,
+     "mem_mib": 49.7
+    },
+    "radar-1": {
+     "cpu_pct": 1.35,
+     "mem_mib": 44.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 9.07,
+     "mem_mib": 43.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 9.99,
+     "mem_mib": 41.0
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 38.2
+    },
+    "redis-1": {
+     "cpu_pct": 9.33,
+     "mem_mib": 8.4
+    },
+    "postgres-1": {
+     "cpu_pct": 0.06,
+     "mem_mib": 54.7
+    },
+    "kafka-1": {
+     "cpu_pct": 88.65,
+     "mem_mib": 432.6
+    },
+    "clickhouse-1": {
+     "cpu_pct": 16.62,
+     "mem_mib": 218.0
+    }
+   }
+  },
+  {
+   "t": 10.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.26,
+     "mem_mib": 110.0
+    },
+    "sink-1": {
+     "cpu_pct": 7.55,
+     "mem_mib": 47.6
+    },
+    "detector-1": {
+     "cpu_pct": 4.89,
+     "mem_mib": 71.5
+    },
+    "radar-1": {
+     "cpu_pct": 1.17,
+     "mem_mib": 42.9
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.18,
+     "mem_mib": 39.2
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.47,
+     "mem_mib": 39.5
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 33.0
+    },
+    "redis-1": {
+     "cpu_pct": 4.07,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.05,
+     "mem_mib": 54.6
+    },
+    "kafka-1": {
+     "cpu_pct": 63.16,
+     "mem_mib": 455.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.56,
+     "mem_mib": 220.5
+    }
+   }
+  },
+  {
+   "t": 15.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.46,
+     "mem_mib": 110.2
+    },
+    "sink-1": {
+     "cpu_pct": 1.35,
+     "mem_mib": 47.6
+    },
+    "detector-1": {
+     "cpu_pct": 3.53,
+     "mem_mib": 73.5
+    },
+    "radar-1": {
+     "cpu_pct": 1.26,
+     "mem_mib": 42.9
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.92,
+     "mem_mib": 39.2
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.24,
+     "mem_mib": 39.8
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 37.5
+    },
+    "redis-1": {
+     "cpu_pct": 0.79,
+     "mem_mib": 12.3
+    },
+    "postgres-1": {
+     "cpu_pct": 0.04,
+     "mem_mib": 54.6
+    },
+    "kafka-1": {
+     "cpu_pct": 61.22,
+     "mem_mib": 458.7
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.41,
+     "mem_mib": 223.7
+    }
+   }
+  },
+  {
+   "t": 20.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.75,
+     "mem_mib": 110.4
+    },
+    "sink-1": {
+     "cpu_pct": 3.64,
+     "mem_mib": 47.9
+    },
+    "detector-1": {
+     "cpu_pct": 5.38,
+     "mem_mib": 76.1
+    },
+    "radar-1": {
+     "cpu_pct": 1.45,
+     "mem_mib": 42.9
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.82,
+     "mem_mib": 39.2
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.04,
+     "mem_mib": 39.5
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 39.3
+    },
+    "redis-1": {
+     "cpu_pct": 1.57,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 8.11,
+     "mem_mib": 54.6
+    },
+    "kafka-1": {
+     "cpu_pct": 174.92,
+     "mem_mib": 586.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.42,
+     "mem_mib": 227.2
+    }
+   }
+  },
+  {
+   "t": 25.1,
+   "target_ev_s": null,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": null,
+   "detector_lag": null,
+   "sink_lag": null,
+   "radar_lag": null,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.22,
+     "mem_mib": 110.6
+    },
+    "sink-1": {
+     "cpu_pct": 5.07,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 10.36,
+     "mem_mib": 75.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.21,
+     "mem_mib": 42.9
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.16,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.34,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 2.56,
+     "mem_mib": 33.6
+    },
+    "redis-1": {
+     "cpu_pct": 1.82,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 3.99,
+     "mem_mib": 56.8
+    },
+    "kafka-1": {
+     "cpu_pct": 26.27,
+     "mem_mib": 483.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.5,
+     "mem_mib": 223.6
+    }
+   }
+  },
+  {
+   "t": 30.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": null,
+   "normalizer_msg_s": null,
+   "detector_msg_s": null,
+   "sink_msg_s": null,
+   "radar_msg_s": null,
+   "normalizer_lag": 193.0,
+   "detector_lag": 279.0,
+   "sink_lag": 27.0,
+   "radar_lag": 286.0,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": null,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 7.95,
+     "mem_mib": 111.3
+    },
+    "sink-1": {
+     "cpu_pct": 8.08,
+     "mem_mib": 48.2
+    },
+    "detector-1": {
+     "cpu_pct": 4.73,
+     "mem_mib": 76.7
+    },
+    "radar-1": {
+     "cpu_pct": 1.26,
+     "mem_mib": 43.1
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.25,
+     "mem_mib": 39.6
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.06,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.65,
+     "mem_mib": 41.3
+    },
+    "redis-1": {
+     "cpu_pct": 2.31,
+     "mem_mib": 12.0
+    },
+    "postgres-1": {
+     "cpu_pct": 3.09,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 42.36,
+     "mem_mib": 483.9
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.97,
+     "mem_mib": 229.4
+    }
+   }
+  },
+  {
+   "t": 35.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 370.29,
+   "normalizer_msg_s": 400.55,
+   "detector_msg_s": 302.42,
+   "sink_msg_s": 352.27,
+   "radar_msg_s": 286.78,
+   "normalizer_lag": 209.0,
+   "detector_lag": 344.0,
+   "sink_lag": 1163.0,
+   "radar_lag": 344.0,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": 3.71,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.29,
+     "mem_mib": 110.6
+    },
+    "sink-1": {
+     "cpu_pct": 1.82,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.45,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.3,
+     "mem_mib": 43.1
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.55,
+     "mem_mib": 39.4
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.23,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.62,
+     "mem_mib": 38.4
+    },
+    "redis-1": {
+     "cpu_pct": 0.88,
+     "mem_mib": 12.0
+    },
+    "postgres-1": {
+     "cpu_pct": 2.97,
+     "mem_mib": 57.0
+    },
+    "kafka-1": {
+     "cpu_pct": 27.57,
+     "mem_mib": 480.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.99,
+     "mem_mib": 238.2
+    }
+   }
+  },
+  {
+   "t": 40.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 537.4,
+   "normalizer_msg_s": 564.58,
+   "detector_msg_s": 473.53,
+   "sink_msg_s": 272.35,
+   "radar_msg_s": 448.58,
+   "normalizer_lag": 211.0,
+   "detector_lag": 344.0,
+   "sink_lag": 1163.0,
+   "radar_lag": 344.0,
+   "normalizer_seconds_behind": null,
+   "detector_seconds_behind": null,
+   "sink_seconds_behind": null,
+   "radar_seconds_behind": null,
+   "alerts_per_min": 4.71,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.72,
+     "mem_mib": 111.1
+    },
+    "sink-1": {
+     "cpu_pct": 3.37,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.99,
+     "mem_mib": 76.7
+    },
+    "radar-1": {
+     "cpu_pct": 1.18,
+     "mem_mib": 43.1
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.23,
+     "mem_mib": 39.6
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.1,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.63,
+     "mem_mib": 40.6
+    },
+    "redis-1": {
+     "cpu_pct": 3.49,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 4.29,
+     "mem_mib": 57.3
+    },
+    "kafka-1": {
+     "cpu_pct": 23.28,
+     "mem_mib": 481.5
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.01,
+     "mem_mib": 236.0
+    }
+   }
+  },
+  {
+   "t": 45.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 710.42,
+   "normalizer_msg_s": 735.2,
+   "detector_msg_s": 635.94,
+   "sink_msg_s": 254.16,
+   "radar_msg_s": 623.46,
+   "normalizer_lag": 213.0,
+   "detector_lag": 320.0,
+   "sink_lag": 46.0,
+   "radar_lag": 347.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 4.0,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.85,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 6.32,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.97,
+     "mem_mib": 76.7
+    },
+    "radar-1": {
+     "cpu_pct": 1.33,
+     "mem_mib": 43.1
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.56,
+     "mem_mib": 39.3
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.65,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.5,
+     "mem_mib": 43.4
+    },
+    "redis-1": {
+     "cpu_pct": 4.08,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 3.35,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 32.29,
+     "mem_mib": 489.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 9.38,
+     "mem_mib": 237.8
+    }
+   }
+  },
+  {
+   "t": 50.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 879.35,
+   "normalizer_msg_s": 944.8,
+   "detector_msg_s": 799.75,
+   "sink_msg_s": 431.97,
+   "radar_msg_s": 785.85,
+   "normalizer_lag": 218.0,
+   "detector_lag": 320.0,
+   "sink_lag": 46.0,
+   "radar_lag": 347.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 3.71,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.34,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 11.04,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.35,
+     "mem_mib": 77.5
+    },
+    "radar-1": {
+     "cpu_pct": 1.35,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.37,
+     "mem_mib": 39.6
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.43,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.53,
+     "mem_mib": 37.8
+    },
+    "redis-1": {
+     "cpu_pct": 4.87,
+     "mem_mib": 11.6
+    },
+    "postgres-1": {
+     "cpu_pct": 3.37,
+     "mem_mib": 57.0
+    },
+    "kafka-1": {
+     "cpu_pct": 27.38,
+     "mem_mib": 499.0
+    },
+    "clickhouse-1": {
+     "cpu_pct": 29.63,
+     "mem_mib": 288.8
+    }
+   }
+  },
+  {
+   "t": 55.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.8,
+   "normalizer_msg_s": 1012.52,
+   "detector_msg_s": 989.6,
+   "sink_msg_s": 589.52,
+   "radar_msg_s": 987.88,
+   "normalizer_lag": 248.0,
+   "detector_lag": 327.0,
+   "sink_lag": 948.0,
+   "radar_lag": 346.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 4.73,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.47,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 1.69,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.21,
+     "mem_mib": 77.1
+    },
+    "radar-1": {
+     "cpu_pct": 1.29,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.18,
+     "mem_mib": 39.4
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.05,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.55,
+     "mem_mib": 39.7
+    },
+    "redis-1": {
+     "cpu_pct": 3.51,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 2.9,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 134.79,
+     "mem_mib": 546.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 13.33,
+     "mem_mib": 250.2
+    }
+   }
+  },
+  {
+   "t": 60.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1016.92,
+   "normalizer_msg_s": 1009.08,
+   "detector_msg_s": 991.72,
+   "sink_msg_s": 407.36,
+   "radar_msg_s": 991.16,
+   "normalizer_lag": 275.0,
+   "detector_lag": 327.0,
+   "sink_lag": 948.0,
+   "radar_lag": 346.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 4.6,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.17,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 3.7,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.03,
+     "mem_mib": 77.1
+    },
+    "radar-1": {
+     "cpu_pct": 1.35,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.07,
+     "mem_mib": 39.4
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.03,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 39.7
+    },
+    "redis-1": {
+     "cpu_pct": 3.65,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 3.59,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 23.28,
+     "mem_mib": 495.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.28,
+     "mem_mib": 251.9
+    }
+   }
+  },
+  {
+   "t": 65.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.56,
+   "normalizer_msg_s": 1010.76,
+   "detector_msg_s": 986.36,
+   "sink_msg_s": 412.48,
+   "radar_msg_s": 992.64,
+   "normalizer_lag": 238.0,
+   "detector_lag": 309.0,
+   "sink_lag": 62.0,
+   "radar_lag": 234.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 5.63,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.39,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 5.16,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.51,
+     "mem_mib": 77.1
+    },
+    "radar-1": {
+     "cpu_pct": 1.46,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.68,
+     "mem_mib": 39.6
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.47,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 43.5
+    },
+    "redis-1": {
+     "cpu_pct": 3.94,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 2.88,
+     "mem_mib": 57.4
+    },
+    "kafka-1": {
+     "cpu_pct": 22.87,
+     "mem_mib": 496.0
+    },
+    "clickhouse-1": {
+     "cpu_pct": 15.18,
+     "mem_mib": 257.4
+    }
+   }
+  },
+  {
+   "t": 70.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.64,
+   "normalizer_msg_s": 1011.72,
+   "detector_msg_s": 992.16,
+   "sink_msg_s": 580.88,
+   "radar_msg_s": 984.68,
+   "normalizer_lag": 211.0,
+   "detector_lag": 309.0,
+   "sink_lag": 62.0,
+   "radar_lag": 234.0,
+   "normalizer_seconds_behind": 3.69,
+   "detector_seconds_behind": 7.18,
+   "sink_seconds_behind": 42.24,
+   "radar_seconds_behind": 7.57,
+   "alerts_per_min": 5.55,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.45,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 0.75,
+     "mem_mib": 47.8
+    },
+    "detector-1": {
+     "cpu_pct": 5.58,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.52,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.71,
+     "mem_mib": 39.6
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.15,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 45.2
+    },
+    "redis-1": {
+     "cpu_pct": 4.99,
+     "mem_mib": 11.8
+    },
+    "postgres-1": {
+     "cpu_pct": 2.83,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 23.28,
+     "mem_mib": 510.5
+    },
+    "clickhouse-1": {
+     "cpu_pct": 13.68,
+     "mem_mib": 253.8
+    }
+   }
+  },
+  {
+   "t": 75.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.72,
+   "normalizer_msg_s": 1011.16,
+   "detector_msg_s": 992.48,
+   "sink_msg_s": 578.32,
+   "radar_msg_s": 988.8,
+   "normalizer_lag": 212.0,
+   "detector_lag": 299.0,
+   "sink_lag": 1029.0,
+   "radar_lag": 306.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 5.49,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.47,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 2.24,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.02,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.51,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 5.04,
+     "mem_mib": 39.4
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.56,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.65,
+     "mem_mib": 43.8
+    },
+    "redis-1": {
+     "cpu_pct": 3.22,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 2.77,
+     "mem_mib": 57.4
+    },
+    "kafka-1": {
+     "cpu_pct": 27.73,
+     "mem_mib": 504.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.54,
+     "mem_mib": 257.9
+    }
+   }
+  },
+  {
+   "t": 80.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1023.12,
+   "normalizer_msg_s": 1010.36,
+   "detector_msg_s": 990.0,
+   "sink_msg_s": 408.92,
+   "radar_msg_s": 992.08,
+   "normalizer_lag": 214.0,
+   "detector_lag": 299.0,
+   "sink_lag": 1029.0,
+   "radar_lag": 306.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 5.44,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 10.09,
+     "mem_mib": 110.9
+    },
+    "sink-1": {
+     "cpu_pct": 3.47,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.85,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.31,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.64,
+     "mem_mib": 39.9
+    },
+    "normalizer-2": {
+     "cpu_pct": 5.11,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.59,
+     "mem_mib": 39.2
+    },
+    "redis-1": {
+     "cpu_pct": 3.53,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 3.68,
+     "mem_mib": 57.5
+    },
+    "kafka-1": {
+     "cpu_pct": 220.56,
+     "mem_mib": 598.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.21,
+     "mem_mib": 258.8
+    }
+   }
+  },
+  {
+   "t": 85.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1024.56,
+   "normalizer_msg_s": 1011.24,
+   "detector_msg_s": 995.92,
+   "sink_msg_s": 411.44,
+   "radar_msg_s": 990.44,
+   "normalizer_lag": 210.0,
+   "detector_lag": 335.0,
+   "sink_lag": 95.0,
+   "radar_lag": 291.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 5.45,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.72,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 5.35,
+     "mem_mib": 48.3
+    },
+    "detector-1": {
+     "cpu_pct": 5.97,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.45,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.7,
+     "mem_mib": 39.9
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.35,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.62,
+     "mem_mib": 37.5
+    },
+    "redis-1": {
+     "cpu_pct": 4.18,
+     "mem_mib": 11.8
+    },
+    "postgres-1": {
+     "cpu_pct": 3.2,
+     "mem_mib": 57.3
+    },
+    "kafka-1": {
+     "cpu_pct": 29.44,
+     "mem_mib": 511.0
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.36,
+     "mem_mib": 258.1
+    }
+   }
+  },
+  {
+   "t": 90.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.96,
+   "normalizer_msg_s": 1010.04,
+   "detector_msg_s": 994.16,
+   "sink_msg_s": 570.08,
+   "radar_msg_s": 991.92,
+   "normalizer_lag": 207.0,
+   "detector_lag": 335.0,
+   "sink_lag": 95.0,
+   "radar_lag": 291.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.52,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 5.62,
+     "mem_mib": 48.3
+    },
+    "detector-1": {
+     "cpu_pct": 5.79,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.39,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.42,
+     "mem_mib": 39.4
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.05,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.56,
+     "mem_mib": 41.5
+    },
+    "redis-1": {
+     "cpu_pct": 4.43,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.24,
+     "mem_mib": 58.8
+    },
+    "kafka-1": {
+     "cpu_pct": 21.3,
+     "mem_mib": 512.6
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.09,
+     "mem_mib": 279.5
+    }
+   }
+  },
+  {
+   "t": 95.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1023.68,
+   "normalizer_msg_s": 1010.16,
+   "detector_msg_s": 992.52,
+   "sink_msg_s": 570.72,
+   "radar_msg_s": 986.56,
+   "normalizer_lag": 215.0,
+   "detector_lag": 291.0,
+   "sink_lag": 996.0,
+   "radar_lag": 182.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.12,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 2.29,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.51,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.45,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.56,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.04,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.63,
+     "mem_mib": 41.2
+    },
+    "redis-1": {
+     "cpu_pct": 3.12,
+     "mem_mib": 11.8
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 20.32,
+     "mem_mib": 517.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.15,
+     "mem_mib": 263.0
+    }
+   }
+  },
+  {
+   "t": 100.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.12,
+   "normalizer_msg_s": 1011.0,
+   "detector_msg_s": 993.2,
+   "sink_msg_s": 413.72,
+   "radar_msg_s": 988.16,
+   "normalizer_lag": 219.0,
+   "detector_lag": 291.0,
+   "sink_lag": 996.0,
+   "radar_lag": 182.0,
+   "normalizer_seconds_behind": 1.33,
+   "detector_seconds_behind": 2.1,
+   "sink_seconds_behind": 0.81,
+   "radar_seconds_behind": 1.62,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.14,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 3.25,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.88,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.26,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 5.08,
+     "mem_mib": 39.9
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.63,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 2.74,
+     "mem_mib": 35.3
+    },
+    "redis-1": {
+     "cpu_pct": 3.86,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 1.5,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 23.54,
+     "mem_mib": 522.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.46,
+     "mem_mib": 272.5
+    }
+   }
+  },
+  {
+   "t": 105.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.96,
+   "normalizer_msg_s": 1008.44,
+   "detector_msg_s": 993.08,
+   "sink_msg_s": 410.68,
+   "radar_msg_s": 985.12,
+   "normalizer_lag": 218.0,
+   "detector_lag": 283.0,
+   "sink_lag": 142.0,
+   "radar_lag": 193.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.52,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 4.77,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.67,
+     "mem_mib": 76.9
+    },
+    "radar-1": {
+     "cpu_pct": 1.36,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.72,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.02,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.53,
+     "mem_mib": 41.1
+    },
+    "redis-1": {
+     "cpu_pct": 3.84,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.8
+    },
+    "kafka-1": {
+     "cpu_pct": 111.87,
+     "mem_mib": 523.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.48,
+     "mem_mib": 272.9
+    }
+   }
+  },
+  {
+   "t": 110.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.28,
+   "normalizer_msg_s": 1010.28,
+   "detector_msg_s": 986.6,
+   "sink_msg_s": 575.96,
+   "radar_msg_s": 984.6,
+   "normalizer_lag": 213.0,
+   "detector_lag": 283.0,
+   "sink_lag": 142.0,
+   "radar_lag": 193.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.34,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 5.36,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.67,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.41,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.42,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.31,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.61,
+     "mem_mib": 40.7
+    },
+    "redis-1": {
+     "cpu_pct": 4.2,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.01,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 21.2,
+     "mem_mib": 526.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.82,
+     "mem_mib": 265.5
+    }
+   }
+  },
+  {
+   "t": 115.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.6,
+   "normalizer_msg_s": 1014.92,
+   "detector_msg_s": 990.64,
+   "sink_msg_s": 526.4,
+   "radar_msg_s": 990.32,
+   "normalizer_lag": 202.0,
+   "detector_lag": 335.0,
+   "sink_lag": 1089.0,
+   "radar_lag": 258.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.27,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 2.35,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.96,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.32,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.04,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.05,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.59,
+     "mem_mib": 38.4
+    },
+    "redis-1": {
+     "cpu_pct": 3.08,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.13,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 23.54,
+     "mem_mib": 531.7
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.42,
+     "mem_mib": 269.2
+    }
+   }
+  },
+  {
+   "t": 120.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.12,
+   "normalizer_msg_s": 1009.48,
+   "detector_msg_s": 984.64,
+   "sink_msg_s": 418.84,
+   "radar_msg_s": 992.48,
+   "normalizer_lag": 205.0,
+   "detector_lag": 335.0,
+   "sink_lag": 1089.0,
+   "radar_lag": 258.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 0.0,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.36,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.88,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.84,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.46,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.27,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.73,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 41.9
+    },
+    "redis-1": {
+     "cpu_pct": 3.49,
+     "mem_mib": 12.4
+    },
+    "postgres-1": {
+     "cpu_pct": 0.7,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 26.66,
+     "mem_mib": 536.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 17.17,
+     "mem_mib": 277.3
+    }
+   }
+  },
+  {
+   "t": 125.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1018.8,
+   "normalizer_msg_s": 1011.12,
+   "detector_msg_s": 989.32,
+   "sink_msg_s": 413.4,
+   "radar_msg_s": 989.72,
+   "normalizer_lag": 196.0,
+   "detector_lag": 377.0,
+   "sink_lag": 164.0,
+   "radar_lag": 221.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 1.43,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.62,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 7.0,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 7.02,
+     "mem_mib": 77.2
+    },
+    "radar-1": {
+     "cpu_pct": 1.46,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.87,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.45,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.69,
+     "mem_mib": 41.3
+    },
+    "redis-1": {
+     "cpu_pct": 1.82,
+     "mem_mib": 11.6
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 28.84,
+     "mem_mib": 545.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.12,
+     "mem_mib": 269.6
+    }
+   }
+  },
+  {
+   "t": 130.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.44,
+   "normalizer_msg_s": 1010.72,
+   "detector_msg_s": 996.48,
+   "sink_msg_s": 575.2,
+   "radar_msg_s": 998.56,
+   "normalizer_lag": 187.0,
+   "detector_lag": 377.0,
+   "sink_lag": 164.0,
+   "radar_lag": 221.0,
+   "normalizer_seconds_behind": 0.84,
+   "detector_seconds_behind": 1.18,
+   "sink_seconds_behind": 7.9,
+   "radar_seconds_behind": 0.75,
+   "alerts_per_min": 1.29,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.31,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 5.09,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 7.89,
+     "mem_mib": 77.2
+    },
+    "radar-1": {
+     "cpu_pct": 1.45,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.17,
+     "mem_mib": 39.9
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.82,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.5,
+     "mem_mib": 43.1
+    },
+    "redis-1": {
+     "cpu_pct": 1.9,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 38.28,
+     "mem_mib": 552.0
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.02,
+     "mem_mib": 281.8
+    }
+   }
+  },
+  {
+   "t": 135.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.64,
+   "normalizer_msg_s": 1012.72,
+   "detector_msg_s": 991.04,
+   "sink_msg_s": 522.48,
+   "radar_msg_s": 993.16,
+   "normalizer_lag": 187.0,
+   "detector_lag": 343.0,
+   "sink_lag": 935.0,
+   "radar_lag": 279.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 1.21,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.44,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.11,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.12,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.37,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.15,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.23,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.63,
+     "mem_mib": 43.6
+    },
+    "redis-1": {
+     "cpu_pct": 0.93,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 23.89,
+     "mem_mib": 546.9
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.44,
+     "mem_mib": 275.7
+    }
+   }
+  },
+  {
+   "t": 140.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.4,
+   "normalizer_msg_s": 1006.08,
+   "detector_msg_s": 989.68,
+   "sink_msg_s": 469.88,
+   "radar_msg_s": 989.28,
+   "normalizer_lag": 182.0,
+   "detector_lag": 343.0,
+   "sink_lag": 935.0,
+   "radar_lag": 279.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 1.17,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.89,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.58,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.5,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.44,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.38,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.31,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.66,
+     "mem_mib": 38.0
+    },
+    "redis-1": {
+     "cpu_pct": 0.97,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.74,
+     "mem_mib": 57.4
+    },
+    "kafka-1": {
+     "cpu_pct": 170.02,
+     "mem_mib": 612.6
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.54,
+     "mem_mib": 275.9
+    }
+   }
+  },
+  {
+   "t": 145.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.76,
+   "normalizer_msg_s": 1012.12,
+   "detector_msg_s": 992.52,
+   "sink_msg_s": 416.6,
+   "radar_msg_s": 991.64,
+   "normalizer_lag": 183.0,
+   "detector_lag": 224.0,
+   "sink_lag": 117.0,
+   "radar_lag": 216.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 2.23,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.72,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 3.68,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.65,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.39,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.25,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.13,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.59,
+     "mem_mib": 40.7
+    },
+    "redis-1": {
+     "cpu_pct": 1.57,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 20.01,
+     "mem_mib": 553.5
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.52,
+     "mem_mib": 300.2
+    }
+   }
+  },
+  {
+   "t": 150.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1020.4,
+   "normalizer_msg_s": 1012.08,
+   "detector_msg_s": 994.92,
+   "sink_msg_s": 571.96,
+   "radar_msg_s": 992.72,
+   "normalizer_lag": 187.0,
+   "detector_lag": 224.0,
+   "sink_lag": 213.0,
+   "radar_lag": 216.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 2.21,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.48,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.45,
+     "mem_mib": 47.8
+    },
+    "detector-1": {
+     "cpu_pct": 3.66,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.36,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.89,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.21,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 39.4
+    },
+    "redis-1": {
+     "cpu_pct": 1.06,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 23.25,
+     "mem_mib": 555.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.41,
+     "mem_mib": 276.8
+    }
+   }
+  },
+  {
+   "t": 155.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1020.52,
+   "normalizer_msg_s": 1013.48,
+   "detector_msg_s": 982.92,
+   "sink_msg_s": 527.24,
+   "radar_msg_s": 991.96,
+   "normalizer_lag": 187.0,
+   "detector_lag": 240.0,
+   "sink_lag": 531.0,
+   "radar_lag": 318.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 2.2,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.06,
+     "mem_mib": 110.7
+    },
+    "sink-1": {
+     "cpu_pct": 2.37,
+     "mem_mib": 48.3
+    },
+    "detector-1": {
+     "cpu_pct": 5.11,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.27,
+     "mem_mib": 43.4
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.67,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.52,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 44.5
+    },
+    "redis-1": {
+     "cpu_pct": 0.96,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 18.44,
+     "mem_mib": 558.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.45,
+     "mem_mib": 277.7
+    }
+   }
+  },
+  {
+   "t": 160.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.52,
+   "normalizer_msg_s": 1008.52,
+   "detector_msg_s": 991.52,
+   "sink_msg_s": 468.92,
+   "radar_msg_s": 993.32,
+   "normalizer_lag": 194.0,
+   "detector_lag": 240.0,
+   "sink_lag": 895.0,
+   "radar_lag": 318.0,
+   "normalizer_seconds_behind": 0.52,
+   "detector_seconds_behind": 1.09,
+   "sink_seconds_behind": 0.94,
+   "radar_seconds_behind": 0.64,
+   "alerts_per_min": 4.4,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.03,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.69,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.81,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.12,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.25,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.48,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.58,
+     "mem_mib": 44.5
+    },
+    "redis-1": {
+     "cpu_pct": 1.24,
+     "mem_mib": 11.7
+    },
+    "postgres-1": {
+     "cpu_pct": 0.73,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 20.36,
+     "mem_mib": 561.0
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.96,
+     "mem_mib": 280.8
+    }
+   }
+  },
+  {
+   "t": 165.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1019.56,
+   "normalizer_msg_s": 1010.44,
+   "detector_msg_s": 988.56,
+   "sink_msg_s": 419.12,
+   "radar_msg_s": 992.48,
+   "normalizer_lag": 228.0,
+   "detector_lag": 246.0,
+   "sink_lag": 115.0,
+   "radar_lag": 213.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 4.37,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 7.88,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 5.05,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.47,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.17,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.89,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.85,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.52,
+     "mem_mib": 45.6
+    },
+    "redis-1": {
+     "cpu_pct": 1.71,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.17,
+     "mem_mib": 57.0
+    },
+    "kafka-1": {
+     "cpu_pct": 208.03,
+     "mem_mib": 675.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.24,
+     "mem_mib": 279.4
+    }
+   }
+  },
+  {
+   "t": 170.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1020.36,
+   "normalizer_msg_s": 1008.76,
+   "detector_msg_s": 989.36,
+   "sink_msg_s": 571.04,
+   "radar_msg_s": 992.08,
+   "normalizer_lag": 228.0,
+   "detector_lag": 246.0,
+   "sink_lag": 336.0,
+   "radar_lag": 213.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 5.46,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.34,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 0.95,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 10.09,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.43,
+     "mem_mib": 43.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.89,
+     "mem_mib": 39.9
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.24,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 43.7
+    },
+    "redis-1": {
+     "cpu_pct": 0.58,
+     "mem_mib": 11.7
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 21.82,
+     "mem_mib": 569.5
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.04,
+     "mem_mib": 283.3
+    }
+   }
+  },
+  {
+   "t": 175.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.64,
+   "normalizer_msg_s": 1007.72,
+   "detector_msg_s": 982.08,
+   "sink_msg_s": 531.32,
+   "radar_msg_s": 988.32,
+   "normalizer_lag": 212.0,
+   "detector_lag": 251.0,
+   "sink_lag": 233.0,
+   "radar_lag": 227.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 5.44,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.04,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 2.46,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.24,
+     "mem_mib": 77.3
+    },
+    "radar-1": {
+     "cpu_pct": 1.36,
+     "mem_mib": 43.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 5.02,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.48,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 44.8
+    },
+    "redis-1": {
+     "cpu_pct": 1.04,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 21.39,
+     "mem_mib": 572.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.46,
+     "mem_mib": 285.6
+    }
+   }
+  },
+  {
+   "t": 180.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1019.88,
+   "normalizer_msg_s": 1008.88,
+   "detector_msg_s": 992.04,
+   "sink_msg_s": 466.08,
+   "radar_msg_s": 984.88,
+   "normalizer_lag": 194.0,
+   "detector_lag": 251.0,
+   "sink_lag": 810.0,
+   "radar_lag": 227.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.31,
+     "mem_mib": 110.8
+    },
+    "sink-1": {
+     "cpu_pct": 0.92,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 11.62,
+     "mem_mib": 76.5
+    },
+    "radar-1": {
+     "cpu_pct": 1.4,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 5.02,
+     "mem_mib": 40.0
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.88,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.55,
+     "mem_mib": 41.6
+    },
+    "redis-1": {
+     "cpu_pct": 0.61,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.74,
+     "mem_mib": 57.0
+    },
+    "kafka-1": {
+     "cpu_pct": 23.55,
+     "mem_mib": 576.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.78,
+     "mem_mib": 283.4
+    }
+   }
+  },
+  {
+   "t": 185.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1019.72,
+   "normalizer_msg_s": 1011.08,
+   "detector_msg_s": 987.2,
+   "sink_msg_s": 420.84,
+   "radar_msg_s": 991.04,
+   "normalizer_lag": 181.0,
+   "detector_lag": 309.0,
+   "sink_lag": 134.0,
+   "radar_lag": 287.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.19,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 4.84,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.31,
+     "mem_mib": 76.4
+    },
+    "radar-1": {
+     "cpu_pct": 1.29,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.2,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.06,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 42.6
+    },
+    "redis-1": {
+     "cpu_pct": 1.65,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 19.37,
+     "mem_mib": 581.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.38,
+     "mem_mib": 280.1
+    }
+   }
+  },
+  {
+   "t": 190.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1016.48,
+   "normalizer_msg_s": 1014.88,
+   "detector_msg_s": 994.04,
+   "sink_msg_s": 566.08,
+   "radar_msg_s": 990.4,
+   "normalizer_lag": 178.0,
+   "detector_lag": 309.0,
+   "sink_lag": 376.0,
+   "radar_lag": 287.0,
+   "normalizer_seconds_behind": 0.42,
+   "detector_seconds_behind": 0.54,
+   "sink_seconds_behind": 3.98,
+   "radar_seconds_behind": 0.72,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.76,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 0.95,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 9.99,
+     "mem_mib": 77.7
+    },
+    "radar-1": {
+     "cpu_pct": 1.5,
+     "mem_mib": 43.3
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.35,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.44,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.57,
+     "mem_mib": 41.0
+    },
+    "redis-1": {
+     "cpu_pct": 0.54,
+     "mem_mib": 11.7
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 80.4,
+     "mem_mib": 585.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.92,
+     "mem_mib": 310.8
+    }
+   }
+  },
+  {
+   "t": 195.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1019.08,
+   "normalizer_msg_s": 1009.88,
+   "detector_msg_s": 990.92,
+   "sink_msg_s": 526.08,
+   "radar_msg_s": 990.92,
+   "normalizer_lag": 206.0,
+   "detector_lag": 320.0,
+   "sink_lag": 215.0,
+   "radar_lag": 347.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.24,
+     "mem_mib": 110.8
+    },
+    "sink-1": {
+     "cpu_pct": 2.42,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.03,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.41,
+     "mem_mib": 43.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.41,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.13,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.6,
+     "mem_mib": 46.0
+    },
+    "redis-1": {
+     "cpu_pct": 1.05,
+     "mem_mib": 12.3
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 19.38,
+     "mem_mib": 586.8
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.23,
+     "mem_mib": 286.9
+    }
+   }
+  },
+  {
+   "t": 200.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.48,
+   "normalizer_msg_s": 1011.52,
+   "detector_msg_s": 992.64,
+   "sink_msg_s": 461.8,
+   "radar_msg_s": 990.64,
+   "normalizer_lag": 219.0,
+   "detector_lag": 320.0,
+   "sink_lag": 788.0,
+   "radar_lag": 347.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.63,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 1.14,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 8.49,
+     "mem_mib": 77.3
+    },
+    "radar-1": {
+     "cpu_pct": 1.53,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.41,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.59,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.62,
+     "mem_mib": 40.1
+    },
+    "redis-1": {
+     "cpu_pct": 0.63,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 0.77,
+     "mem_mib": 57.0
+    },
+    "kafka-1": {
+     "cpu_pct": 57.95,
+     "mem_mib": 608.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.76,
+     "mem_mib": 287.6
+    }
+   }
+  },
+  {
+   "t": 205.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1017.68,
+   "normalizer_msg_s": 1015.48,
+   "detector_msg_s": 988.88,
+   "sink_msg_s": 425.28,
+   "radar_msg_s": 989.16,
+   "normalizer_lag": 200.0,
+   "detector_lag": 290.0,
+   "sink_lag": 39.0,
+   "radar_lag": 339.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.93,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 4.86,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.7,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.26,
+     "mem_mib": 43.3
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.46,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.41,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.7,
+     "mem_mib": 39.2
+    },
+    "redis-1": {
+     "cpu_pct": 1.74,
+     "mem_mib": 11.7
+    },
+    "postgres-1": {
+     "cpu_pct": 0.02,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 19.46,
+     "mem_mib": 593.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.16,
+     "mem_mib": 286.2
+    }
+   }
+  },
+  {
+   "t": 210.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.08,
+   "normalizer_msg_s": 1008.08,
+   "detector_msg_s": 993.16,
+   "sink_msg_s": 562.32,
+   "radar_msg_s": 989.04,
+   "normalizer_lag": 203.0,
+   "detector_lag": 290.0,
+   "sink_lag": 372.0,
+   "radar_lag": 339.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 4.36,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.64,
+     "mem_mib": 111.3
+    },
+    "sink-1": {
+     "cpu_pct": 0.87,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 8.3,
+     "mem_mib": 77.3
+    },
+    "radar-1": {
+     "cpu_pct": 1.2,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.9,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.46,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.48,
+     "mem_mib": 39.5
+    },
+    "redis-1": {
+     "cpu_pct": 0.54,
+     "mem_mib": 12.2
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 18.41,
+     "mem_mib": 601.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.82,
+     "mem_mib": 290.7
+    }
+   }
+  },
+  {
+   "t": 215.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1024.32,
+   "normalizer_msg_s": 1004.68,
+   "detector_msg_s": 991.92,
+   "sink_msg_s": 533.84,
+   "radar_msg_s": 988.04,
+   "normalizer_lag": 211.0,
+   "detector_lag": 240.0,
+   "sink_lag": 107.0,
+   "radar_lag": 297.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.57,
+     "mem_mib": 111.1
+    },
+    "sink-1": {
+     "cpu_pct": 2.27,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.93,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.25,
+     "mem_mib": 43.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.64,
+     "mem_mib": 40.0
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.23,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.66,
+     "mem_mib": 43.0
+    },
+    "redis-1": {
+     "cpu_pct": 0.98,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 56.9
+    },
+    "kafka-1": {
+     "cpu_pct": 17.48,
+     "mem_mib": 600.5
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.1,
+     "mem_mib": 293.6
+    }
+   }
+  },
+  {
+   "t": 220.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.96,
+   "normalizer_msg_s": 1011.4,
+   "detector_msg_s": 991.16,
+   "sink_msg_s": 462.4,
+   "radar_msg_s": 990.08,
+   "normalizer_lag": 216.0,
+   "detector_lag": 240.0,
+   "sink_lag": 549.0,
+   "radar_lag": 297.0,
+   "normalizer_seconds_behind": 0.32,
+   "detector_seconds_behind": 0.57,
+   "sink_seconds_behind": 1.37,
+   "radar_seconds_behind": 0.53,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.86,
+     "mem_mib": 110.8
+    },
+    "sink-1": {
+     "cpu_pct": 0.81,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 7.17,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 3.35,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.76,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.47,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.24,
+     "mem_mib": 44.3
+    },
+    "redis-1": {
+     "cpu_pct": 0.52,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.6,
+     "mem_mib": 57.3
+    },
+    "kafka-1": {
+     "cpu_pct": 17.78,
+     "mem_mib": 603.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.43,
+     "mem_mib": 288.8
+    }
+   }
+  },
+  {
+   "t": 225.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1023.48,
+   "normalizer_msg_s": 1004.6,
+   "detector_msg_s": 990.12,
+   "sink_msg_s": 429.4,
+   "radar_msg_s": 992.64,
+   "normalizer_lag": 215.0,
+   "detector_lag": 231.0,
+   "sink_lag": 0.0,
+   "radar_lag": 291.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.96,
+     "mem_mib": 111.1
+    },
+    "sink-1": {
+     "cpu_pct": 3.87,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.17,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.28,
+     "mem_mib": 43.3
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.13,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.47,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.58,
+     "mem_mib": 41.1
+    },
+    "redis-1": {
+     "cpu_pct": 1.57,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.0,
+     "mem_mib": 57.1
+    },
+    "kafka-1": {
+     "cpu_pct": 208.04,
+     "mem_mib": 686.7
+    },
+    "clickhouse-1": {
+     "cpu_pct": 9.62,
+     "mem_mib": 293.6
+    }
+   }
+  },
+  {
+   "t": 230.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1027.84,
+   "normalizer_msg_s": 1007.6,
+   "detector_msg_s": 988.44,
+   "sink_msg_s": 560.32,
+   "radar_msg_s": 992.44,
+   "normalizer_lag": 201.0,
+   "detector_lag": 231.0,
+   "sink_lag": 435.0,
+   "radar_lag": 291.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.88,
+     "mem_mib": 111.1
+    },
+    "sink-1": {
+     "cpu_pct": 0.88,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 8.14,
+     "mem_mib": 77.3
+    },
+    "radar-1": {
+     "cpu_pct": 1.29,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 5.33,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.95,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 41.5
+    },
+    "redis-1": {
+     "cpu_pct": 0.62,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.27,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 22.46,
+     "mem_mib": 611.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.73,
+     "mem_mib": 298.9
+    }
+   }
+  },
+  {
+   "t": 235.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1026.44,
+   "normalizer_msg_s": 1008.16,
+   "detector_msg_s": 989.24,
+   "sink_msg_s": 535.32,
+   "radar_msg_s": 991.16,
+   "normalizer_lag": 183.0,
+   "detector_lag": 360.0,
+   "sink_lag": 85.0,
+   "radar_lag": 339.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 10.22,
+     "mem_mib": 111.4
+    },
+    "sink-1": {
+     "cpu_pct": 2.53,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.06,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.39,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.57,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.48,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.65,
+     "mem_mib": 38.9
+    },
+    "redis-1": {
+     "cpu_pct": 1.03,
+     "mem_mib": 11.9
+    },
+    "postgres-1": {
+     "cpu_pct": 0.1,
+     "mem_mib": 57.3
+    },
+    "kafka-1": {
+     "cpu_pct": 20.14,
+     "mem_mib": 614.9
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.51,
+     "mem_mib": 291.4
+    }
+   }
+  },
+  {
+   "t": 240.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.32,
+   "normalizer_msg_s": 1012.6,
+   "detector_msg_s": 985.88,
+   "sink_msg_s": 455.76,
+   "radar_msg_s": 989.68,
+   "normalizer_lag": 187.0,
+   "detector_lag": 360.0,
+   "sink_lag": 553.0,
+   "radar_lag": 339.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.64,
+     "mem_mib": 111.1
+    },
+    "sink-1": {
+     "cpu_pct": 1.08,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 8.22,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.22,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.83,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.07,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 37.6
+    },
+    "redis-1": {
+     "cpu_pct": 0.67,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.81,
+     "mem_mib": 57.3
+    },
+    "kafka-1": {
+     "cpu_pct": 18.4,
+     "mem_mib": 617.1
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.35,
+     "mem_mib": 295.6
+    }
+   }
+  },
+  {
+   "t": 245.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.44,
+   "normalizer_msg_s": 1006.32,
+   "detector_msg_s": 988.4,
+   "sink_msg_s": 434.16,
+   "radar_msg_s": 985.44,
+   "normalizer_lag": 195.0,
+   "detector_lag": 266.0,
+   "sink_lag": 121.0,
+   "radar_lag": 362.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 1.09,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.58,
+     "mem_mib": 111.4
+    },
+    "sink-1": {
+     "cpu_pct": 4.88,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.07,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.33,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.84,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.64,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 43.0
+    },
+    "redis-1": {
+     "cpu_pct": 1.78,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.11,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 24.11,
+     "mem_mib": 621.6
+    },
+    "clickhouse-1": {
+     "cpu_pct": 27.24,
+     "mem_mib": 333.5
+    }
+   }
+  },
+  {
+   "t": 250.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.08,
+   "normalizer_msg_s": 1010.28,
+   "detector_msg_s": 989.16,
+   "sink_msg_s": 554.88,
+   "radar_msg_s": 986.72,
+   "normalizer_lag": 201.0,
+   "detector_lag": 266.0,
+   "sink_lag": 567.0,
+   "radar_lag": 362.0,
+   "normalizer_seconds_behind": 0.33,
+   "detector_seconds_behind": 0.37,
+   "sink_seconds_behind": 1.7,
+   "radar_seconds_behind": 0.46,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.94,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 0.77,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 9.14,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.2,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.14,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.39,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.47,
+     "mem_mib": 39.0
+    },
+    "redis-1": {
+     "cpu_pct": 0.57,
+     "mem_mib": 12.5
+    },
+    "postgres-1": {
+     "cpu_pct": 0.15,
+     "mem_mib": 57.4
+    },
+    "kafka-1": {
+     "cpu_pct": 116.65,
+     "mem_mib": 624.9
+    },
+    "clickhouse-1": {
+     "cpu_pct": 9.9,
+     "mem_mib": 295.0
+    }
+   }
+  },
+  {
+   "t": 255.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.68,
+   "normalizer_msg_s": 1000.68,
+   "detector_msg_s": 994.48,
+   "sink_msg_s": 534.0,
+   "radar_msg_s": 986.36,
+   "normalizer_lag": 209.0,
+   "detector_lag": 325.0,
+   "sink_lag": 227.0,
+   "radar_lag": 258.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.93,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 2.71,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.87,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.37,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.33,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.28,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.61,
+     "mem_mib": 45.2
+    },
+    "redis-1": {
+     "cpu_pct": 1.39,
+     "mem_mib": 12.3
+    },
+    "postgres-1": {
+     "cpu_pct": 0.14,
+     "mem_mib": 57.5
+    },
+    "kafka-1": {
+     "cpu_pct": 19.1,
+     "mem_mib": 628.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 13.0,
+     "mem_mib": 296.7
+    }
+   }
+  },
+  {
+   "t": 260.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.04,
+   "normalizer_msg_s": 1009.36,
+   "detector_msg_s": 987.96,
+   "sink_msg_s": 456.0,
+   "radar_msg_s": 987.12,
+   "normalizer_lag": 201.0,
+   "detector_lag": 325.0,
+   "sink_lag": 500.0,
+   "radar_lag": 258.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 2.18,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.06,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 1.42,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 7.17,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.21,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.29,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.83,
+     "mem_mib": 40.2
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.74,
+     "mem_mib": 35.9
+    },
+    "redis-1": {
+     "cpu_pct": 0.71,
+     "mem_mib": 12.4
+    },
+    "postgres-1": {
+     "cpu_pct": 0.74,
+     "mem_mib": 57.5
+    },
+    "kafka-1": {
+     "cpu_pct": 28.32,
+     "mem_mib": 633.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 12.51,
+     "mem_mib": 295.9
+    }
+   }
+  },
+  {
+   "t": 265.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1024.6,
+   "normalizer_msg_s": 1007.1,
+   "detector_msg_s": 989.68,
+   "sink_msg_s": 438.48,
+   "radar_msg_s": 984.68,
+   "normalizer_lag": 201.0,
+   "detector_lag": 268.0,
+   "sink_lag": 203.0,
+   "radar_lag": 270.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 3.29,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.37,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 5.14,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 6.54,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.25,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.35,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.95,
+     "mem_mib": 40.0
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.64,
+     "mem_mib": 40.1
+    },
+    "redis-1": {
+     "cpu_pct": 1.93,
+     "mem_mib": 12.0
+    },
+    "postgres-1": {
+     "cpu_pct": 0.09,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 19.92,
+     "mem_mib": 635.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.78,
+     "mem_mib": 302.0
+    }
+   }
+  },
+  {
+   "t": 270.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.52,
+   "normalizer_msg_s": 1011.64,
+   "detector_msg_s": 992.48,
+   "sink_msg_s": 553.2,
+   "radar_msg_s": 992.68,
+   "normalizer_lag": 198.0,
+   "detector_lag": 268.0,
+   "sink_lag": 643.0,
+   "radar_lag": 270.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 3.28,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 7.61,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 1.68,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 8.78,
+     "mem_mib": 77.1
+    },
+    "radar-1": {
+     "cpu_pct": 0.99,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 3.79,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.95,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.66,
+     "mem_mib": 41.0
+    },
+    "redis-1": {
+     "cpu_pct": 0.8,
+     "mem_mib": 12.0
+    },
+    "postgres-1": {
+     "cpu_pct": 0.1,
+     "mem_mib": 57.5
+    },
+    "kafka-1": {
+     "cpu_pct": 18.53,
+     "mem_mib": 638.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.56,
+     "mem_mib": 304.3
+    }
+   }
+  },
+  {
+   "t": 275.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1023.32,
+   "normalizer_msg_s": 1011.6,
+   "detector_msg_s": 989.72,
+   "sink_msg_s": 536.04,
+   "radar_msg_s": 987.44,
+   "normalizer_lag": 198.0,
+   "detector_lag": 233.0,
+   "sink_lag": 390.0,
+   "radar_lag": 274.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.66,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 2.55,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 4.55,
+     "mem_mib": 77.1
+    },
+    "radar-1": {
+     "cpu_pct": 1.31,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.47,
+     "mem_mib": 39.7
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.37,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.61,
+     "mem_mib": 44.6
+    },
+    "redis-1": {
+     "cpu_pct": 1.05,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.15,
+     "mem_mib": 57.5
+    },
+    "kafka-1": {
+     "cpu_pct": 20.72,
+     "mem_mib": 641.7
+    },
+    "clickhouse-1": {
+     "cpu_pct": 10.04,
+     "mem_mib": 304.2
+    }
+   }
+  },
+  {
+   "t": 280.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1021.24,
+   "normalizer_msg_s": 1017.8,
+   "detector_msg_s": 988.68,
+   "sink_msg_s": 455.32,
+   "radar_msg_s": 992.4,
+   "normalizer_lag": 203.0,
+   "detector_lag": 233.0,
+   "sink_lag": 394.0,
+   "radar_lag": 274.0,
+   "normalizer_seconds_behind": 0.26,
+   "detector_seconds_behind": 0.36,
+   "sink_seconds_behind": 1.52,
+   "radar_seconds_behind": 0.49,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.91,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 1.14,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.63,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.16,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.16,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.0,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.74,
+     "mem_mib": 39.6
+    },
+    "redis-1": {
+     "cpu_pct": 0.7,
+     "mem_mib": 12.6
+    },
+    "postgres-1": {
+     "cpu_pct": 0.68,
+     "mem_mib": 57.6
+    },
+    "kafka-1": {
+     "cpu_pct": 17.14,
+     "mem_mib": 645.7
+    },
+    "clickhouse-1": {
+     "cpu_pct": 9.99,
+     "mem_mib": 301.8
+    }
+   }
+  },
+  {
+   "t": 285.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1022.8,
+   "normalizer_msg_s": 1012.56,
+   "detector_msg_s": 996.44,
+   "sink_msg_s": 440.2,
+   "radar_msg_s": 991.52,
+   "normalizer_lag": 203.0,
+   "detector_lag": 246.0,
+   "sink_lag": 284.0,
+   "radar_lag": 301.0,
+   "normalizer_seconds_behind": 0.23,
+   "detector_seconds_behind": 0.28,
+   "sink_seconds_behind": 0.93,
+   "radar_seconds_behind": 0.33,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.87,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 4.67,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.41,
+     "mem_mib": 77.0
+    },
+    "radar-1": {
+     "cpu_pct": 1.28,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.62,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 3.92,
+     "mem_mib": 39.9
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.63,
+     "mem_mib": 41.9
+    },
+    "redis-1": {
+     "cpu_pct": 1.72,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.1,
+     "mem_mib": 57.2
+    },
+    "kafka-1": {
+     "cpu_pct": 199.62,
+     "mem_mib": 724.4
+    },
+    "clickhouse-1": {
+     "cpu_pct": 13.13,
+     "mem_mib": 306.8
+    }
+   }
+  },
+  {
+   "t": 290.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1020.64,
+   "normalizer_msg_s": 1011.98,
+   "detector_msg_s": 986.8,
+   "sink_msg_s": 547.84,
+   "radar_msg_s": 994.04,
+   "normalizer_lag": 254.0,
+   "detector_lag": 246.0,
+   "sink_lag": 704.0,
+   "radar_lag": 301.0,
+   "normalizer_seconds_behind": 0.23,
+   "detector_seconds_behind": 0.28,
+   "sink_seconds_behind": 0.93,
+   "radar_seconds_behind": 0.33,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 9.49,
+     "mem_mib": 111.2
+    },
+    "sink-1": {
+     "cpu_pct": 3.29,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 3.1,
+     "mem_mib": 77.3
+    },
+    "radar-1": {
+     "cpu_pct": 1.19,
+     "mem_mib": 43.5
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.56,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.29,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.69,
+     "mem_mib": 43.8
+    },
+    "redis-1": {
+     "cpu_pct": 1.23,
+     "mem_mib": 12.0
+    },
+    "postgres-1": {
+     "cpu_pct": 0.1,
+     "mem_mib": 57.7
+    },
+    "kafka-1": {
+     "cpu_pct": 19.39,
+     "mem_mib": 652.2
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.5,
+     "mem_mib": 305.2
+    }
+   }
+  },
+  {
+   "t": 295.1,
+   "target_ev_s": 1000.0,
+   "delivered_ev_s": 1023.6,
+   "normalizer_msg_s": 1010.16,
+   "detector_msg_s": 989.8,
+   "sink_msg_s": 540.84,
+   "radar_msg_s": 990.0,
+   "normalizer_lag": 254.0,
+   "detector_lag": 235.0,
+   "sink_lag": 533.0,
+   "radar_lag": 255.0,
+   "normalizer_seconds_behind": 0.23,
+   "detector_seconds_behind": 0.28,
+   "sink_seconds_behind": 0.93,
+   "radar_seconds_behind": 0.33,
+   "alerts_per_min": 3.27,
+   "docker": {
+    "simulator-1": {
+     "cpu_pct": 8.63,
+     "mem_mib": 111.0
+    },
+    "sink-1": {
+     "cpu_pct": 3.14,
+     "mem_mib": 48.1
+    },
+    "detector-1": {
+     "cpu_pct": 5.32,
+     "mem_mib": 77.4
+    },
+    "radar-1": {
+     "cpu_pct": 1.42,
+     "mem_mib": 43.2
+    },
+    "normalizer-1": {
+     "cpu_pct": 4.72,
+     "mem_mib": 39.5
+    },
+    "normalizer-2": {
+     "cpu_pct": 4.74,
+     "mem_mib": 39.7
+    },
+    "prometheus-1": {
+     "cpu_pct": 0.6,
+     "mem_mib": 40.0
+    },
+    "redis-1": {
+     "cpu_pct": 1.23,
+     "mem_mib": 12.1
+    },
+    "postgres-1": {
+     "cpu_pct": 0.49,
+     "mem_mib": 57.6
+    },
+    "kafka-1": {
+     "cpu_pct": 19.64,
+     "mem_mib": 655.3
+    },
+    "clickhouse-1": {
+     "cpu_pct": 11.56,
+     "mem_mib": 308.4
+    }
+   }
+  }
+ ]
+}

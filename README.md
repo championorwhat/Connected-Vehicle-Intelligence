@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M13 (testing) and M15 (SQL optimisation) complete; M14 and M16 are next. See [milestones](#milestones).
+**Status:** M0–M15 complete; M16 (cloud) and M17–M19 (docs, demo, audit) remain. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -431,7 +431,36 @@ The slowest queries were **measured**, not guessed.
 - **Dependabot** now groups minor and patch updates and ignores majors. A major bump
   needs a deliberate migration.
 
-## 19. Repository structure
+## 19. Load tests (M14)
+
+[Load tests](docs/performance/load-tests.md): 10K, 50K and 100K vehicles, a capacity
+ramp, a burst, a 30-minute soak and 40 concurrent dashboard users. All measured on a
+**4-vCPU Linux container, not the target Mac** (the Mac is NOT YET MEASURED).
+
+| Fleet | Critical alert latency p50 / p95 / p99 | CPU (of 4) | Verdict |
+|---|---|---|---|
+| 10K vehicles | 0.52 / 1.23 / 1.85 s | 0.9 | sustained |
+| 50K vehicles | 0.55 / 1.57 / 1.92 s | 1.9 | sustained |
+| **100K vehicles** (the brief) | **0.62 / 1.78 / 2.84 s** | 2.9 | sustained, 3.1 GiB |
+| 100K at 1.5× rate (15K events/s) | 0.70 / 1.79 / 2.57 s | 3.5 | at the limit of this machine |
+| 100K at 2× rate (20K events/s) | 18 / 29 / 30 s | 3.8 | not sustained (CPU saturated) |
+
+- **Soak:** 30 minutes at 100K vehicles with every stage current, flat detector memory
+  (295–305 MB) and bounded disk use.
+- **API under load:** 40 users during the 100K run; p95 of 63–82 ms on every route;
+  0 errors.
+- **Burst:** the backlog peaked at 587K messages (43 s behind, inside the 60 s SLO) and
+  drained 50 s after input returned to normal.
+- **Found and fixed:**
+  - The detector crash-looped at 100K vehicles: it was OOM-killed at its 512 MB limit,
+    because each vehicle's state held a whole event. Per-vehicle state is now 54 %
+    smaller, and a new `ServiceRestarting` alert catches crash loops.
+  - A login burst froze the API: password hashing ran on the event loop, and logins held
+    database connections while they waited. The summary p99 went from 9.9 s to 133 ms.
+  - Kafka filled the disk: 1 GB default segments defeat retention. Telemetry topics now
+    use 128 MB segments.
+
+## 20. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -463,9 +492,10 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ✅ Done ([SLOs](docs/observability/slo.md), [drill](docs/observability/drills.md), [ADR-009](docs/architecture/adr/ADR-009.md)) |
 | M12 | Security and privacy: STRIDE, row-level security, erasure workflow, headers, scan gate | ✅ Done ([threat model](docs/security/threat-model.md), [privacy](docs/security/privacy.md), [ADR-010](docs/architecture/adr/ADR-010.md)) |
 | M13 | Testing: coverage, contract, BDD, chaos | ✅ Done ([strategy](docs/testing/strategy.md), [drills](docs/observability/drills.md)) |
-| M14 | Performance: 10K / 50K / 100K / burst / soak | ⏭ Next |
+| M14 | Performance: 10K / 50K / 100K / burst / soak | ✅ Done ([load tests](docs/performance/load-tests.md)); on a 4-vCPU Linux container, not the Mac |
 | M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
-| M16–M19 | See the M0 document | Planned |
+| M16 | Cloud deployment (Helm + Terraform) | ⏭ Next |
+| M17–M19 | Documentation, demo, final audit | Planned |
 
 ## Declarations
 

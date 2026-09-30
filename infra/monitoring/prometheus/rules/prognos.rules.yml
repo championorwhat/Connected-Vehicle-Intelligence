@@ -217,3 +217,11 @@ groups:
         annotations:
           summary: "{{ $labels.job }} ({{ $labels.instance }}) is not reachable"
           runbook: docs/observability/runbooks.md#target-down
+      - alert: ServiceRestarting
+        # A crash loop (e.g. OOM-killed at its memory limit) keeps `up` mostly 1, so
+        # ServiceDown and TargetDown stay quiet. Found in the M14 100K-vehicle load test.
+        expr: changes(process_start_time_seconds{job!="prometheus"}[15m]) > 2
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.job }} ({{ $labels.instance }}) restarted {{ $value }} times in 15 minutes"
+          runbook: docs/observability/runbooks.md#restarting
