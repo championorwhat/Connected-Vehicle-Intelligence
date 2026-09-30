@@ -16,7 +16,7 @@ jobs:
     name: lint, typecheck, unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -37,7 +37,7 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -52,7 +52,7 @@ jobs:
     name: integration (Testcontainers)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -68,7 +68,7 @@ jobs:
     name: compose validate + smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: cp .env.example .env
       - run: docker compose config --quiet
       - run: docker compose -f docker-compose.yml -f infra/docker/compose.kafka-ha.yml config --quiet
