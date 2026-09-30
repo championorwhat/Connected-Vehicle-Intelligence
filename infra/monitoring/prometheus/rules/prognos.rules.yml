@@ -1,0 +1,219 @@
+# Prognos SLOs and alerts. Definitions and rationale: docs/observability/slo.md.
+# Unit tests: infra/monitoring/prometheus/tests/prognos.test.yml (promtool test rules).
+#
+# Burn-rate alerts follow the multi-window, multi-burn-rate method (Google SRE
+# Workbook, "Alerting on SLOs"): page when the error budget burns fast over both a
+# long and a short window (fast AND still happening), ticket on slow burns.
+groups:
+  # ---------------------------------------------------------------- recording rules
+  - name: prognos-sli
+    interval: 30s
+    rules:
+      # API availability: share of requests that did not fail on the server side.
+      # `or vector(0)`: with no 5xx at all the numerator has no series, not a zero.
+      - record: prognos:api_errors:ratio_rate5m
+        expr: |
+          (sum(rate(prognos_api_requests_total{status=~"5.."}[5m])) or vector(0))
+          / clamp_min(sum(rate(prognos_api_requests_total[5m])), 1e-9)
+      - record: prognos:api_errors:ratio_rate30m
+        expr: |
+          (sum(rate(prognos_api_requests_total{status=~"5.."}[30m])) or vector(0))
+          / clamp_min(sum(rate(prognos_api_requests_total[30m])), 1e-9)
+      - record: prognos:api_errors:ratio_rate1h
+        expr: |
+          (sum(rate(prognos_api_requests_total{status=~"5.."}[1h])) or vector(0))
+          / clamp_min(sum(rate(prognos_api_requests_total[1h])), 1e-9)
+      - record: prognos:api_errors:ratio_rate6h
+        expr: |
+          (sum(rate(prognos_api_requests_total{status=~"5.."}[6h])) or vector(0))
+          / clamp_min(sum(rate(prognos_api_requests_total[6h])), 1e-9)
+
+      # Critical alert latency: share of opened alerts slower than 5 s end to end
+      # (device timestamp -> alert raised). The brief's target is < 5 s.
+      - record: prognos:alert_latency_slow:ratio_rate5m
+        expr: |
+          1 - (
+            sum(rate(prognos_detector_alert_latency_seconds_bucket{le="5.0"}[5m]))
+            / clamp_min(sum(rate(prognos_detector_alert_latency_seconds_count[5m])), 1e-9)
+          )
+      - record: prognos:alert_latency_slow:ratio_rate1h
+        expr: |
+          1 - (
+            sum(rate(prognos_detector_alert_latency_seconds_bucket{le="5.0"}[1h]))
+            / clamp_min(sum(rate(prognos_detector_alert_latency_seconds_count[1h])), 1e-9)
+          )
+
+      # Freshness: how many seconds of traffic each consumer group is behind
+      # (messages waiting / messages processed per second).
+      - record: prognos:stream_seconds_behind
+        expr: |
+          sum by (service) (prognos_stream_consumer_lag)
+          / clamp_min(sum by (service) (rate(prognos_stream_consumed_total[5m])), 1)
+
+      # Data quality: share of raw messages quarantined in the DLQ.
+      - record: prognos:dlq:ratio_rate10m
+        expr: |
+          sum(rate(prognos_normalizer_dlq_total[10m]))
+          / clamp_min(
+              sum(rate(prognos_normalizer_dlq_total[10m]))
+              + sum(rate(prognos_normalizer_outcomes_total{kind="canonical"}[10m])), 1e-9)
+
+  # ---------------------------------------------------------------- SLO alerts
+  - name: prognos-slo
+    rules:
+      # API availability SLO 99.5 % / 30 days -> error budget 0.5 %.
+      - alert: ApiErrorBudgetFastBurn
+        expr: |
+          prognos:api_errors:ratio_rate1h > (14.4 * 0.005)
+          and prognos:api_errors:ratio_rate5m > (14.4 * 0.005)
+        labels: { severity: page, slo: api-availability }
+        annotations:
+          summary: "API is burning its 30-day error budget 14x too fast (2% of budget per hour)"
+          runbook: docs/observability/runbooks.md#api-errors
+      - alert: ApiErrorBudgetSlowBurn
+        expr: |
+          prognos:api_errors:ratio_rate6h > (6 * 0.005)
+          and prognos:api_errors:ratio_rate30m > (6 * 0.005)
+        labels: { severity: ticket, slo: api-availability }
+        annotations:
+          summary: "API error rate will exhaust the monthly budget in ~5 days"
+          runbook: docs/observability/runbooks.md#api-errors
+
+      # Critical alert latency SLO: 95 % within 5 s -> budget 5 % slow alerts. Page at a
+      # 2x burn (> 10 % slow) sustained over 1 h and still happening in the last 5 min.
+      - alert: AlertLatencySLOBurn
+        expr: |
+          prognos:alert_latency_slow:ratio_rate1h > (2 * 0.05)
+          and prognos:alert_latency_slow:ratio_rate5m > (2 * 0.05)
+        for: 5m
+        labels: { severity: page, slo: alert-latency }
+        annotations:
+          summary: "More than 5% of critical alerts take longer than 5 s to raise"
+          runbook: docs/observability/runbooks.md#alert-latency
+
+  # ---------------------------------------------------------------- symptoms
+  - name: prognos-pipeline
+    rules:
+      - alert: PipelineFallingBehind
+        expr: prognos:stream_seconds_behind > 60
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.service }} is {{ $value | humanizeDuration }} behind the stream"
+          runbook: docs/observability/runbooks.md#falling-behind
+      - alert: PipelineStalled
+        expr: |
+          sum by (service) (prognos_stream_consumer_lag) > 0
+          and sum by (service) (rate(prognos_stream_consumed_total[5m])) == 0
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.service }} has a backlog but consumes nothing"
+          runbook: docs/observability/runbooks.md#stalled
+      - alert: DeadLetterRateHigh
+        expr: prognos:dlq:ratio_rate10m > 0.05
+        for: 10m
+        labels: { severity: ticket }
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of telemetry is quarantined (normal < 3%)"
+          runbook: docs/observability/runbooks.md#dlq
+      - alert: SinkRejectingAlerts
+        expr: increase(prognos_sink_rejected_total[15m]) > 0
+        labels: { severity: ticket }
+        annotations:
+          summary: "The sink rejected {{ $value }} alert records in 15 minutes"
+          runbook: docs/observability/runbooks.md#sink-rejections
+      - alert: ScorerStale
+        expr: time() - prognos_scorer_last_success_timestamp_seconds > 3 * 300
+        for: 2m
+        labels: { severity: ticket }
+        annotations:
+          summary: "No successful model scoring cycle for {{ $value | humanizeDuration }}"
+          runbook: docs/observability/runbooks.md#stale-loops
+      - alert: PlannerStale
+        expr: time() - prognos_planner_last_success_timestamp_seconds > 5 * 60
+        for: 2m
+        labels: { severity: ticket }
+        annotations:
+          summary: "No successful planning cycle for {{ $value | humanizeDuration }}"
+          runbook: docs/observability/runbooks.md#stale-loops
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy normalizer" catches down AND gone.
+        expr: absent(up{job="normalizer"} == 1)
+        for: 2m
+        labels: { severity: page, job: normalizer }
+        annotations:
+          summary: "No healthy normalizer instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy detector" catches down AND gone.
+        expr: absent(up{job="detector"} == 1)
+        for: 2m
+        labels: { severity: page, job: detector }
+        annotations:
+          summary: "No healthy detector instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy sink" catches down AND gone.
+        expr: absent(up{job="sink"} == 1)
+        for: 2m
+        labels: { severity: page, job: sink }
+        annotations:
+          summary: "No healthy sink instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy planner" catches down AND gone.
+        expr: absent(up{job="planner"} == 1)
+        for: 2m
+        labels: { severity: page, job: planner }
+        annotations:
+          summary: "No healthy planner instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy radar" catches down AND gone.
+        expr: absent(up{job="radar"} == 1)
+        for: 2m
+        labels: { severity: page, job: radar }
+        annotations:
+          summary: "No healthy radar instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy scorer" catches down AND gone.
+        expr: absent(up{job="scorer"} == 1)
+        for: 2m
+        labels: { severity: page, job: scorer }
+        annotations:
+          summary: "No healthy scorer instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy api" catches down AND gone.
+        expr: absent(up{job="api"} == 1)
+        for: 2m
+        labels: { severity: page, job: api }
+        annotations:
+          summary: "No healthy api instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: ServiceDown
+        # absent(): with DNS discovery a stopped container disappears from the target
+        # list, so `up == 0` never happens; "no healthy clickhouse" catches down AND gone.
+        expr: absent(up{job="clickhouse"} == 1)
+        for: 2m
+        labels: { severity: page, job: clickhouse }
+        annotations:
+          summary: "No healthy clickhouse instance for 2 minutes"
+          runbook: docs/observability/runbooks.md#service-down
+      - alert: TargetDown
+        # One replica of several unreachable (the others still answer).
+        expr: up{job!="prometheus"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $labels.job }} ({{ $labels.instance }}) is not reachable"
+          runbook: docs/observability/runbooks.md#target-down

@@ -19,6 +19,7 @@ from pathlib import Path
 
 from prometheus_client import start_http_server
 
+from prognos_common.logs import configure
 from prognos_stream.detector import Detector
 from prognos_stream.detector_service import DetectorConfig, DetectorService
 
@@ -26,9 +27,7 @@ log = logging.getLogger("prognos_stream")
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
-    )
+    configure("detector")
     parser = argparse.ArgumentParser(description="Prognos real-time detector")
     parser.add_argument("--summary", type=Path, help="write a run summary JSON here on exit")
     args = parser.parse_args(argv)

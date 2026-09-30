@@ -22,6 +22,7 @@ import orjson
 import redis
 from prometheus_client import Counter, Histogram, start_http_server
 
+from prognos_common.logs import configure
 from prognos_stream.kafka_loop import BatchService, LoopConfig, Record
 from prognos_stream.sinks import AlertStore, LiveStateStore
 
@@ -100,9 +101,7 @@ def _dsn() -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
-    )
+    configure("sink")
     parser = argparse.ArgumentParser(description="Prognos sink (PostgreSQL + Redis)")
     parser.add_argument("--summary", type=Path)
     args = parser.parse_args(argv)

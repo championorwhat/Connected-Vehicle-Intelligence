@@ -29,6 +29,7 @@ import orjson
 from prometheus_client import Counter, Gauge, start_http_server
 
 from prognos_common.catalog import VEHICLE_MODELS
+from prognos_common.logs import configure
 from prognos_common.roster import Roster
 from prognos_stream.kafka_loop import BatchService, LoopConfig, Record
 from prognos_stream.main import wait_for_registry
@@ -150,9 +151,7 @@ class RadarService(BatchService):
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
-    )
+    configure("radar")
     parser = argparse.ArgumentParser(description="Prognos emerging-fault radar")
     parser.add_argument("--summary", type=Path, help="write signals + counters here on exit")
     args = parser.parse_args(argv)

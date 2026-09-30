@@ -1,0 +1,201 @@
+# promtool test rules infra/monitoring/prometheus/tests/prognos.test.yml
+# Each alert must fire on a synthetic failure and stay quiet on normal traffic.
+rule_files:
+  - ../rules/prognos.rules.yml
+evaluation_interval: 1m
+
+tests:
+  # API: 20 % server errors for an hour burns the 0.5 % budget 40x -> page.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_api_requests_total{method="GET",route="/v1/vehicles",status="200"}'
+        values: '0+80x90'
+      - series: 'prognos_api_requests_total{method="GET",route="/v1/vehicles",status="500"}'
+        values: '0+20x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: ApiErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels: { severity: page, slo: api-availability }
+            exp_annotations:
+              summary: "API is burning its 30-day error budget 14x too fast (2% of budget per hour)"
+              runbook: docs/observability/runbooks.md#api-errors
+
+  # API: 0.1 % errors is inside the budget -> silence.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_api_requests_total{method="GET",route="/v1/vehicles",status="200"}'
+        values: '0+999x400'
+      - series: 'prognos_api_requests_total{method="GET",route="/v1/vehicles",status="500"}'
+        values: '0+1x400'
+    alert_rule_test:
+      - eval_time: 6h
+        alertname: ApiErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 6h
+        alertname: ApiErrorBudgetSlowBurn
+        exp_alerts: []
+
+  # API: no 5xx series exists yet -> the error ratio is 0, not "no data" (found live in M11).
+  - interval: 1m
+    input_series:
+      - series: 'prognos_api_requests_total{method="GET",route="/healthz",status="200"}'
+        values: '0+6x90'
+    promql_expr_test:
+      - expr: prognos:api_errors:ratio_rate1h
+        eval_time: 70m
+        exp_samples:
+          - labels: 'prognos:api_errors:ratio_rate1h'
+            value: 0
+
+  # Alert latency: 30 % of alerts slower than 5 s -> page; recording rule checked too.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_detector_alert_latency_seconds_bucket{le="5.0"}'
+        values: '0+7x90'
+      - series: 'prognos_detector_alert_latency_seconds_count'
+        values: '0+10x90'
+    promql_expr_test:
+      - expr: round(prognos:alert_latency_slow:ratio_rate5m * 100)  # percent, float-safe
+        eval_time: 30m
+        exp_samples:
+          - labels: '{}'
+            value: 30
+    alert_rule_test:
+      - eval_time: 75m
+        alertname: AlertLatencySLOBurn
+        exp_alerts:
+          - exp_labels: { severity: page, slo: alert-latency }
+            exp_annotations:
+              summary: "More than 5% of critical alerts take longer than 5 s to raise"
+              runbook: docs/observability/runbooks.md#alert-latency
+
+  # Freshness: 12,000 messages waiting at 100 msg/s = 120 s behind -> page.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_stream_consumer_lag{service="detector",partition="0"}'
+        values: '12000x20'
+      - series: 'prognos_stream_consumed_total{service="detector"}'
+        values: '0+6000x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: PipelineFallingBehind
+        exp_alerts:
+          - exp_labels: { severity: page, service: detector }
+            exp_annotations:
+              summary: "detector is 2m 0s behind the stream"
+              runbook: docs/observability/runbooks.md#falling-behind
+      - eval_time: 15m
+        alertname: PipelineStalled
+        exp_alerts: []
+
+  # Stalled: a backlog and zero consumption.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_stream_consumer_lag{service="sink",partition="0"}'
+        values: '500x20'
+      - series: 'prognos_stream_consumed_total{service="sink"}'
+        values: '100x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: PipelineStalled
+        exp_alerts:
+          - exp_labels: { severity: page, service: sink }
+            exp_annotations:
+              summary: "sink has a backlog but consumes nothing"
+              runbook: docs/observability/runbooks.md#stalled
+
+  # DLQ: 2 % (injected faults) is normal; 10 % is not.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_normalizer_dlq_total{reason="malformed_json"}'
+        values: '0+2x40 80+10x40'
+      - series: 'prognos_normalizer_outcomes_total{kind="canonical"}'
+        values: '0+98x40 3920+90x40'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: DeadLetterRateHigh
+        exp_alerts: []
+      - eval_time: 75m
+        alertname: DeadLetterRateHigh
+        exp_alerts:
+          - exp_labels: { severity: ticket }
+            exp_annotations:
+              summary: "10% of telemetry is quarantined (normal < 3%)"
+              runbook: docs/observability/runbooks.md#dlq
+
+  # Stuck background loops.
+  - interval: 1m
+    input_series:
+      - series: 'prognos_scorer_last_success_timestamp_seconds'
+        values: '0x30'
+      - series: 'prognos_planner_last_success_timestamp_seconds'
+        values: '0+60x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: ScorerStale
+        exp_alerts:
+          - exp_labels: { severity: ticket }
+            exp_annotations:
+              summary: "No successful model scoring cycle for 20m 0s"
+              runbook: docs/observability/runbooks.md#stale-loops
+      - eval_time: 20m
+        alertname: PlannerStale
+        exp_alerts: []
+
+  # A service that stops answering scrapes.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="api",instance="api:8000"}'
+        values: '1 1 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: TargetDown
+        exp_alerts:
+          - exp_labels: { severity: page, job: api, instance: "api:8000" }
+            exp_annotations:
+              summary: "api (api:8000) is not reachable"
+              runbook: docs/observability/runbooks.md#target-down
+
+  # A stopped container vanishes from DNS discovery: no `up` series at all.
+  # Found in a live drill (docs/observability/drills.md): TargetDown alone never fired.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="detector",instance="10.0.0.5:9103"}'
+        values: '1 1 _ _ _ _ _ _ _ _ _ _'
+      - series: 'up{job="normalizer",instance="10.0.0.6:9102"}'
+        values: '1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      # The last sample stays visible for the 5-minute lookback, then 2 minutes of `for`.
+      - eval_time: 11m
+        alertname: ServiceDown
+        exp_alerts:
+          - exp_labels: { severity: page, job: detector }
+            exp_annotations:
+              summary: "No healthy detector instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: sink }
+            exp_annotations:
+              summary: "No healthy sink instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: planner }
+            exp_annotations:
+              summary: "No healthy planner instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: radar }
+            exp_annotations:
+              summary: "No healthy radar instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: scorer }
+            exp_annotations:
+              summary: "No healthy scorer instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: api }
+            exp_annotations:
+              summary: "No healthy api instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+          - exp_labels: { severity: page, job: clickhouse }
+            exp_annotations:
+              summary: "No healthy clickhouse instance for 2 minutes"
+              runbook: docs/observability/runbooks.md#service-down
+

@@ -181,4 +181,14 @@ test: ## Unit tests (fast, no Docker)
 test-integration: ## Integration tests against real Postgres/ClickHouse (needs Docker)
 	uv run pytest tests/integration
 
+PROMTOOL = docker run --rm --entrypoint promtool -v "$(CURDIR)/infra/monitoring/prometheus:/etc/prometheus:ro" -w /etc/prometheus prom/prometheus:v3.5.0
+.PHONY: dashboards obs-check
+dashboards: ## Regenerate Grafana dashboards from scripts/gen_dashboards.py
+	uv run python scripts/gen_dashboards.py
+
+obs-check: ## Validate Prometheus config and alert rules; run the rule unit tests
+	$(PROMTOOL) check config prometheus.yml
+	$(PROMTOOL) check rules rules/prognos.rules.yml
+	$(PROMTOOL) test rules tests/prognos.test.yml
+
 check: lint typecheck test config ## Everything CI runs locally (except integration)
