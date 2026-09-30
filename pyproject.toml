@@ -30,6 +30,7 @@ dev = [
     "prognos-ml",
     "prognos-api",
     "httpx>=0.28",
+    "pytest-bdd>=8.1",
 ]
 
 [tool.uv]
@@ -99,8 +100,9 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["prognos_common", "prognos_sim", "prognos_stream"]
+source = ["prognos_common", "prognos_sim", "prognos_stream", "prognos_api", "prognos_ml"]
 omit = ["**/tests/**"]
+relative_files = true  # unit and integration data are combined in CI (coverage job)
 
 [tool.coverage.report]
 show_missing = true

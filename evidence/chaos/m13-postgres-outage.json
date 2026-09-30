@@ -1,0 +1,24 @@
+{
+  "measured_at": "2026-09-30T12:48:30Z",
+  "hardware": "x86_64 Linux container, 4 vCPU, Docker Compose stack; not the target Mac",
+  "setup": "fresh volumes; 10,000 seeded vehicles; simulator, 2 normalizers, detector, sink running; SINK_RETRY_BUDGET_SECONDS=60",
+  "images": "prognos/stream:local and prognos/simulator:local built 2026-09-30T09:18Z (Docker Hub rate limit blocked a rebuild); sink retry/commit logic unchanged since M6",
+  "fault": "docker compose stop postgres for 90 s, longer than the sink's 60 s retry budget",
+  "timeline_utc": {
+    "pipeline_started": "12:41:19",
+    "postgres_stopped": "12:42:48",
+    "sink_first_retry": "12:43:04 (connection terminated), then exponential backoff with jitter",
+    "sink_budget_exhausted": "~12:44:06: partitions revoked, process exited without committing (traceback; now a clear log line, see finding)",
+    "postgres_started": "12:44:19",
+    "sink_restarted_by_docker": "restart count 0 -> 1, running",
+    "simulator_stopped": "12:47:54"
+  },
+  "other_services": "normalizers kept running on their cached vehicle registry (refresh every 300 s); detector unaffected",
+  "alerts_raised_during_outage": 4,
+  "alerts_raised_during_outage_present_in_postgres_after": 4,
+  "reconciliation": "m13-postgres-outage-reconciliation.json: passed; 3,767,309 raw = 3,693,007 canonical + 37,394 DLQ + 36,908 duplicates; ClickHouse 3,693,007 unique events; PostgreSQL 91 alert rows = 91 opened fingerprints",
+  "findings": [
+    "No data loss: the failed batch was not committed, so after the restart Kafka redelivered it and the idempotent upsert (unique tenant_id, fingerprint) wrote each alert once.",
+    "The sink exited with an unhandled traceback once the retry budget was spent. Changed to log 'store unavailable ... exiting for a restart (offsets not committed)' and exit 1 (unit test apps/stream-processor/tests/test_sink_main.py). Not yet run in a container: the image could not be rebuilt here."
+  ]
+}
