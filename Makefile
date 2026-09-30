@@ -133,7 +133,7 @@ fmt: ## Auto-format Python code
 	uv run ruff format .
 
 typecheck: ## Static type check
-	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts/reconcile.py scripts/build_calibration.py scripts/bench_planner.py scripts/bench_radar.py
+	uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts
 
 test: ## Unit tests (fast, no Docker)
 	uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=term

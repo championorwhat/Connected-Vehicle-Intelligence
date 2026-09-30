@@ -23,7 +23,7 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts/reconcile.py scripts/build_calibration.py scripts/bench_planner.py scripts/bench_radar.py
+      - run: uv run mypy tests packages/common/src database/postgres/seeds apps/simulator/src apps/stream-processor/src scripts
       - run: uv run pytest tests/unit tests/contract packages apps/simulator/tests apps/stream-processor/tests --cov --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
@@ -104,7 +104,7 @@ jobs:
       - name: reconcile Kafka vs ClickHouse vs PostgreSQL (no data loss)
         run: |
           set -a; . ./.env; set +a
-          uv run python scripts/reconcile.py scripts/build_calibration.py scripts/bench_planner.py scripts/bench_radar.py --wait-seconds 240 --output reconciliation.json
+          uv run python scripts/reconcile.py --wait-seconds 240 --output reconciliation.json
       - name: planner proposes work orders once (idempotent re-run)
         run: |
           psql() { docker compose exec -T postgres psql -U prognos -d prognos -tAc "$1"; }
