@@ -31,7 +31,7 @@ test("fleet manager: overview, shadow toggle, alerts, work orders, vehicle", asy
 
   await page.getByRole("link", { name: "Work orders" }).click();
   await expect(page.getByRole("button", { name: "Schedule", exact: true }).first()).toBeVisible();
-  await expect(page.getByText("not sourced").first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "not sourced" }).first()).toBeVisible();
   await shot(page, "work-orders");
 
   await page.getByRole("link", { name: "Overview" }).click();

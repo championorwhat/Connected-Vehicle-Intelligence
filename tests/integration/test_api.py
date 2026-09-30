@@ -248,6 +248,9 @@ def test_work_order_lifecycle(client: TestClient, world: dict[str, Any], seeded_
     assert created.status_code == 201, created.text
     wo = created.json()
     assert wo["status"] == "proposed"
+    listed = client.get("/v1/work-orders", headers=manager,
+                        params={"vehicle_id": body["vehicle_id"]}).json()["items"]  # fmt: skip
+    assert all(listed[0][k] for k in ("vin", "model_name", "workshop_name")), listed[0]
     problem(client.post("/v1/work-orders", headers=manager, json=body), 409)  # one active only
     foreign = body | {"workshop_id": world["workshops"][world["b"]]}
     problem(client.post("/v1/work-orders", headers=manager,

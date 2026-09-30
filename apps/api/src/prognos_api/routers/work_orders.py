@@ -90,7 +90,37 @@ async def list_work_orders(
         params["a_ts"], params["a_id"] = after
     sql += f" ORDER BY {LIST_ORDER} LIMIT %(limit)s"
     rows = await (await conn.execute(sql, params)).fetchall()
+    await _add_names(conn, rows)
     return pagination.page(rows, limit, ["created_at", "work_order_id"])
+
+
+async def _add_names(conn: Any, rows: list[dict[str, Any]]) -> None:
+    """Add what a person reads (VIN, model, workshop) to a page of work orders.
+
+    A second primary-key lookup rather than joins in the list query, so the M15-tuned
+    list plan (index on tenant, status, created_at) stays exactly as measured.
+    """
+    if not rows:
+        return
+    vehicles = {r["vehicle_id"] for r in rows}
+    workshops = {r["workshop_id"] for r in rows}
+    names: dict[str, dict[str, Any]] = {}
+    for row in await (await conn.execute(
+        "SELECT v.vehicle_id::text AS id, v.vin, m.display_name AS model_name"
+        " FROM vehicles v JOIN vehicle_models m USING (model_code)"
+        " WHERE v.vehicle_id = ANY(%s::uuid[])", (list(vehicles),),
+    )).fetchall():  # fmt: skip
+        names[row["id"]] = row
+    shops: dict[str, dict[str, Any]] = {}
+    for row in await (await conn.execute(
+        "SELECT workshop_id::text AS id, name, city FROM workshops"
+        " WHERE workshop_id = ANY(%s::uuid[])", (list(workshops),),
+    )).fetchall():  # fmt: skip
+        shops[row["id"]] = row
+    for r in rows:
+        v, w = names.get(r["vehicle_id"], {}), shops.get(r["workshop_id"], {})
+        r["vin"], r["model_name"] = v.get("vin"), v.get("model_name")
+        r["workshop_name"], r["workshop_city"] = w.get("name"), w.get("city")
 
 
 @router.post("/v1/work-orders", status_code=201)
