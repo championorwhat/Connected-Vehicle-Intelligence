@@ -13,6 +13,8 @@ the target 8 GB MacBook Air, and all services share the same 4 vCPUs.
 | Normalizer | 1 process, from Kafka | 25,779 msg/s | `evidence/benchmarks/m4-normalizer-1-process.json` |
 | Normalizer | 3 processes, one consumer group | 62,889 msg/s | `evidence/benchmarks/m4-normalizer-3-process-*.json` |
 | Pipeline | raw → canonical + DLQ + duplicates | balances exactly; 0 duplicate event_ids; lag 0 | `evidence/benchmarks/m4-pipeline-reconciliation.json` |
+| Detector | back-test recall / precision / median lead | 98.6% / 100% (simulated world) / 49.6 h | `evidence/benchmarks/m5-detection-backtest.json` |
+| Detector | critical alert latency, live (p50 / p95 / p99) | **0.495 / 1.105 / 3.592 s** (target < 5 s) | `evidence/benchmarks/m5-alert-latency-live.json` |
 | Pipeline | ingest latency, on-time events (p50 / p95 / p99) | **0.35 / 1.04 / 1.52 s** (includes the simulator's injected 0.3 s mean network delay) | `evidence/benchmarks/m4-pipeline-ingest-latency.json` |
 
 ## How to reproduce

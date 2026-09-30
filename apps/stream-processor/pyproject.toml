@@ -5,12 +5,15 @@ description = "Prognos stream processing: OEM normalisation, validation, dedupli
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "prognos-common",
-    "prognos-simulator",  # evaluate.py back-test harness only
     "orjson>=3.10",
     "confluent-kafka>=2.6",
     "prometheus-client>=0.21",
     "psycopg[binary]>=3.2",
 ]
+
+[project.optional-dependencies]
+# evaluate.py (offline back-test) drives the simulator in-process; not needed at runtime.
+backtest = ["prognos-simulator"]
 
 [project.scripts]
 prognos-normalizer = "prognos_stream.main:main"
