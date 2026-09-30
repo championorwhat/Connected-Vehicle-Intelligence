@@ -20,6 +20,8 @@ backtest = ["prognos-simulator"]
 prognos-normalizer = "prognos_stream.main:main"
 prognos-detector = "prognos_stream.detector_main:main"
 prognos-sink = "prognos_stream.sink_main:main"
+prognos-planner = "prognos_stream.planner_main:main"
+prognos-radar = "prognos_stream.radar_main:main"
 
 [tool.uv.sources]
 prognos-common = { workspace = true }
