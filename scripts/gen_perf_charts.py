@@ -49,7 +49,7 @@ def chart(title: str, subtitle: str, x_label: str, panels: list[dict[str, Any]],
           x_step: float, band: tuple[float, float] | None = None) -> str:  # fmt: skip
     """panels: [{"label": y-axis title, "series": [(name, [(x, y), ...])], "ref": (y, text)}]"""
     height = TOP + 30 + len(panels) * (PANEL_H + GAP) + 10
-    xs = [float(x) for p in panels for _, pts in p["series"] for x, _ in pts]
+    xs = [float(x) for p in panels for item in p["series"] for x, _ in item[1]]
     x0, x1 = min(xs), max(xs)
     plot_w = W - LEFT - RIGHT
 
@@ -66,7 +66,7 @@ def chart(title: str, subtitle: str, x_label: str, panels: list[dict[str, Any]],
            f"{esc(subtitle)}</text>"]  # fmt: skip
     for i, panel in enumerate(panels):
         top = TOP + 30 + i * (PANEL_H + GAP)
-        ymax, ystep = nice_axis(max([y for _, pts in panel["series"] for _, y in pts]
+        ymax, ystep = nice_axis(max([y for item in panel["series"] for _, y in item[1]]
                                     + [panel.get("ref", (0, ""))[0]]))  # fmt: skip
 
         def sy(y: float, top: float = top, ymax: float = ymax) -> float:
@@ -94,8 +94,9 @@ def chart(title: str, subtitle: str, x_label: str, panels: list[dict[str, Any]],
             out.append(f'<text x="{W - RIGHT + 6}" y="{sy(ry) + 4:.1f}" font-size="11" '
                        f'fill="{INK_2}">{esc(rtext)}</text>')  # fmt: skip
         ends: list[tuple[float, str, str]] = []
-        for j, (name, pts) in enumerate(panel["series"]):
-            color = SERIES[j]
+        for j, item in enumerate(panel["series"]):
+            name, pts = item[0], item[1]
+            color = item[2] if len(item) > 2 else SERIES[j]  # colour follows the entity
             path = " ".join(f"{'M' if n == 0 else 'L'}{sx(x):.1f},{sy(y):.1f}"
                             for n, (x, y) in enumerate(pts))  # fmt: skip
             out.append(f'<path d="{path}" fill="none" stroke="{color}" stroke-width="2" '
@@ -152,7 +153,7 @@ def main() -> int:
             ("normalizer", series(s, "normalizer_msg_s")),
             ("detector", series(s, "detector_msg_s"))]},
          {"label": "detector backlog (messages)", "series": [
-            ("backlog", series(s, "detector_lag"))]}],
+            ("detector backlog", series(s, "detector_lag"), SERIES[2])]}],
         x_step=60, band=(min(high), max(high)),
     ))  # fmt: skip
     soak_file = EVIDENCE / "m14-soak-30min.json"
@@ -170,7 +171,7 @@ def main() -> int:
             ("kafka", mem(s, "kafka-1")), ("clickhouse", mem(s, "clickhouse-1")),
             ("detector", mem(s, "detector-1"))]},
          {"label": "detector seconds behind the stream", "ref": (60, "60 s SLO"),
-          "series": [("detector", behind)]}],
+          "series": [("detector", behind, SERIES[2])]}],
         x_step=5,
     ))  # fmt: skip
     print("wrote docs/images/m14-burst.svg, docs/images/m14-soak.svg")
