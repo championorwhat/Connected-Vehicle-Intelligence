@@ -1,0 +1,515 @@
+===== q1_fleet_summary, custom plan (before) =====
+SELECT
+  (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s) AS vehicles,
+  (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s AND status = 'in_workshop')
+      AS vehicles_in_workshop,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+      AND severity = 'critical') AS open_critical_alerts,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+      AND severity = 'warning') AS open_warning_alerts,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'acknowledged')
+      AS acknowledged_alerts,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'proposed')
+      AS work_orders_proposed,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'scheduled')
+      AS work_orders_scheduled,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'in_progress')
+      AS work_orders_in_progress
+
+Result (actual time=1166.959..1168.934 rows=1 loops=1)
+  Buffers: shared hit=44922 read=213686
+  I/O Timings: shared read=2398.984
+  InitPlan 1
+    ->  Aggregate (actual time=11.829..11.833 rows=1 loops=1)
+          Buffers: shared read=1840
+          I/O Timings: shared read=5.235
+          ->  Result (actual time=2.665..11.271 rows=12193 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                Buffers: shared read=1840
+                I/O Timings: shared read=5.235
+                ->  Seq Scan on vehicles (actual time=2.623..10.331 rows=12193 loops=1)
+                      Filter: (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                      Rows Removed by Filter: 87807
+                      Buffers: shared read=1840
+                      I/O Timings: shared read=5.235
+  InitPlan 2
+    ->  Aggregate (actual time=4.927..4.929 rows=1 loops=1)
+          Buffers: shared hit=1840
+          ->  Result (actual time=4.905..4.906 rows=0 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                Buffers: shared hit=1840
+                ->  Seq Scan on vehicles vehicles_1 (actual time=4.894..4.894 rows=0 loops=1)
+                      Filter: ((tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (status = 'in_workshop'::text))
+                      Rows Removed by Filter: 100000
+                      Buffers: shared hit=1840
+  InitPlan 3
+    ->  Finalize Aggregate (actual time=383.063..383.165 rows=1 loops=1)
+          Buffers: shared hit=13945 read=70651
+          I/O Timings: shared read=827.331
+          ->  Gather (actual time=382.726..383.143 rows=3 loops=1)
+                Workers Planned: 2
+                Workers Launched: 2
+                Buffers: shared hit=13945 read=70651
+                I/O Timings: shared read=827.331
+                ->  Partial Aggregate (actual time=355.281..355.284 rows=1 loops=3)
+                      Buffers: shared hit=13945 read=70651
+                      I/O Timings: shared read=827.331
+                      ->  Result (actual time=124.178..355.090 rows=321 loops=3)
+                            One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                            Buffers: shared hit=13945 read=70651
+                            I/O Timings: shared read=827.331
+                            ->  Parallel Seq Scan on alerts (actual time=103.422..334.183 rows=321 loops=3)
+                                  Filter: ((tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (status = 'open'::text) AND (severity = 'critical'::text))
+                                  Rows Removed by Filter: 666346
+                                  Buffers: shared hit=13945 read=70651
+                                  I/O Timings: shared read=827.331
+  InitPlan 4
+    ->  Finalize Aggregate (actual time=357.227..357.263 rows=1 loops=1)
+          Buffers: shared hit=13951 read=70645
+          I/O Timings: shared read=749.201
+          ->  Gather (actual time=356.869..357.247 rows=3 loops=1)
+                Workers Planned: 2
+                Workers Launched: 2
+                Buffers: shared hit=13951 read=70645
+                I/O Timings: shared read=749.201
+                ->  Partial Aggregate (actual time=327.432..327.434 rows=1 loops=3)
+                      Buffers: shared hit=13951 read=70645
+                      I/O Timings: shared read=749.201
+                      ->  Result (actual time=109.707..327.248 rows=386 loops=3)
+                            One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                            Buffers: shared hit=13951 read=70645
+                            I/O Timings: shared read=749.201
+                            ->  Parallel Seq Scan on alerts alerts_1 (actual time=88.599..306.009 rows=386 loops=3)
+                                  Filter: ((tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (status = 'open'::text) AND (severity = 'warning'::text))
+                                  Rows Removed by Filter: 666281
+                                  Buffers: shared hit=13951 read=70645
+                                  I/O Timings: shared read=749.201
+  InitPlan 5
+    ->  Finalize Aggregate (actual time=373.975..375.793 rows=1 loops=1)
+          Buffers: shared hit=14047 read=70549
+          I/O Timings: shared read=817.048
+          ->  Gather (actual time=373.197..375.749 rows=3 loops=1)
+                Workers Planned: 2
+                Workers Launched: 2
+                Buffers: shared hit=14047 read=70549
+                I/O Timings: shared read=817.048
+                ->  Partial Aggregate (actual time=350.198..350.200 rows=1 loops=3)
+                      Buffers: shared hit=14047 read=70549
+                      I/O Timings: shared read=817.048
+                      ->  Result (actual time=122.339..349.989 rows=393 loops=3)
+                            One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                            Buffers: shared hit=14047 read=70549
+                            I/O Timings: shared read=817.048
+                            ->  Parallel Seq Scan on alerts alerts_2 (actual time=106.828..334.320 rows=393 loops=3)
+                                  Filter: ((tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (status = 'acknowledged'::text))
+                                  Rows Removed by Filter: 666274
+                                  Buffers: shared hit=14047 read=70549
+                                  I/O Timings: shared read=817.048
+  InitPlan 6
+    ->  Aggregate (actual time=6.620..6.623 rows=1 loops=1)
+          Buffers: shared hit=379 read=1
+          I/O Timings: shared read=0.169
+          ->  Result (actual time=2.663..6.486 rows=651 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                Buffers: shared hit=379 read=1
+                I/O Timings: shared read=0.169
+                ->  Bitmap Heap Scan on work_orders (actual time=2.614..6.378 rows=651 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid))
+                      Filter: (status = 'proposed'::text)
+                      Rows Removed by Filter: 173
+                      Heap Blocks: exact=130
+                      Buffers: shared hit=379 read=1
+                      I/O Timings: shared read=0.169
+                      ->  BitmapAnd (actual time=2.452..2.453 rows=0 loops=1)
+                            Buffers: shared hit=250
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.520..0.520 rows=9987 loops=1)
+                                  Buffers: shared hit=81
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.897..1.898 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                                  Buffers: shared hit=169
+  InitPlan 7
+    ->  Aggregate (actual time=2.260..2.263 rows=1 loops=1)
+          Buffers: shared hit=380
+          ->  Result (actual time=1.925..2.237 rows=123 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                Buffers: shared hit=380
+                ->  Bitmap Heap Scan on work_orders work_orders_1 (actual time=1.905..2.206 rows=123 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid))
+                      Filter: (status = 'scheduled'::text)
+                      Rows Removed by Filter: 701
+                      Heap Blocks: exact=130
+                      Buffers: shared hit=380
+                      ->  BitmapAnd (actual time=1.845..1.846 rows=0 loops=1)
+                            Buffers: shared hit=250
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.446..0.446 rows=9987 loops=1)
+                                  Buffers: shared hit=81
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.371..1.371 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                                  Buffers: shared hit=169
+  InitPlan 8
+    ->  Aggregate (actual time=2.074..2.075 rows=1 loops=1)
+          Buffers: shared hit=380
+          ->  Result (actual time=1.867..2.057 rows=50 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                Buffers: shared hit=380
+                ->  Bitmap Heap Scan on work_orders work_orders_2 (actual time=1.850..2.035 rows=50 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid))
+                      Filter: (status = 'in_progress'::text)
+                      Rows Removed by Filter: 774
+                      Heap Blocks: exact=130
+                      Buffers: shared hit=380
+                      ->  BitmapAnd (actual time=1.798..1.798 rows=0 loops=1)
+                            Buffers: shared hit=250
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.402..0.402 rows=9987 loops=1)
+                                  Buffers: shared hit=81
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.366..1.367 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+                                  Buffers: shared hit=169
+Planning Time: 0.579 ms
+Execution Time: 1172.726 ms
+
+===== q1_fleet_summary, generic plan (before) =====
+SELECT
+  (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s) AS vehicles,
+  (SELECT count(*) FROM vehicles WHERE tenant_id = %(t)s AND status = 'in_workshop')
+      AS vehicles_in_workshop,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+      AND severity = 'critical') AS open_critical_alerts,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'open'
+      AND severity = 'warning') AS open_warning_alerts,
+  (SELECT count(*) FROM alerts WHERE tenant_id = %(t)s AND status = 'acknowledged')
+      AS acknowledged_alerts,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'proposed')
+      AS work_orders_proposed,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'scheduled')
+      AS work_orders_scheduled,
+  (SELECT count(*) FROM work_orders WHERE tenant_id = %(t)s AND status = 'in_progress')
+      AS work_orders_in_progress
+
+Result (actual time=4845.433..4845.486 rows=1 loops=1)
+  Buffers: shared hit=2602 read=139276
+  I/O Timings: shared read=2851.089
+  InitPlan 1
+    ->  Aggregate (actual time=14.902..14.906 rows=1 loops=1)
+          Buffers: shared read=1840
+          I/O Timings: shared read=8.208
+          ->  Result (actual time=3.262..14.299 rows=12193 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared read=1840
+                I/O Timings: shared read=8.208
+                ->  Seq Scan on vehicles (actual time=3.213..13.331 rows=12193 loops=1)
+                      Filter: (tenant_id = $1)
+                      Rows Removed by Filter: 87807
+                      Buffers: shared read=1840
+                      I/O Timings: shared read=8.208
+  InitPlan 2
+    ->  Aggregate (actual time=5.449..5.451 rows=1 loops=1)
+          Buffers: shared hit=1840
+          ->  Result (actual time=5.422..5.423 rows=0 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared hit=1840
+                ->  Seq Scan on vehicles vehicles_1 (actual time=5.408..5.409 rows=0 loops=1)
+                      Filter: ((tenant_id = $1) AND (status = 'in_workshop'::text))
+                      Rows Removed by Filter: 100000
+                      Buffers: shared hit=1840
+  InitPlan 3
+    ->  Aggregate (actual time=1631.740..1631.769 rows=1 loops=1)
+          Buffers: shared read=45686
+          I/O Timings: shared read=993.300
+          ->  Result (actual time=146.261..1631.059 rows=962 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared read=45686
+                I/O Timings: shared read=993.300
+                ->  Bitmap Heap Scan on alerts (actual time=146.245..1630.463 rows=962 loops=1)
+                      Recheck Cond: (tenant_id = $1)
+                      Filter: ((status = 'open'::text) AND (severity = 'critical'::text))
+                      Rows Removed by Filter: 242500
+                      Heap Blocks: exact=43177
+                      Buffers: shared read=45686
+                      I/O Timings: shared read=993.300
+                      ->  Bitmap Index Scan on alerts_tenant_id_fingerprint_key (actual time=138.353..138.354 rows=243462 loops=1)
+                            Index Cond: (tenant_id = $1)
+                            Buffers: shared read=2509
+                            I/O Timings: shared read=117.664
+  InitPlan 4
+    ->  Aggregate (actual time=1186.738..1186.741 rows=1 loops=1)
+          Buffers: shared hit=1 read=45685
+          I/O Timings: shared read=689.642
+          ->  Result (actual time=47.082..1185.717 rows=1158 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared hit=1 read=45685
+                I/O Timings: shared read=689.642
+                ->  Bitmap Heap Scan on alerts alerts_1 (actual time=47.045..1185.149 rows=1158 loops=1)
+                      Recheck Cond: (tenant_id = $1)
+                      Filter: ((status = 'open'::text) AND (severity = 'warning'::text))
+                      Rows Removed by Filter: 242304
+                      Heap Blocks: exact=43177
+                      Buffers: shared hit=1 read=45685
+                      I/O Timings: shared read=689.642
+                      ->  Bitmap Index Scan on alerts_tenant_id_fingerprint_key (actual time=39.355..39.356 rows=243462 loops=1)
+                            Index Cond: (tenant_id = $1)
+                            Buffers: shared read=2509
+                            I/O Timings: shared read=19.805
+  InitPlan 5
+    ->  Aggregate (actual time=1911.953..1911.955 rows=1 loops=1)
+          Buffers: shared hit=1 read=45685
+          I/O Timings: shared read=1148.760
+          ->  Result (actual time=161.546..1910.773 rows=1179 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared hit=1 read=45685
+                I/O Timings: shared read=1148.760
+                ->  Bitmap Heap Scan on alerts alerts_2 (actual time=161.522..1910.043 rows=1179 loops=1)
+                      Recheck Cond: (tenant_id = $1)
+                      Filter: (status = 'acknowledged'::text)
+                      Rows Removed by Filter: 242283
+                      Heap Blocks: exact=43177
+                      Buffers: shared hit=1 read=45685
+                      I/O Timings: shared read=1148.760
+                      ->  Bitmap Index Scan on alerts_tenant_id_fingerprint_key (actual time=153.202..153.202 rows=243462 loops=1)
+                            Index Cond: (tenant_id = $1)
+                            Buffers: shared read=2509
+                            I/O Timings: shared read=130.561
+  InitPlan 6
+    ->  Aggregate (actual time=15.424..15.428 rows=1 loops=1)
+          Buffers: shared read=380
+          I/O Timings: shared read=11.178
+          ->  Result (actual time=11.492..15.326 rows=651 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared read=380
+                I/O Timings: shared read=11.178
+                ->  Bitmap Heap Scan on work_orders (actual time=11.471..15.232 rows=651 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = $1))
+                      Filter: (status = 'proposed'::text)
+                      Rows Removed by Filter: 173
+                      Heap Blocks: exact=130
+                      Buffers: shared read=380
+                      I/O Timings: shared read=11.178
+                      ->  BitmapAnd (actual time=11.343..11.345 rows=0 loops=1)
+                            Buffers: shared read=250
+                            I/O Timings: shared read=9.065
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=1.173..1.173 rows=9987 loops=1)
+                                  Buffers: shared read=81
+                                  I/O Timings: shared read=0.752
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=10.123..10.123 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = $1)
+                                  Buffers: shared read=169
+                                  I/O Timings: shared read=8.313
+  InitPlan 7
+    ->  Aggregate (actual time=2.314..2.317 rows=1 loops=1)
+          Buffers: shared hit=380
+          ->  Result (actual time=2.036..2.294 rows=123 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared hit=380
+                ->  Bitmap Heap Scan on work_orders work_orders_1 (actual time=2.019..2.267 rows=123 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = $1))
+                      Filter: (status = 'scheduled'::text)
+                      Rows Removed by Filter: 701
+                      Heap Blocks: exact=130
+                      Buffers: shared hit=380
+                      ->  BitmapAnd (actual time=1.965..1.967 rows=0 loops=1)
+                            Buffers: shared hit=250
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.431..0.431 rows=9987 loops=1)
+                                  Buffers: shared hit=81
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.508..1.508 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = $1)
+                                  Buffers: shared hit=169
+  InitPlan 8
+    ->  Aggregate (actual time=2.044..2.046 rows=1 loops=1)
+          Buffers: shared hit=380
+          ->  Result (actual time=1.873..2.032 rows=50 loops=1)
+                One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+                Buffers: shared hit=380
+                ->  Bitmap Heap Scan on work_orders work_orders_2 (actual time=1.856..2.010 rows=50 loops=1)
+                      Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = $1))
+                      Filter: (status = 'in_progress'::text)
+                      Rows Removed by Filter: 774
+                      Heap Blocks: exact=130
+                      Buffers: shared hit=380
+                      ->  BitmapAnd (actual time=1.798..1.799 rows=0 loops=1)
+                            Buffers: shared hit=250
+                            ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.454..0.454 rows=9987 loops=1)
+                                  Buffers: shared hit=81
+                            ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.313..1.313 rows=18799 loops=1)
+                                  Index Cond: (tenant_id = $1)
+                                  Buffers: shared hit=169
+Planning Time: 0.034 ms
+Execution Time: 4857.206 ms
+
+===== q2_planner_open_alerts, custom plan (before) =====
+SELECT a.alert_id, a.tenant_id::text, a.vehicle_id::text, a.failure_mode, a.rule_code,
+       a.severity, extract(epoch FROM now() - a.event_ts) / 3600.0,
+       (a.details ->> 'estimated_hours_to_critical')::float8,
+       hw.latitude::float8, hw.longitude::float8
+FROM alerts a
+JOIN vehicles v ON v.vehicle_id = a.vehicle_id
+LEFT JOIN workshops hw ON hw.workshop_id = v.home_workshop_id
+WHERE a.status IN ('open', 'acknowledged')
+  AND a.failure_mode IS NOT NULL
+  AND v.status = 'active'
+  AND NOT EXISTS (
+      SELECT 1 FROM work_orders w
+      WHERE w.vehicle_id = a.vehicle_id AND w.failure_mode = a.failure_mode
+        AND w.status IN ('proposed', 'scheduled', 'in_progress'))
+
+Gather (actual time=61.859..465.444 rows=22508 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=37100 read=70536
+  I/O Timings: shared read=845.982
+  ->  Hash Left Join (actual time=42.069..433.661 rows=7503 loops=3)
+        Hash Cond: (v.home_workshop_id = hw.workshop_id)
+        Buffers: shared hit=37100 read=70536
+        I/O Timings: shared read=845.982
+        ->  Hash Anti Join (actual time=41.941..422.745 rows=7503 loops=3)
+              Hash Cond: ((a.vehicle_id = w.vehicle_id) AND (a.failure_mode = w.failure_mode))
+              Buffers: shared hit=37094 read=70536
+              I/O Timings: shared read=845.982
+              ->  Parallel Hash Join (actual time=35.694..410.578 rows=9989 loops=3)
+                    Hash Cond: (a.vehicle_id = v.vehicle_id)
+                    Buffers: shared hit=16020 read=70536
+                    I/O Timings: shared read=845.982
+                    ->  Parallel Seq Scan on alerts a (actual time=2.602..368.008 rows=9989 loops=3)
+                          Filter: ((failure_mode IS NOT NULL) AND (status = ANY ('{open,acknowledged}'::text[])))
+                          Rows Removed by Filter: 656678
+                          Buffers: shared hit=14060 read=70536
+                          I/O Timings: shared read=845.982
+                    ->  Parallel Hash (actual time=32.485..32.486 rows=33333 loops=3)
+                          Buckets: 131072  Batches: 1  Memory Usage: 7360kB
+                          Buffers: shared hit=1840
+                          ->  Parallel Seq Scan on vehicles v (actual time=19.620..24.176 rows=33333 loops=3)
+                                Filter: (status = 'active'::text)
+                                Buffers: shared hit=1840
+              ->  Hash (actual time=6.105..6.106 rows=9987 loops=3)
+                    Buckets: 16384 (originally 4096)  Batches: 1 (originally 1)  Memory Usage: 759kB
+                    Buffers: shared hit=21044
+                    ->  Index Only Scan using work_orders_one_active_per_vehicle_mode on work_orders w (actual time=0.039..3.883 rows=9987 loops=3)
+                          Heap Fetches: 20961
+                          Buffers: shared hit=21044
+        ->  Hash (actual time=0.067..0.068 rows=82 loops=3)
+              Buckets: 1024  Batches: 1  Memory Usage: 14kB
+              Buffers: shared hit=6
+              ->  Seq Scan on workshops hw (actual time=0.031..0.039 rows=82 loops=3)
+                    Buffers: shared hit=6
+Planning Time: 0.015 ms
+Execution Time: 468.983 ms
+
+===== q2_planner_open_alerts, generic plan (before) =====
+SELECT a.alert_id, a.tenant_id::text, a.vehicle_id::text, a.failure_mode, a.rule_code,
+       a.severity, extract(epoch FROM now() - a.event_ts) / 3600.0,
+       (a.details ->> 'estimated_hours_to_critical')::float8,
+       hw.latitude::float8, hw.longitude::float8
+FROM alerts a
+JOIN vehicles v ON v.vehicle_id = a.vehicle_id
+LEFT JOIN workshops hw ON hw.workshop_id = v.home_workshop_id
+WHERE a.status IN ('open', 'acknowledged')
+  AND a.failure_mode IS NOT NULL
+  AND v.status = 'active'
+  AND NOT EXISTS (
+      SELECT 1 FROM work_orders w
+      WHERE w.vehicle_id = a.vehicle_id AND w.failure_mode = a.failure_mode
+        AND w.status IN ('proposed', 'scheduled', 'in_progress'))
+
+Gather (actual time=62.063..495.067 rows=22508 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=37100 read=70536
+  I/O Timings: shared read=908.991
+  ->  Hash Left Join (actual time=42.854..462.729 rows=7503 loops=3)
+        Hash Cond: (v.home_workshop_id = hw.workshop_id)
+        Buffers: shared hit=37100 read=70536
+        I/O Timings: shared read=908.991
+        ->  Hash Anti Join (actual time=42.675..451.163 rows=7503 loops=3)
+              Hash Cond: ((a.vehicle_id = w.vehicle_id) AND (a.failure_mode = w.failure_mode))
+              Buffers: shared hit=37094 read=70536
+              I/O Timings: shared read=908.991
+              ->  Parallel Hash Join (actual time=35.741..438.107 rows=9989 loops=3)
+                    Hash Cond: (a.vehicle_id = v.vehicle_id)
+                    Buffers: shared hit=16020 read=70536
+                    I/O Timings: shared read=908.991
+                    ->  Parallel Seq Scan on alerts a (actual time=1.892..394.262 rows=9989 loops=3)
+                          Filter: ((failure_mode IS NOT NULL) AND (status = ANY ('{open,acknowledged}'::text[])))
+                          Rows Removed by Filter: 656678
+                          Buffers: shared hit=14060 read=70536
+                          I/O Timings: shared read=908.991
+                    ->  Parallel Hash (actual time=33.282..33.283 rows=33333 loops=3)
+                          Buckets: 131072  Batches: 1  Memory Usage: 7328kB
+                          Buffers: shared hit=1840
+                          ->  Parallel Seq Scan on vehicles v (actual time=19.431..23.692 rows=33333 loops=3)
+                                Filter: (status = 'active'::text)
+                                Buffers: shared hit=1840
+              ->  Hash (actual time=6.797..6.798 rows=9987 loops=3)
+                    Buckets: 16384 (originally 4096)  Batches: 1 (originally 1)  Memory Usage: 759kB
+                    Buffers: shared hit=21044
+                    ->  Index Only Scan using work_orders_one_active_per_vehicle_mode on work_orders w (actual time=0.046..4.440 rows=9987 loops=3)
+                          Heap Fetches: 20961
+                          Buffers: shared hit=21044
+        ->  Hash (actual time=0.113..0.114 rows=82 loops=3)
+              Buckets: 1024  Batches: 1  Memory Usage: 14kB
+              Buffers: shared hit=6
+              ->  Seq Scan on workshops hw (actual time=0.049..0.069 rows=82 loops=3)
+                    Buffers: shared hit=6
+Planning Time: 0.018 ms
+Execution Time: 498.604 ms
+
+===== q3_work_orders_by_status_last_page, custom plan (before) =====
+SELECT work_order_id::text AS work_order_id, vehicle_id::text AS vehicle_id,
+    workshop_id::text AS workshop_id, source_alert_id, failure_mode, status,
+    failure_probability::float8 AS failure_probability,
+    expected_cost_avoided::float8 AS expected_cost_avoided, model_version, scheduled_for,
+    created_by::text AS created_by, created_at, completed_at, outcome
+FROM work_orders WHERE tenant_id = %(t)s AND status = %(s)s
+  AND (created_at, work_order_id) < (%(ts)s::timestamptz, %(id)s::uuid)
+ORDER BY created_at DESC, work_order_id DESC LIMIT 51
+
+Limit (actual time=1.780..1.786 rows=20 loops=1)
+  Buffers: shared hit=264
+  ->  Sort (actual time=1.779..1.782 rows=20 loops=1)
+        Sort Key: created_at DESC, ((work_order_id)::text) DESC
+        Sort Method: quicksort  Memory: 30kB
+        Buffers: shared hit=264
+        ->  Result (actual time=1.695..1.766 rows=20 loops=1)
+              One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid)
+              Buffers: shared hit=264
+              ->  Bitmap Heap Scan on work_orders (actual time=1.684..1.739 rows=20 loops=1)
+                    Recheck Cond: ((status = ANY ('{proposed,scheduled,in_progress}'::text[])) AND (tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (ROW(created_at, work_order_id) < ROW('2026-09-23 22:12:52.171764+00'::timestamp with time zone, '24b3a183-60fb-4402-b669-5199c4688373'::uuid)))
+                    Filter: (status = 'proposed'::text)
+                    Rows Removed by Filter: 10
+                    Heap Blocks: exact=22
+                    Buffers: shared hit=264
+                    ->  BitmapAnd (actual time=1.660..1.661 rows=0 loops=1)
+                          Buffers: shared hit=242
+                          ->  Bitmap Index Scan on work_orders_one_active_per_vehicle_mode (actual time=0.352..0.352 rows=9987 loops=1)
+                                Buffers: shared hit=81
+                          ->  Bitmap Index Scan on work_orders_tenant_created_idx (actual time=1.263..1.264 rows=17933 loops=1)
+                                Index Cond: ((tenant_id = '57151c3e-0ba8-4c45-bccf-9cb9c8ed5ef2'::uuid) AND (ROW(created_at, work_order_id) < ROW('2026-09-23 22:12:52.171764+00'::timestamp with time zone, '24b3a183-60fb-4402-b669-5199c4688373'::uuid)))
+                                Buffers: shared hit=161
+Planning Time: 0.191 ms
+Execution Time: 1.867 ms
+
+===== q3_work_orders_by_status_last_page, generic plan (before) =====
+SELECT work_order_id::text AS work_order_id, vehicle_id::text AS vehicle_id,
+    workshop_id::text AS workshop_id, source_alert_id, failure_mode, status,
+    failure_probability::float8 AS failure_probability,
+    expected_cost_avoided::float8 AS expected_cost_avoided, model_version, scheduled_for,
+    created_by::text AS created_by, created_at, completed_at, outcome
+FROM work_orders WHERE tenant_id = %(t)s AND status = %(s)s
+  AND (created_at, work_order_id) < (%(ts)s::timestamptz, %(id)s::uuid)
+ORDER BY created_at DESC, work_order_id DESC LIMIT 51
+
+Limit (actual time=6.953..6.957 rows=20 loops=1)
+  Buffers: shared hit=18086
+  ->  Incremental Sort (actual time=6.952..6.954 rows=20 loops=1)
+        Sort Key: created_at DESC, ((work_order_id)::text) DESC
+        Presorted Key: created_at
+        Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 30kB  Peak Memory: 30kB
+        Buffers: shared hit=18086
+        ->  Result (actual time=0.067..6.925 rows=20 loops=1)
+              One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = $1)
+              Buffers: shared hit=18086
+              ->  Index Scan using work_orders_tenant_created_idx on work_orders (actual time=0.060..6.907 rows=20 loops=1)
+                    Index Cond: ((tenant_id = $1) AND (ROW(created_at, work_order_id) < ROW($3, $4)))
+                    Filter: (status = $2)
+                    Rows Removed by Filter: 17913
+                    Buffers: shared hit=18086
+Planning Time: 0.019 ms
+Execution Time: 7.046 ms

@@ -5,7 +5,7 @@
 Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta**
 (RA2311003010027).
 
-**Status:** M12 (security and privacy) complete. See [milestones](#milestones).
+**Status:** M15 (SQL optimisation) complete; M13, M14 and M16 are next. See [milestones](#milestones).
 Every number in this repository is either measured (with a link to the evidence) or marked
 **NOT YET MEASURED**.
 
@@ -376,7 +376,32 @@ http://localhost:9090.
   - Automated 2-year purge.
   - Container image CVE scan (M13).
 
-## 17. Repository structure
+## 17. SQL optimisation (M15)
+
+The slowest queries were **measured**, not guessed.
+- **Data:** 100K vehicles plus a generated year of history (2M alerts, 150K work orders).
+- **Traffic:** a replay of real dashboard traffic across all 20 tenants (3,055 API
+  requests), ranked with `pg_stat_statements`.
+- **Plans:** `EXPLAIN ANALYZE` of each query under custom and generic plans
+  ([write-up](docs/performance/sql-optimisation.md)).
+
+| Query | Before | After |
+|---|---|---|
+| Dashboard fleet summary | 1,663 ms mean | **0.97 ms** |
+| Work orders by status, next page | 58 ms mean | **0.17 ms** |
+| Planner input (active alerts without a work order) | 309 ms | 473 ms: **not improved**, depends on caching; the fix is incremental planning (future work) |
+
+- **Whole workload:** 195.6 s → 23.8 s of API time.
+- **Fixes:**
+  - Partial and covering indexes, built with `CREATE INDEX CONCURRENTLY` so they don't
+    lock the live table.
+  - A one-pass `FILTER` rewrite of the summary.
+  - A subtle `ORDER BY` bug: the sort bound to a text alias, which no index could serve.
+- **Correctness:** tests check that each rewrite returns exactly what the straightforward
+  query returns.
+- Measured on a 4-vCPU Linux container, not the target Mac.
+
+## 18. Repository structure
 
 ```
 apps/        api · simulator · stream-processor · batch · web
@@ -408,7 +433,9 @@ evidence/    measured results only: benchmarks, coverage, security, load tests, 
 | M11 | Observability: metrics dashboards, alerting rules, tracing, SLOs | ✅ Done ([SLOs](docs/observability/slo.md), [drill](docs/observability/drills.md), [ADR-009](docs/architecture/adr/ADR-009.md)) |
 | M12 | Security and privacy: STRIDE, row-level security, erasure workflow, headers, scan gate | ✅ Done ([threat model](docs/security/threat-model.md), [privacy](docs/security/privacy.md), [ADR-010](docs/architecture/adr/ADR-010.md)) |
 | M13 | Testing: coverage, contract, BDD, chaos | ⏭ Next |
-| M14–M19 | See the M0 document | Planned |
+| M14 | Performance: 10K / 50K / 100K / burst / soak | Planned |
+| M15 | SQL optimisation: 3 slowest queries, EXPLAIN ANALYZE before/after | ✅ Done ([write-up](docs/performance/sql-optimisation.md)); done before M13/M14 by choice |
+| M16–M19 | See the M0 document | Planned |
 
 ## Declarations
 

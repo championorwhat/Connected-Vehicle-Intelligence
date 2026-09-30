@@ -1,0 +1,34 @@
+{
+  "measured_at": "2026-09-30",
+  "hardware": "x86_64 Linux container, 4 vCPU, PostgreSQL 17 in Docker; not the target Mac",
+  "dataset": "100,000 vehicles (seed) + scripts/sql_history.py: 2,000,000 alerts over 365 days (~1.5 % active) and 150,000 work orders (3,000 active); identical deterministic data for before and after",
+  "selection": "scripts/sql_workload.py: 3,055 API requests (fleet managers of all 20 tenants, 5 rounds) + 3 planner cycles, ranked by pg_stat_statements total time. The top 3 read queries were optimised; the planner's work-order INSERTs (0.35 ms each) were not.",
+  "end_to_end_workload": {
+    "before": {"api_seconds": 195.6, "evidence": "m15-workload-before.json", "state": "old API image, no new indexes"},
+    "after": {"api_seconds": 23.8, "evidence": "m15-workload-after.json", "state": "new API image, migrations 20261003000005-7"}
+  },
+  "queries": {
+    "q1_fleet_summary": {
+      "change": "8 correlated count subqueries -> one pass per table with FILTER aggregates, restricted to active rows; partial index alerts_active_idx, vehicles_tenant_status_idx, work_orders_tenant_status_created_idx",
+      "workload_mean_ms": {"before": 1663.24, "after": 0.97},
+      "workload_max_ms": {"before": 5201.9},
+      "explain_median_ms_generic_plan": {"before": 590.04, "after": 1.41},
+      "results_identical": "yes, all 20 tenants compared (old vs new SQL on the same data)"
+    },
+    "q3_work_orders_by_status_page": {
+      "change": "ORDER BY bound to the text alias of work_order_id (no index can supply it) -> qualified columns; index (tenant_id, status, created_at DESC, work_order_id DESC)",
+      "workload_next_page_mean_ms": {"before": 58.15, "after": 0.17},
+      "workload_next_page_max_ms": {"before": 145.21, "after": 0.34},
+      "workload_first_page_mean_ms": {"before": 1.09, "after": 0.23},
+      "explain_median_ms_generic_plan_last_page": {"before": 2.64, "after": 0.10}
+    },
+    "q2_planner_open_alerts": {
+      "change": "none to the SQL; the partial index alerts_active_idx is available to it",
+      "workload_mean_ms_3_cycles": {"before": 309.15, "after": 473.31},
+      "explain_median_ms_warm": {"before": 465.85, "after": 187.32},
+      "cold_shared_buffers_after_restart_ms": {"with_index": [282.1, 292.0, 276.6], "without_index": [296.7, 162.6, 156.4]},
+      "warm_ms": {"with_index": [241.8, 244.4, 229.3], "without_index": [158.1, 149.7, 159.4]},
+      "verdict": "NOT improved. The index reads ~22K heap pages instead of 84K, but single-threaded random reads are slower than a parallel full scan when the table is in the OS cache. It returns 22.5K rows each cycle; the real fix is incremental planning (only alerts since the last cycle)."
+    }
+  }
+}
