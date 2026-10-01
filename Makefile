@@ -112,6 +112,7 @@ users: ## Create demo users for every role in the largest tenant (password: DEMO
 	test -n "$$DEMO_USER_PASSWORD" || { echo "set DEMO_USER_PASSWORD in .env (see .env.example)"; exit 1; }; \
 	tenant=$$($(COMPOSE) exec -T postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \
 	  "SELECT t.slug FROM tenants t JOIN vehicles v USING (tenant_id) GROUP BY t.slug ORDER BY count(*) DESC, t.slug LIMIT 1"); \
+	test -n "$$tenant" || { echo "no vehicles loaded yet: run make seed (or make pipeline-demo) first, then make users"; exit 1; }; \
 	for role in fleet_manager technician analyst dpo; do \
 	  echo "$$DEMO_USER_PASSWORD" | $(COMPOSE) --profile pipeline run --rm -T api create-user \
 	    --email "$$role@demo.prognos.local" --tenant "$$tenant" --role $$role > /dev/null \

@@ -143,6 +143,9 @@ def require(permission: str) -> Callable[..., Awaitable[Principal]]:
                 outcome="denied", request_id=getattr(request.state, "request_id", None),
                 client_ip=client_ip(request), details={"permission": permission},
             )  # fmt: skip
+        if principal.tenant_id is None:
+            raise ApiError(403, "this account is not linked to a fleet",
+                           code="forbidden")  # fmt: skip
         raise ApiError(403, f"missing permission {permission}", code="forbidden")
 
     return _check
