@@ -4,12 +4,12 @@
 
 | | |
 |---|---|
-| **To be submitted by** | Pratibimb Gupta (RA2311003010027). Team name: **[to be provided by the author]** |
-| **Team members and roles** | Pratibimb Gupta: sole member, all roles. Email: **[to be provided by the author]** |
+| **To be submitted by** | Pratibimb Gupta (RA2311003010027). Team name: **Prognos** |
+| **Team members and roles** | Pratibimb Gupta: sole member, all roles. Email: codingupta@gmail.com |
 | **Problem space chosen** | Predictive maintenance, with a fleet-wide emerging-fault radar |
 | **Repository URL** | https://github.com/championorwhat/Connected-Vehicle-Intelligence |
-| **Demo video URL (≤ 5 min)** | **[to be recorded; script in M18]** |
-| **Date of submission** | 20/09/2026 |
+| **Explainer video** | In folder **2 – Hackathon Explainer Video** of the submission Google Drive folder |
+| **Date of submission** | 02/10/2026 |
 
 **How to read the numbers.** Every measured number links to the evidence file that
 produced it. Anything not measured says **NOT YET MEASURED**. Unless stated otherwise,
@@ -1044,8 +1044,8 @@ same rows ([model card](../ml/model-card.md),
 
 **Script:** [docs/demo/demo-script.md](../demo/demo-script.md), timed from a real rehearsal
 ([timeline](../../evidence/demo/m18-rehearsal-timeline.json),
-[recovery moment](../../evidence/demo/m18-recovery-rehearsal.md)). **Video link:**
-**[to be recorded by the author]**.
+[recovery moment](../../evidence/demo/m18-recovery-rehearsal.md)). **Video:** in
+folder **2 – Hackathon Explainer Video** of the submission Google Drive folder.
 
 ## 14. Repository Checklist
 
