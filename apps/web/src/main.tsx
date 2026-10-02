@@ -3,9 +3,9 @@ import "./styles.css";
 
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { currentSession, onSessionChange, type Session } from "./api/client";
+import { DEMO, currentSession, onSessionChange, type Session } from "./api/client";
 import { Layout } from "./components/Layout";
 import { Alerts } from "./pages/Alerts";
 import { Login } from "./pages/Login";
@@ -33,13 +33,16 @@ export function App() {
   );
 }
 
+// GitHub Pages serves one file per path, so the demo build keeps the route after a `#`.
+const Router = DEMO ? HashRouter : BrowserRouter;
+
 const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <BrowserRouter>
+      <Router>
         <App />
-      </BrowserRouter>
+      </Router>
     </StrictMode>,
   );
 }

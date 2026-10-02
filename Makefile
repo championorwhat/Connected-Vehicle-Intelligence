@@ -72,7 +72,7 @@ chsql: ## Open a clickhouse-client shell
 	$(COMPOSE) exec clickhouse sh -c 'clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD -d $$CLICKHOUSE_DB'
 
 # --- Pipeline ----------------------------------------------------------------
-.PHONY: pipeline pipeline-demo pipeline-stop dlq-peek alerts-tail signals-tail users score plan reconcile backtest \
+.PHONY: pipeline pipeline-demo codespace-demo demo-snapshot pipeline-stop dlq-peek alerts-tail signals-tail users score plan reconcile backtest \
 	calibrate radar-backtest ml-data ml-train sim-bench
 pipeline: env ## Simulator + normalizer (run `make seed` first with the same VEHICLE_COUNT)
 	$(COMPOSE) --profile pipeline up -d --build simulator normalizer detector sink planner radar scorer api web
@@ -90,6 +90,15 @@ lag: ## Backlog per consumer group, from the broker (works while a consumer is d
 	  $(COMPOSE) exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:19092 \
 	    --describe --group "$$g" 2>/dev/null | awk 'NR>1 && $$6 ~ /^[0-9]+$$/ {s+=$$6} END {print s+0}'; \
 	done
+
+codespace-demo: env ## One command for Codespaces: stack, seed, demo pipeline, demo users
+	./scripts/up.sh
+	./scripts/seed.sh
+	$(MAKE) pipeline-demo users
+	@echo "Dashboard: PORTS tab, port 8080. Password: grep DEMO_USER_PASSWORD .env"
+
+demo-snapshot: ## Record the dashboard's API responses for the GitHub Pages demo (after pipeline-demo + users)
+	set -a; . ./.env; set +a; uv run python scripts/capture_demo_snapshot.py
 
 demo-timeline: ## Live cue sheet for recording the demo: when each scripted failure appears
 	set -a; . ./.env; set +a; uv run python scripts/demo_timeline.py --duration 1320

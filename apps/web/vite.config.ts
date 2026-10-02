@@ -8,6 +8,8 @@ const api = process.env.API_URL ?? "http://localhost:8000";
 
 export default defineConfig({
   plugins: [react()],
+  // The demo build is served from a sub-path on GitHub Pages (/<repo>/), so assets load relatively.
+  base: process.env.VITE_DEMO === "1" ? "./" : "/",
   server: {
     port: 5173,
     proxy: {

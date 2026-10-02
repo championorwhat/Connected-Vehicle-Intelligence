@@ -10,6 +10,9 @@ Built for the **Connected Vehicle Intelligence Hackathon** by **Pratibimb Gupta*
 **Solution Document:** [docs/solution-document/solution-document.md](docs/solution-document/solution-document.md)
 (all 17 template sections, every measured claim linked to its evidence;
 [PDF](docs/solution-document/solution-document.pdf), regenerated with `make pdf`).
+**Try it:** [static demo on GitHub Pages](https://championorwhat.github.io/Connected-Vehicle-Intelligence/)
+(recorded from a real run), or the full live system in GitHub Codespaces; see
+[Run it on GitHub](#run-it-on-github).
 **Final audit:** [docs/audit/final-audit.md](docs/audit/final-audit.md): every requirement of the
 brief traced to code, test, evidence and demo time, including what is **not** met.
 Every number in this repository is either measured (with a link to the evidence) or marked
@@ -101,6 +104,34 @@ Run the same checks CI runs:
 make check             # lint, types, unit tests, compose validation (no Docker needed for tests)
 make test-integration  # 80 tests against real PostgreSQL 17, ClickHouse 25.8, Kafka and Redis (Testcontainers)
 ```
+
+### Run it on GitHub
+
+**Static demo on GitHub Pages:** <https://championorwhat.github.io/Connected-Vehicle-Intelligence/>.
+It is the real dashboard, built with `VITE_DEMO=1`. Instead of calling the API, it answers from
+[`apps/web/demo/snapshot.json`](apps/web/demo/snapshot.json): the API's responses recorded by
+`make demo-snapshot` during a `make pipeline-demo` run. Times are shifted so they read as they
+did at capture, and acknowledging alerts or moving work orders only changes the open tab. A
+banner on every page says so. There is no live feed of new data; the Alerts page replays the
+latest recorded alerts. The [`pages` workflow](.github/workflows/pages.yml) publishes it on every
+push to `main` that touches `apps/web/`. One-time setup: **Settings → Pages → Source: GitHub Actions**.
+To refresh the snapshot, run the demo, then `make demo-snapshot`, and commit the file.
+
+**Full live system in GitHub Codespaces:** **Code → Codespaces → ⋯ → New with options**, and
+pick a **4-core / 16 GB** machine. The [dev container](.devcontainer/devcontainer.json) installs
+Docker, uv and Node, creates `.env` with a random `DEMO_USER_PASSWORD`, and syncs the Python deps.
+Then, in the Codespace terminal:
+
+```bash
+make codespace-demo            # make up + seed + pipeline-demo + users (first image builds: several minutes)
+grep DEMO_USER_PASSWORD .env   # the password for every demo account
+```
+
+Open port **8080 (Dashboard)** from the **PORTS** tab and sign in as
+`fleet_manager@demo.prognos.local`. Forwarded ports are private to you by default. To show it to
+someone else, right-click the port and choose **Port Visibility → Public**; anyone with the link
+then reaches the sign-in page, which is why the password is random per Codespace. The Codespace
+stops after 30 idle minutes (GitHub's default) and uses your Codespaces hours while it runs.
 
 ## 4. Environment variables
 
