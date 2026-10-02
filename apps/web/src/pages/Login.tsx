@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 
-import { ApiError, signIn } from "../api/client";
+import { ApiError, DEMO, enterDemo, signIn } from "../api/client";
+import { DemoBanner } from "../components/DemoBanner";
 
 const DEMO_ROLES = [
   ["fleet_manager", "Fleet manager", "sees everything, books repairs"],
@@ -30,6 +31,8 @@ export function Login() {
       setBusy(false);
     }
   }
+
+  if (DEMO) return <DemoLogin />;
 
   return (
     <main className="login">
@@ -76,5 +79,35 @@ export function Login() {
         </form>
       </div>
     </main>
+  );
+}
+
+/** GitHub Pages build: there are no accounts, only the recorded fleet-manager view. */
+function DemoLogin() {
+  return (
+    <>
+      <DemoBanner />
+      <main className="login">
+        <div className="login-panel">
+          <section className="login-about" aria-labelledby="about-title">
+            <h2 id="about-title">Know which vehicle fails next</h2>
+            <p>
+              Prognos reads live data from every vehicle in a fleet, raises an alert within seconds when something is
+              critical, and proposes a workshop booking before a vehicle breaks down.
+            </p>
+            <p className="muted small">
+              This demo shows the dashboard a fleet manager saw during a recorded run of the full system.
+            </p>
+          </section>
+          <div className="card login-demo">
+            <h1>Prognos</h1>
+            <p className="muted">Predictive maintenance for connected vehicle fleets.</p>
+            <button type="button" className="primary" onClick={() => void enterDemo()}>
+              Open the demo as a fleet manager
+            </button>
+          </div>
+        </div>
+      </main>
+    </>
   );
 }

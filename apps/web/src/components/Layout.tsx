@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 
 import { signOut, type Session } from "../api/client";
 import { roleLabel } from "../format";
+import { DemoBanner } from "./DemoBanner";
 
 const LINKS: { to: string; label: string; hint: string; permission?: string }[] = [
   { to: "/", label: "Overview", hint: "The whole fleet at a glance and the vehicles most at risk" },
@@ -16,6 +17,7 @@ export function Layout({ session }: { session: Session }) {
   const visible = LINKS.filter((l) => !l.permission || session.permissions.includes(l.permission));
   return (
     <div className="shell">
+      <DemoBanner />
       <header className="topbar">
         <span className="brand">
           Prognos <span className="tagline">predictive maintenance</span>

@@ -1,5 +1,8 @@
 // Typed client for the Prognos API (same origin: Vite proxy in dev, nginx in the container).
 //
+// With `VITE_DEMO=1` (the GitHub Pages build) there is no API: calls are answered from a
+// recorded snapshot by ./demo.ts, which is only loaded in that build.
+//
 // The access token lives in memory and sessionStorage (cleared when the tab closes; tokens
 // expire after 15 minutes). A 401 anywhere signs the user out.
 
@@ -23,6 +26,9 @@ export class ApiError extends Error {
     super(problem.detail);
   }
 }
+
+export const DEMO = import.meta.env.VITE_DEMO === "1";
+const demo = () => import("./demo");
 
 const KEY = "prognos.session";
 let session: Session | null = null;
@@ -76,6 +82,10 @@ async function toProblem(res: Response): Promise<Problem> {
 }
 
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (DEMO) {
+    const { demoRequest } = await demo();
+    return demoRequest<T>(path, init).catch((p: Problem) => Promise.reject(new ApiError(p)));
+  }
   const headers = new Headers(init.headers);
   if (session) headers.set("Authorization", `Bearer ${session.token}`);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
@@ -83,6 +93,16 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   if (res.status === 401 && session) signOut();
   if (!res.ok) throw new ApiError(await toProblem(res));
   return (await res.json()) as T;
+}
+
+/** Demo build only: when the snapshot was recorded. */
+export async function demoCapturedAt(): Promise<string> {
+  return (await demo()).capturedAt;
+}
+
+/** Demo build only: sign in as the fleet manager whose view the snapshot recorded. */
+export async function enterDemo(): Promise<void> {
+  setSession((await demo()).demoSession);
 }
 
 export async function signIn(email: string, password: string): Promise<Session> {
@@ -243,6 +263,12 @@ export const api = {
 /** Live alert feed. Returns a function that closes the socket. */
 export function subscribeAlerts(onAlert: (a: Record<string, unknown>) => void): () => void {
   if (!session) return () => undefined;
+  if (DEMO) {
+    let stop = () => undefined as void;
+    let closed = false;
+    void demo().then((d) => { if (!closed) stop = d.replayAlerts(onAlert); });
+    return () => { closed = true; stop(); };
+  }
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/v1/ws/alerts`);
   const token = session.token;
