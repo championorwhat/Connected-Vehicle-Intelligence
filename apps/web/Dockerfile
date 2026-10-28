@@ -10,7 +10,7 @@ RUN --mount=type=secret,id=extra_ca,required=false \
 COPY . .
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.inc /etc/nginx/security-headers.inc
 USER 101
